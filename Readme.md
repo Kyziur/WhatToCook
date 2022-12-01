@@ -23,11 +23,12 @@ Clone the project
 ~~~bash  
 git clone https://github.com/Kyziur/WhatToCook.git
 ~~~
-Download nodejs from:
+.NET is also required to run this project.
+Next step is to download nodejs from:
 https://nodejs.org/en/download/
 
 ~~~
-Go to the project directory  
+Then go to the project directory  
 
 ~~~bash  
 npm install -g @angular/cli
