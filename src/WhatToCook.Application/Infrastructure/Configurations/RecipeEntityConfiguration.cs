@@ -9,7 +9,20 @@ internal class RecipeEntityConfiguration : IEntityTypeConfiguration<Recipe>
     public void Configure(EntityTypeBuilder<Recipe> builder)
     {
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Name).IsRequired();
+        builder.Property(x => x.Name);
+        builder.HasMany(x => x.Ingredients).WithOne(x => x.Recipe);
         builder.HasIndex(x => x.Name);
+        builder.Property(x => x.Description);
+        builder.Property(x => x.TimeToPrepare);
+        builder.OwnsOne(x => x.Statistics);
+
+        /* builder.HasData(
+             new Recipe
+             {
+                 Name = "Omlet",
+                 Ingredients = new List<Ingredient> { new Ingredient { Name = "ffff" }
+                 }
+             }
+             );*/
     }
 }

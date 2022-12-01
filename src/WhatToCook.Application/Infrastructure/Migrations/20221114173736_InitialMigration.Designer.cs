@@ -11,7 +11,7 @@ using WhatToCook.Application.Infrastructure;
 namespace WhatToCook.Application.Infrastructure.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20221109221226_InitialMigration")]
+    [Migration("20221114173736_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
