@@ -23,7 +23,7 @@ Clone the project
 ~~~bash  
 git clone https://github.com/Kyziur/WhatToCook.git
 ~~~
-.NET is also required to run this project
+.NET version 7.0 is also required to run this project. You can download .NET at https://dotnet.microsoft.com/en-us/download.
 Next step is to download nodejs from:
 https://nodejs.org/en/download/
 
