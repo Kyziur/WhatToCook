@@ -19,15 +19,15 @@ namespace WhatToCook.Application.Domain
             var User1 = new User
             {
 
-                FirstName = "William",
-                LastName = "Shakespeare"
+                Email = "Pajacyk@gmail.com",
+                 
             };
             modelBuilder.Entity<User>().HasData(
                 new User
                 {
 
-                    FirstName = "William",
-                    LastName = "Shakespeare"
+                    Email = "Pajacyk@gmail.com",
+                    
                 }
             );
 
