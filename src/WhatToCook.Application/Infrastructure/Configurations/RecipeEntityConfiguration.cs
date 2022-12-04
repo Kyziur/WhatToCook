@@ -15,14 +15,5 @@ internal class RecipeEntityConfiguration : IEntityTypeConfiguration<Recipe>
         builder.Property(x => x.Description);
         builder.Property(x => x.TimeToPrepare);
         builder.OwnsOne(x => x.Statistics);
-
-        /* builder.HasData(
-             new Recipe
-             {
-                 Name = "Omlet",
-                 Ingredients = new List<Ingredient> { new Ingredient { Name = "ffff" }
-                 }
-             }
-             );*/
     }
 }

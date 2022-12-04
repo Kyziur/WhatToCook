@@ -17,13 +17,6 @@ namespace WhatToCook.Application.Infrastructure.Configurations
             builder.HasKey(x => x.Id);
             builder.HasOne(x => x.User);
             builder.HasOne(x => x.Recipe);
-            builder.HasIndex(x => new { x.RecipeId, x.UserId });
         }
     }
 }
-
-//Favourite
-//Id | UserId | RecipeId
-//1 | 1 | 1
-//2 | 1 | 1 //throws error
-//3 | 1 | 2

@@ -17,7 +17,7 @@ namespace WhatToCook.Application.Infrastructure.Configurations
         {
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Name);
-            builder.HasOne(x => x.Recipe).WithMany();
+            builder.HasOne(x => x.Recipe).WithMany(x => x.Ingredients);
         }
     }
 }

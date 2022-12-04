@@ -1,16 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 
 namespace WhatToCook.Application.Domain
 {
 
-
-    public static class ModelBuilderExtensions
+    public static class DataSeeder
     {
 
         public static void Seed(this ModelBuilder modelBuilder)
@@ -20,14 +13,14 @@ namespace WhatToCook.Application.Domain
             {
 
                 Email = "Pajacyk@gmail.com",
-                 
+
             };
             modelBuilder.Entity<User>().HasData(
                 new User
                 {
 
                     Email = "Pajacyk@gmail.com",
-                    
+
                 }
             );
 
@@ -50,13 +43,11 @@ namespace WhatToCook.Application.Domain
             {
                 Name = "cebula"
             });
-
             modelBuilder.Entity<Tag>().HasData(new Tag { Name = " Mexican" });
             modelBuilder.Entity<Rating>().HasData(new Rating { Score = 1, User = User1, Recipe = Recipe1 });
             modelBuilder.Entity<Favourite>().HasData(new Favourite(Recipe1, User1));
-            modelBuilder.Entity<PlanOfmeals>().HasData(new PlanOfmeals { FromDateToDate = new DateTime(2022, 12, 12), Recipe = Recipe1, User = User1 });
-            modelBuilder.Entity<RecipeTag>().HasData(new RecipeTag { Recipe = Recipe1, Tags = new Tag { Name = "Mexican" } });
-
+            modelBuilder.Entity<PlanOfMeals>().HasData(new PlanOfMeals { FromDate = new DateTime(2022, 12, 12), ToDate = new DateTime(2023, 01, 12), Recipe = Recipe1, User = User1 });
+            modelBuilder.Entity<RecipeTag>().HasData(new RecipeTag { Recipe = Recipe1, Tag = new Tag { Name = "Mexican" } });
         }
     }
 }
