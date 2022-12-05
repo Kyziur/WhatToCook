@@ -1,5 +1,5 @@
-﻿namespace WhatToCook.Application.Domain
-{
+﻿namespace WhatToCook.Application.Domain;
+
     public class Favourite
     {
         protected Favourite() { }
@@ -17,4 +17,4 @@
         public int UserId { get; private set; }
         public User User { get; private set; }
     }
-}
+

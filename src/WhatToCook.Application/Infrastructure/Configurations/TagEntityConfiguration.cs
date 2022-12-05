@@ -2,15 +2,14 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using WhatToCook.Application.Domain;
 
-namespace WhatToCook.Application.Infrastructure.Configurations
-{
-    internal class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
-    {
-        public void Configure(EntityTypeBuilder<Tag> builder)
-        {
-            builder.HasKey(x => x.Id);
-            builder.Property(x => x.Name);
+namespace WhatToCook.Application.Infrastructure.Configurations;
 
-        }
+internal class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
+{
+    public void Configure(EntityTypeBuilder<Tag> builder)
+    {
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Name);
+
     }
 }
