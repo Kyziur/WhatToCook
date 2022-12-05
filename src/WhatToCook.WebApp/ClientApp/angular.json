@@ -132,5 +132,8 @@
       }
     }
   },
-  "defaultProject": "WhatToCook.WebApp"
+  "defaultProject": "WhatToCook.WebApp",
+  "cli": {
+    "analytics": false
+  }
 }
