@@ -1,5 +1,5 @@
 {
-  "name": "whattocook.webapp",
+  "name": "whattocook",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -8,7 +8,7 @@
     "start:windows": "ng serve --port 44486 --ssl --ssl-cert \"%APPDATA%\\ASP.NET\\https\\%npm_package_name%.pem\" --ssl-key \"%APPDATA%\\ASP.NET\\https\\%npm_package_name%.key\"",
     "start:default": "ng serve --port 44486 --ssl --ssl-cert \"$HOME/.aspnet/https/${npm_package_name}.pem\" --ssl-key \"$HOME/.aspnet/https/${npm_package_name}.key\"",
     "build": "ng build",
-    "build:ssr": "ng run WhatToCook.WebApp:server:dev",
+    "build:ssr": "ng run WhatToCook:server:dev",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
@@ -23,24 +23,20 @@
     "@angular/platform-browser-dynamic": "^15.0.2",
     "@angular/platform-server": "^15.0.2",
     "@angular/router": "^15.0.2",
-    "bootstrap": "^5.2.0",
-    "jquery": "^3.6.0",
-    "oidc-client": "^1.11.5",
-    "popper.js": "^1.16.0",
     "run-script-os": "^1.1.6",
-    "rxjs": "~7.5.6",
-    "tslib": "^2.4.0",
-    "zone.js": "~0.11.8"
+    "rxjs": "~7.6.0",
+    "tslib": "^2.4.1",
+    "zone.js": "~0.12.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^15.0.2",
     "@angular/cli": "^15.0.2",
     "@angular/compiler-cli": "^15.0.2",
-    "@types/jasmine": "~4.3.0",
+    "@types/jasmine": "~4.3.1",
     "@types/jasminewd2": "~2.0.10",
-    "@types/node": "^18.7.11",
-    "jasmine-core": "~4.3.0",
-    "karma": "~6.4.0",
+    "@types/node": "^18.11.11",
+    "jasmine-core": "~4.5.0",
+    "karma": "~6.4.1",
     "karma-chrome-launcher": "~3.1.1",
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
