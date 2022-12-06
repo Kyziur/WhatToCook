@@ -3,11 +3,14 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "WhatToCook.WebApp": {
+    "WhatToCook": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:application": {
           "strict": true
+        },
+        "@schematics/angular:component": {
+          "style": "scss"
         }
       },
       "root": "",
@@ -23,15 +26,11 @@
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
-            "allowedCommonJsDependencies": [
-              "oidc-client"
-            ],
             "assets": [
               "src/assets"
             ],
             "styles": [
-              "node_modules/bootstrap/dist/css/bootstrap.min.css",
-              "src/styles.css"
+              "src/styles.scss"
             ],
             "scripts": []
           },
@@ -72,10 +71,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "WhatToCook.WebApp:build:production"
+              "browserTarget": "WhatToCook:build:production"
             },
             "development": {
-              "browserTarget": "WhatToCook.WebApp:build:development",
+              "browserTarget": "WhatToCook:build:development",
               "proxyConfig": "proxy.conf.js"
             }
           },
@@ -84,7 +83,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "WhatToCook.WebApp:build"
+            "browserTarget": "WhatToCook:build"
           }
         },
         "test": {
@@ -98,7 +97,7 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.css"
+              "src/styles.scss"
             ],
             "scripts": []
           }
@@ -132,5 +131,8 @@
       }
     }
   },
-  "defaultProject": "WhatToCook.WebApp"
+  "defaultProject": "WhatToCook",
+  "cli": {
+    "analytics": false
+  }
 }
