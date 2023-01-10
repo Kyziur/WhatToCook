@@ -1,6 +1,7 @@
 .d-flex {
-    display:flex;
+    display: flex;
 }
+
 .recipe-card-img {
     display: flex;
     align-items: center;
@@ -10,18 +11,18 @@
 }
 
 .container {
-    width:80%;
-    margin: auto 0;
+    width: 80%;
+    margin: 0 auto;
+    //color for test
+    background-color: blue;
 }
 
-.sidebar-container{
-    
-        width: 216px;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        background-color: #fff;
-        
-    
-    
+.sidebar-container {
+    min-width: 216px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    position: sticky;
+    top: 0;
 }
