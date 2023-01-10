@@ -1,0 +1,27 @@
+.d-flex {
+    display:flex;
+}
+.recipe-card-img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.container {
+    width:80%;
+    margin: auto 0;
+}
+
+.sidebar-container{
+    
+        width: 216px;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background-color: #fff;
+        
+    
+    
+}
