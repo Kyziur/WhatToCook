@@ -1,31 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
 
 /* Provide sufficient contrast against white background */
-
-
-.btn:focus,
-.btn:active:focus,
-.btn-link.nav-link:focus,
-.form-control:focus,
-.form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-code {
-  color: #e01a76;
-}
-
-.btn-primary {
-  color: #fff;
-
-}
+@import "defaults.scss";
 
 body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  // font-size: 16px;
-
+  font-size: 16px;
 }
 
 a {
@@ -35,4 +17,9 @@ a {
   &:hover {
     color: black;
   }
+}
+
+input:focus {
+  appearance: none;
+  outline: none;
 }

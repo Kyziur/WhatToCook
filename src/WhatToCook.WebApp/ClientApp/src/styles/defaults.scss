@@ -1,0 +1,42 @@
+// $paddingDirection: (
+//     ''
+//     'right',
+//     'left',
+//     'top',
+//     'bottom'
+// );
+// $paddingLength: (
+//     1,
+//     2,
+//     3,
+//     4
+// );
+
+// @each $len in $paddingLength {
+//     .padding-#{$len} {
+//         padding: #{$len/2}rem;
+//     }
+// }
+
+// // if you want to use padding-left, padding-right etc.
+// @each $dir in $paddingDirection {
+//     @each $len in $paddingLength {
+//         .padding-#{$dir}-#{$len} {
+//             padding-#{$dir}: #{$len/2}rem;
+//         }
+//     }
+// }
+
+// @each $len in $paddingLength {
+//     %padding-#{$len} {
+//         padding: #{$len}px;
+//     }
+// }
+
+// @each $dir in $paddingDirection {
+//     @each $len in $paddingLength {
+//         %padding-#{$dir}-#{$len} {
+//             padding-#{$dir}: #{$len}px;
+//         }
+//     }
+// }
