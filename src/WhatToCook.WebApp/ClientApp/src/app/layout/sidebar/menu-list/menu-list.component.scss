@@ -1,8 +1,21 @@
-.main-menu-nav
-{
-margin-top: 20%;
-line-height: 30px;
-border-top: 1px solid black;
-padding-top: 15px;
-padding-left: 30px
+@import '_variables';
+
+.menu-list {
+    margin-top: 20%;
+    line-height: 30px;
+    border-top: 1px solid black;
+    padding-top: 15px;
+
+    &-item {
+        padding-left: 30px;
+    }
+
+
+    &-item:hover {
+        background-color: $blue-background;
+
+        >a {
+            color: $white;
+        }
+    }
 }

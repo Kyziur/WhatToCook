@@ -1,16 +1,10 @@
-.d-flex {
-    display: flex;
-    
-}
-
-
+@import '_variables';
 
 .container {
     width: 80%;
-    margin: auto;
-    //color for test
-    
-    
+    display: flex;
+    justify-content: center;
+    margin-top: 100px;
 }
 
 .sidebar-container {
@@ -18,13 +12,12 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: #FFECD1;
+    background-color: $pink-background;
     position: sticky;
     top: 0;
 
 
     @media screen and (max-width: 576px) {
         min-width: 108px;
-
     }
 }

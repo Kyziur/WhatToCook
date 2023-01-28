@@ -1,4 +1,5 @@
 @import "_variables";
+@import "defaults";
 
 .search-container {
     position: fixed;
@@ -8,12 +9,11 @@
     .search-wrapper {
         position: relative;
         display: flex;
-
         color: black;
     }
 
     .search-input {
-        border: 1px solid $green-background;
+        border: 1px solid $blue-background;
         background-color: white;
         padding: 0.5rem;
         width: 600px;
@@ -28,13 +28,13 @@
     .search-button {
         color: white;
         border: 0;
-        padding: 0.5rem;
+        padding: 0.75rem;
         overflow: hidden;
-        background-color: #70a9a194;
+        background-color: $blue-background;
         border-radius: 0 15px 15px 0;
 
         &:hover {
-            background-color: $green-background;
+            background-color: $darker-blue-background;
         }
     }
 }
