@@ -10,6 +10,8 @@ import { RecipeViewComponent } from './recipes/recipe-view/recipe-view.component
 import { RecipeCardComponent } from './recipes/recipe-card/recipe-card.component';
 import { RecipesModule } from './recipes/recipes.module';
 import { RecipesComponent } from './recipes/recipes.component';
+
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -24,10 +26,10 @@ import { RecipesComponent } from './recipes/recipes.component';
       { path: 'recipes', component: RecipeListComponent},
       { path: '', redirectTo: "recipes", pathMatch: 'full'},
       { path: 'recipe', component: RecipeViewComponent},
-      
-
     ]),
-    LayoutModule
+    LayoutModule,
+   
+  
   ],
   providers: [],
   bootstrap: [AppComponent]

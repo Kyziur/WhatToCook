@@ -1,20 +1,16 @@
 .d-flex {
     display: flex;
+    
 }
 
-.recipe-card-img {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    height: 100vh;
-}
+
 
 .container {
     width: 80%;
-    margin: 0 auto;
+    margin: auto;
     //color for test
-    background-color: blue;
+    
+    
 }
 
 .sidebar-container {
@@ -22,7 +18,13 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: #fff;
+    background-color: #FFECD1;
     position: sticky;
     top: 0;
+
+
+    @media screen and (max-width: 576px) {
+        min-width: 108px;
+
+    }
 }

@@ -4,18 +4,19 @@ import { RecipesComponent } from './recipes.component';
 import { RecipeListComponent } from './recipe-list/recipe-list.component';
 import { RecipeCardComponent } from './recipe-card/recipe-card.component';
 import { RecipeViewComponent } from './recipe-view/recipe-view.component';
-
+import { SharedModule } from '../shared/shared.module';
+import { SearchComponent } from '../shared/search/search.component';
 
 @NgModule({
   declarations: [
     RecipesComponent,
     RecipeListComponent,
     RecipeCardComponent,
-
-    RecipeViewComponent
+    RecipeViewComponent,
   ],
   imports: [
-    CommonModule
+    CommonModule,
+    SharedModule
   ],
   exports: [
     RecipeCardComponent,

@@ -5,6 +5,6 @@ import { Component } from '@angular/core';
   templateUrl: './menu-list.component.html',
   styleUrls: ['./menu-list.component.scss']
 })
-export class MenuListComponent {
+export class MenuListComponent { 
 
 }

@@ -4,6 +4,7 @@ export interface RecipeCardViewModel {
   name: string;
   img: string;
   description: string;
+ 
 }
 
 @Component({
