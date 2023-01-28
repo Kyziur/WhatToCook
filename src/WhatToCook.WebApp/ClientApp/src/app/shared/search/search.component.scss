@@ -1,0 +1,40 @@
+@import "_variables";
+@import "defaults";
+
+.search-container {
+    position: fixed;
+    left: 40%;
+    top: 30px;
+
+    .search-wrapper {
+        position: relative;
+        display: flex;
+        color: black;
+    }
+
+    .search-input {
+        border: 1px solid $blue-background;
+        background-color: white;
+        padding: 0.5rem;
+        width: 600px;
+        margin: auto;
+        text-align: center;
+        font-size: 1.3rem;
+        overflow: hidden;
+        color: #4a4a4a;
+        border-radius: 15px 0 0 15px;
+    }
+
+    .search-button {
+        color: white;
+        border: 0;
+        padding: 0.75rem;
+        overflow: hidden;
+        background-color: $blue-background;
+        border-radius: 0 15px 15px 0;
+
+        &:hover {
+            background-color: $darker-blue-background;
+        }
+    }
+}

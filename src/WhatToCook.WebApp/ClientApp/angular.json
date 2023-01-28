@@ -32,6 +32,11 @@
             "styles": [
               "src/styles.scss"
             ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "src/styles"
+              ]
+            },
             "scripts": []
           },
           "configurations": {
@@ -75,7 +80,8 @@
             },
             "development": {
               "browserTarget": "WhatToCook:build:development",
-              "proxyConfig": "proxy.conf.js"
+              "proxyConfig": "proxy.conf.js",
+              "host": "127.0.0.1"
             }
           },
           "defaultConfiguration": "development"

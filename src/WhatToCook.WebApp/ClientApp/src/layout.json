@@ -1,0 +1,16 @@
+- AppModule - configure routing if necessary
+    - AppComponent
+- LayoutModule 
+    - LayoutComponent <router-outlet>
+    - MainComponent
+    - SidebarComponent
+    - MenuListComponent
+    - ProfileComponent
+-RecipesModule (imports SharedModule) - configure routing
+    -RecipeListComponent URL: /recipes
+    -RecipeCardComponent 
+    -SearchComponent
+    -RecipeViewComponent URL: /recipes/name/
+-SharedModule
+    -FavouritesButton 
+

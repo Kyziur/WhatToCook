@@ -1,0 +1,84 @@
+@import "_variables";
+
+.d-flex {
+    display: flex;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.btn {
+    color: black;
+    border: 0;
+    padding: 0.5rem 1rem;
+    overflow: hidden;
+
+    border-radius: 1rem 1rem 1rem 1rem;
+    display: inline-block;
+    background-color: white;
+
+
+    &-green {
+        color: $white;
+        background-color: $blue-background;
+
+        &:hover {
+            background-color: $darker-blue-background;
+            color: $white;
+        }
+    }
+}
+
+
+.pr-2 {
+    padding-right: 2rem;
+}
+
+.pl-2 {
+    padding-left: 2rem;
+}
+
+
+// $paddingDirection: (
+//     ''
+//     'right',
+//     'left',
+//     'top',
+//     'bottom'
+// );
+// $paddingLength: (
+//     1,
+//     2,
+//     3,
+//     4
+// );
+
+// @each $len in $paddingLength {
+//     .padding-#{$len} {
+//         padding: #{$len/2}rem;
+//     }
+// }
+
+// // if you want to use padding-left, padding-right etc.
+// @each $dir in $paddingDirection {
+//     @each $len in $paddingLength {
+//         .padding-#{$dir}-#{$len} {
+//             padding-#{$dir}: #{$len/2}rem;
+//         }
+//     }
+// }
+
+// @each $len in $paddingLength {
+//     %padding-#{$len} {
+//         padding: #{$len}px;
+//     }
+// }
+
+// @each $dir in $paddingDirection {
+//     @each $len in $paddingLength {
+//         %padding-#{$dir}-#{$len} {
+//             padding-#{$dir}: #{$len}px;
+//         }
+//     }
+// }
