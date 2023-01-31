@@ -1,0 +1,40 @@
+<div class="container">
+    <legend>Job Portal</legend>
+    <div class="row">
+      <div class="col col-md-8" style="overflow-y: scroll; max-height: 100vh">
+        <form [formGroup]="jobForm" (ngSubmit)="save()">
+          <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="name"
+              formControlName="name"
+            />
+          </div>
+          <div class="mb-3">
+            <label for="ingredients" class="form-label">Ingredients</label>
+            <input
+              type="text"
+              class="form-control"
+              id="ingredients"
+              formControlName="ingredients"
+            />
+          </div>
+          <div class="mb-3">
+            <label for="preperationDescription" class="form-label">Preperation description</label>
+            <input
+              type="text"
+              class="form-control"
+              id="preperationDescription"
+              formControlName="preperationDescription"
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+      </div>
+      <div class="col col-md-4">
+        <div style="position: fixed">{{ preview }}</div>
+      </div>
+    </div>
+  </div>
