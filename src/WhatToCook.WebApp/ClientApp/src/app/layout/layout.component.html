@@ -1,9 +1,13 @@
 <div class="d-flex">
-    <div class="sidebar-container">
+
+    <div class="header" *ngIf="!(isNotMobile$ | async)">
+        <button (click)="showMenu()">CLICK ME</button>
+    </div>
+    <div [ngClass]="{'space-from-header': (isSidebarVisible$ | async)}" class="sidebar-container"
+        *ngIf="((isNotMobile$ |async) || (isSidebarVisible$ | async))">
         <app-sidebar></app-sidebar>
     </div>
- 
+
     <div class="container">
         <router-outlet></router-outlet>
-        
-</div>
+    </div>

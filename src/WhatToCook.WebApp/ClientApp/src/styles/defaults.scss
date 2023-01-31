@@ -4,6 +4,10 @@
     display: flex;
 }
 
+.d-grid {
+    display: grid;
+}
+
 .justify-center {
     justify-content: center;
 }
@@ -31,54 +35,62 @@
 }
 
 
-.pr-2 {
-    padding-right: 2rem;
+$direction: (
+    "right":"r",
+    "left":"l",
+    "top":"t",
+    "bottom": "b"
+);
+
+$length: (
+    0,
+    1,
+    2,
+    3,
+    4
+);
+
+@each $len in $length {
+    .p-#{$len} {
+        padding: #{$len/2}rem;
+    }
+
+    .m-#{$len} {
+        margin: #{$len/2}rem;
+    }
 }
 
-.pl-2 {
-    padding-left: 2rem;
+@each $dir,
+$shortDir in $direction {
+    @each $len in $length {
+        .p#{$shortDir}-#{$len} {
+            padding-#{$dir}: #{$len/2}rem;
+        }
+
+        .m#{$shortDir}-#{$len} {
+            margin-#{$dir}: #{$len/2}rem;
+        }
+    }
 }
 
+/// Mixin to manage responsive breakpoints
+/// @author Kitty Giraudel
+/// @param {String} $breakpoint - Breakpoint name
+/// @require $breakpoints
+@mixin respond-to($breakpoint) {
 
-// $paddingDirection: (
-//     ''
-//     'right',
-//     'left',
-//     'top',
-//     'bottom'
-// );
-// $paddingLength: (
-//     1,
-//     2,
-//     3,
-//     4
-// );
+    // If the key exists in the map
+    @if map-has-key($breakpoints, $breakpoint) {
 
-// @each $len in $paddingLength {
-//     .padding-#{$len} {
-//         padding: #{$len/2}rem;
-//     }
-// }
+        // Prints a media query based on the value
+        @media #{inspect(map-get($breakpoints, $breakpoint))} {
+            @content;
+        }
+    }
 
-// // if you want to use padding-left, padding-right etc.
-// @each $dir in $paddingDirection {
-//     @each $len in $paddingLength {
-//         .padding-#{$dir}-#{$len} {
-//             padding-#{$dir}: #{$len/2}rem;
-//         }
-//     }
-// }
-
-// @each $len in $paddingLength {
-//     %padding-#{$len} {
-//         padding: #{$len}px;
-//     }
-// }
-
-// @each $dir in $paddingDirection {
-//     @each $len in $paddingLength {
-//         %padding-#{$dir}-#{$len} {
-//             padding-#{$dir}: #{$len}px;
-//         }
-//     }
-// }
+    // If the key doesn't exist in the map
+    @else {
+        @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "
+        +"Available breakpoints are: #{map-keys($breakpoints)}.";
+    }
+}
