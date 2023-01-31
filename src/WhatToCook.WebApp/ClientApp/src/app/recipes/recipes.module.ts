@@ -8,7 +8,7 @@ import { SharedModule } from '../shared/shared.module';
 import { SearchComponent } from '../shared/search/search.component';
 import { Routes, RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
-
+import { HttpClientModule } from '@angular/common/http';
 const routes: Routes = [
   {
     path: 'recipes',
@@ -32,6 +32,7 @@ const routes: Routes = [
     SharedModule,
     RouterModule.forChild(routes),
     ReactiveFormsModule,
+    HttpClientModule
   ],
   exports: [
     RecipeCardComponent,

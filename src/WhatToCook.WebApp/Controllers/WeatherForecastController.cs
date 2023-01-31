@@ -3,7 +3,7 @@
 namespace WhatToCook.WebApp.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/v1/[controller]")]
 public class WeatherForecastController : ControllerBase
 {
     private static readonly string[] Summaries = new[]
@@ -28,5 +28,26 @@ public class WeatherForecastController : ControllerBase
             Summary = Summaries[Random.Shared.Next(Summaries.Length)]
         })
         .ToArray();
+    }
+
+    public class RecipeRequest
+    {
+        public string Name { get; set; }
+        public string Ingredients { get; set; }
+        public string PreperationDescription { get; set; }
+    }
+
+    [HttpPost]
+    public ActionResult Post(RecipeRequest request)
+    {
+        RecipeRequest recipeRequest = new()
+        {
+            Name = request.Name + "resp",
+            Ingredients = request.Ingredients + "resp",
+            PreperationDescription = request.PreperationDescription + "resp"
+
+        };
+
+        return Ok(recipeRequest);
     }
 }
