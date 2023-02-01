@@ -35,3 +35,10 @@ $headerHeight: 40px;
 .space-from-header {
     margin-top: $headerHeight;
 }
+
+.burger-menu {
+    all: unset;
+    background-color: transparent;
+    cursor: pointer;
+    padding: 0.2rem;
+}
