@@ -3,6 +3,7 @@ using WhatToCook.Application.Domain;
 
 namespace WhatToCook.Application.Infrastructure;
 
+
 public static class DataSeeder
 {
     public static void Seed(this ModelBuilder modelBuilder)

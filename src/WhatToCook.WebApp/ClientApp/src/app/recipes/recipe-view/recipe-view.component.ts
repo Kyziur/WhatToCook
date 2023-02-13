@@ -27,7 +27,7 @@ export class RecipeViewComponent implements OnInit {
  
   recipeForm = this.fb.group({
     name: '',
-    ingredients: '',
+    ingredients: [''],
     preperationDescription: '',
     timeToPrepare: '',
   })

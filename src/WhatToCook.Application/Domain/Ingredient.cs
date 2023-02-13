@@ -1,5 +1,8 @@
 ﻿namespace WhatToCook.Application.Domain;
 
+/// <summary>
+/// 
+/// </summary>
 public class Ingredient
 {
     public int Id { get; set; }

@@ -1,5 +1,4 @@
-﻿
-namespace WhatToCook.Application.Domain;
+﻿namespace WhatToCook.Application.Domain;
 
 public class Recipe
 {
@@ -16,5 +15,4 @@ public class Statistics
     public int Id { get; set; }
     public int Shares { get; set; }
     public int Views { get; set; }
-
 }
