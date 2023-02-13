@@ -1,4 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using WhatToCook.Application.Domain;
+using WhatToCook.Application.Infrastructure;
 
 namespace WhatToCook.WebApp.Controllers;
 
@@ -12,10 +15,11 @@ public class WeatherForecastController : ControllerBase
 };
 
     private readonly ILogger<WeatherForecastController> _logger;
-
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    private DatabaseContext _dbcontext;
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, DatabaseContext dbcontext)
     {
         _logger = logger;
+        _dbcontext = dbcontext;
     }
 
     [HttpGet]
@@ -35,19 +39,30 @@ public class WeatherForecastController : ControllerBase
         public string Name { get; set; }
         public string Ingredients { get; set; }
         public string PreperationDescription { get; set; }
-    }
 
+        public string TimeToPrepare { get; set; }
+    }
+    
     [HttpPost]
     public ActionResult Post(RecipeRequest request)
     {
-        RecipeRequest recipeRequest = new()
+        var ingredients = new List<Ingredient>()
         {
-            Name = request.Name + "resp",
-            Ingredients = request.Ingredients + "resp",
-            PreperationDescription = request.PreperationDescription + "resp"
-
+            new Ingredient()
+            {
+                Name = request.Ingredients,
+            }
         };
-
-        return Ok(recipeRequest);
+        var recipe = new Recipe()
+        {
+            Name = request.Name,
+            Ingredients = ingredients,
+            Description = request.PreperationDescription,
+            TimeToPrepare = request.TimeToPrepare,
+        };
+        this._dbcontext.Recipes.Add(recipe);
+        this._dbcontext.SaveChanges();
+        return Ok();
     }
+
 }

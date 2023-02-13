@@ -1,27 +1,79 @@
 <div class="container">
-  <legend>Job Portal</legend>
-  <div class="row">
-    <div class="col col-md-8" style="overflow-y: scroll; max-height: 100vh">
-      <form [formGroup]="jobForm" (ngSubmit)="save()">
+  <legend>Recipe portal</legend>
+
+  <div class="recipeForm">
+    <div>
+      <form [formGroup]="recipeForm" (ngSubmit)="save()">
         <div class="mb-3">
           <label for="name" class="form-label">Name</label>
           <input type="text" class="form-control" id="name" formControlName="name" />
         </div>
         <div class="mb-3">
           <label for="ingredients" class="form-label">Ingredients</label>
-          <input type="text" class="form-control" id="ingredients" formControlName="ingredients" />
+          <input type="text"formControlName="ingredients" />
+          <input type="text"formControlName="ingredients" />
+          <input type="text"formControlName="ingredients" />
+          <input type="text"formControlName="ingredients" />
+          <input type="text"formControlName="ingredients" />
+          <input type="text"formControlName="ingredients" />
         </div>
         <div class="mb-3">
           <label for="preperationDescription" class="form-label">Preperation description</label>
-          <input type="text" class="form-control" id="preperationDescription"
-            formControlName="preperationDescription" />
+          <input type="text" formControlName="preperationDescription" />
         </div>
+        <div class ="timeToPrepare-form" formControlName="timeToPrepare">
+          <label for="timeToPrepare" class="form-label">Time to Prepare</label>
+          <input type="text" class="form-control" id="timeToPrepare"
+            formControlName="timeToPrepare" />
+          
+        </div>
+        <!-- <div class ="timeToPrepare-form" formControlName="timeToPrepare">
+          <label for="timeToPrepare">Estimated time to prepare </label>
+          <select> 
+            <option>Short (less than 20mins) </option>
+            <option>Medium (between 20 and 40 mins)</option>
+            <option>Long (Longer than 40mins)</option>
+          </select>
+        </div> -->
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+    </div>
+    <div>
+      <div>PREVIEW1: {{ preview }}</div>
+      <div>PREVIEW2: {{ preview2 }}</div>
+    </div>
+
+  <!-- <div class="row">
+    <div class="col col-md-8">
+      <form [formGroup]="recipeForm" (ngSubmit)="save()">
+        <div class="name-form">
+          <label for="name">Name </label>
+          <input type="text" class="name" formControlName="name" />
+        </div>
+        <div class="ingredients-form">
+          <label for="ingredients" class="form-label">Ingredients </label>
+          <input type="text" class="ingredients" formControlName="ingredients" />
+        </div>
+        <div class="preperation-form">
+          <label for="preperationDescription">Preperation description </label>
+          <textarea type="text" class="preperationDescription"
+            formControlName="preperationDescription"> </textarea>
+        </div>
+        <div class ="estimatedTime-form" formControlName="estimatedTime">
+          <label for="estimedTime">Estimated time to prepare </label>
+          <select> 
+            <option>Short (less than 20mins) </option>
+            <option>Medium (between 20 and 40 mins)</option>
+            <option>Long (Longer than 40mins)</option>
+          </select>
+        </div>
+
         <button type="submit" class="btn btn-primary">Submit</button>
       </form>
     </div>
     <div class="col col-md-4">
       <div>PREVIEW1: {{ preview }}</div>
       <div>PREVIEW2: {{ preview2 }}</div>
-    </div>
+    </div> -->
   </div>
 </div>
