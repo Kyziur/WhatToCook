@@ -1,10 +1,11 @@
 <div class="recipe-card-wrapper">
-    <div class="recipe-card">
-        <a class="card-description" href="#">
-            <img alt="Photo of {{recipeCard?.name}}" class="recipe-card-img" src="{{recipeCard?.img ?? ''}}">
+    <div class="recipe-card" (click)="viewRecipeDetails(recipe?.name)">
+        <a class="card-description">
             <div class="recipe-card-title-container">
-                <span class="recipe-card-title">{{recipeCard?.name ?? ""}}</span>
+                <span class="recipe-card-title">{{ recipe?.name }}</span>
             </div>
         </a>
     </div>
 </div>
+
+<!-- <img alt="Photo of {{recipeCard?.name}}" class="recipe-card-img" src="{{recipeCard?.img ?? ''}}"> -->

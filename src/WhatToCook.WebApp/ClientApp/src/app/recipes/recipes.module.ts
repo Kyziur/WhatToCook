@@ -6,9 +6,10 @@ import { RecipeCardComponent } from './recipe-card/recipe-card.component';
 import { RecipeViewComponent } from './recipe-view/recipe-view.component';
 import { SharedModule } from '../shared/shared.module';
 import { SearchComponent } from '../shared/search/search.component';
-import { Routes, RouterModule } from '@angular/router';
+import { Routes, RouterModule, Router } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+
 const routes: Routes = [
   {
     path: 'recipes',
@@ -17,6 +18,10 @@ const routes: Routes = [
   {
     path: 'recipes/new',
     component: RecipeViewComponent,
+  },
+  {
+    path: 'recipes/:name',
+    component: RecipesComponent,
   }
 ];
 
@@ -39,6 +44,7 @@ const routes: Routes = [
     RecipeViewComponent,
     RecipesComponent,
     RecipeListComponent,
+    RouterModule,
   ],
 
 })
