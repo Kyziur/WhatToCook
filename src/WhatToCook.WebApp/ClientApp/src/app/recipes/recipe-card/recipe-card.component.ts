@@ -20,7 +20,7 @@ export class RecipeCardComponent {
     if(name === undefined){
       return
     }
-    this.router.navigate(['/recipes', name])
+    this.router.navigate([`/recipes/${name}`])
   }
 }
  // recipeCard: CreateRecipe | undefined;

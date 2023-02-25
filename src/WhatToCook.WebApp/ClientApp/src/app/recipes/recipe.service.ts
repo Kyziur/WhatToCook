@@ -10,12 +10,19 @@ import { CreateRecipe } from './recipe-view/CreateRecipe';
   providedIn: 'root'
 })
 export class RecipeService {
-  constructor(private httpClient: HttpClient, @Inject('BASE_URL') private baseUrl: string) { }
+  recipeUrl = "";
+  constructor(private httpClient: HttpClient, @Inject('BASE_URL') private baseUrl: string) {
+    this.recipeUrl =  this.baseUrl + 'api/v1/Recipe';
+  }
   create(recipe: CreateRecipe){
    return this.httpClient.post<CreateRecipe>(this.baseUrl + 'api/v1/Recipe', recipe)
   }
   get(): Observable<Recipe[]> {
     return this.httpClient.get<Recipe[]>(`${this.baseUrl}api/v1/Recipe`);
+  }
+
+  getByName(name: string): Observable<Recipe> {
+    return this.httpClient.get<Recipe>(`${this.recipeUrl}/${name}`);
   }
 
 }

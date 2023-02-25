@@ -21,7 +21,7 @@ const routes: Routes = [
   },
   {
     path: 'recipes/:name',
-    component: RecipesComponent,
+    component: RecipeViewComponent,
   }
 ];
 
