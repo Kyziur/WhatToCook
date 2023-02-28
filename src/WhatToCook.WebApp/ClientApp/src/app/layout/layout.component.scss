@@ -1,44 +1,46 @@
 @import '_variables';
 @import 'defaults';
 
-$headerHeight: 40px;
+$headerHeight: 60px;
 
 
 .container {
-    width: 80%;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 100px;
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 100px;
 }
 
 .sidebar-container {
-    min-width: 150px;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background-color: $pink-background;
-    position: sticky;
-    top: 0;
+  min-width: 150px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: $pink-background;
+  position: sticky;
+  top: 0;
+  z-index: 99;
 }
 
 .header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 100;
-    width: 100%;
-    display: block;
-    height: $headerHeight;
-    background-color: $pink-background;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  width: 100%;
+  height: $headerHeight;
+  background-color: $pink-background;
+  display: flex;
 }
 
 .space-from-header {
-    margin-top: $headerHeight;
+  margin-top: $headerHeight;
 }
 
 .burger-menu {
-    all: unset;
-    background-color: transparent;
-    cursor: pointer;
-    padding: 0.2rem;
+  all: unset;
+  background-color: transparent;
+  cursor: pointer;
+  padding: 0.2rem;
+  margin-left: 1rem;
 }
