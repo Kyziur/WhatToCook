@@ -1,14 +1,29 @@
-<div class="container">
+<div *ngIf="isEditable; then editable else view "></div>
 
+<ng-template #view>
+  <h2>{{ recipe?.name }}</h2>
+  <ul>
+    <li *ngFor="let ingredient of recipe?.ingredients">{{ ingredient }}</li>
+  </ul>
+  <p>{{ recipe?.preparationDescription }}</p>
+  <p>Time to prepare: {{ recipe?.timeToPrepare }}</p>
+
+  <button type="button" (click)="enableEdit()">Edit</button>
+</ng-template>
+
+<ng-template #editable>
   <ng-container *ngIf="recipeForm">
     <form [formGroup]="recipeForm">
       <div class="form-group">
         <label>Name:</label>
         <input type="text" formControlName="name" class="form-control">
       </div>
-      <div class="form-group">
-        <label>Ingredients:</label>
-        <input type="text" formControlName="ingredients" class="form-control">
+      <div formArrayName="ingredients" class="mb-3">
+        <label class="form-label">Ingredients</label>
+        <div *ngFor="let ingredient of ingredientsControls.controls; let i=index">
+          <input title="Ingredient input" type="text" [formControlName]="i" />
+        </div>
+        <button type="button" (click)="addIngredient()">Add ingredient</button>
       </div>
       <div class="form-group">
         <label>Preparation Description:</label>
@@ -18,67 +33,9 @@
         <label>Time to Prepare:</label>
         <input type="text" formControlName="timeToPrepare" class="form-control">
       </div>
-      <button type="submit" class="btn btn-primary" [disabled]="!recipeForm.valid">Submit</button>
+      <button type="button" (click)="save()">Save</button>
+      <button type="submit" [disabled]="!recipeForm.valid">Submit</button>
+
     </form>
   </ng-container>
-  
-  <ng-container *ngIf="recipe">
-    <h2>{{ recipe.name }}</h2>
-    <ul>
-      <li *ngFor="let ingredient of recipe.ingredients">{{ ingredient }}</li>
-    </ul>
-    <p>{{ recipe.preparationDescription }}</p>
-    <p>Time to prepare: {{ recipe.timeToPrepare }}</p>
-  </ng-container>
-
-  <div class="container">
-    <ng-container *ngTemplateOutlet="recipeFormTemplate; context: { recipeForm: recipeFormTemplate }"></ng-container>
-    <ng-container *ngTemplateOutlet="recipeViewTemplate; context: { recipe: recipeViewTemplate }"></ng-container>
-  </div>
-  
-  <ng-template #recipeFormTemplate let-recipeForm>
-    <app-recipe-view [recipeForm]="recipeFormTemplate"></app-recipe-view>
-  </ng-template>
-  
-  <ng-template #recipeViewTemplate let-recipe>
-    <app-recipe-view [recipe]="recipeViewTemplate"></app-recipe-view>
-  </ng-template>
-  
-  <!-- <legend>Recipe portal</legend>
-
-  <div class="recipeForm">
-    <div>
-      <form [formGroup]="recipeForm" (ngSubmit)="save()">
-        <div class="mb-3">
-          <label for="name" class="form-label">Name</label>
-          <input type="text" class="form-control" id="name" formControlName="name" />
-        </div>
-        <div formArrayName="ingredients" class="mb-3">
-          <label for="ingredients" class="form-label">Ingredients</label>
-          <div *ngFor="let ingredient of ingredientsControls.controls; let i=index">
-            <input title="Ingredient input" type="text" [formControlName]="i" />
-          </div>
-          <button type="button" (click)="addIngredient()">Add ingredient</button>
-        </div>
-        <div class="mb-3">
-          <label for="preperationDescription" class="form-label">Preperation description</label>
-          <input type="text" formControlName="preperationDescription" />
-        </div>
-        <div class="timeToPrepare-form">
-          <label for="timeToPrepare" class="form-label">Time to Prepare</label>
-          <select formControlName="timeToPrepare" >
-            <option value="">--Please choose an option--</option>
-            <option *ngFor="let option of timeToPrepareOptions" value="{{option}}">{{option}}</option>
-          </select>
-
-        </div>
-        <button type="submit" class="">Submit</button>
-      </form>
-    </div>
-    <div>
-      <div>PREVIEW1: {{ preview }}</div>
-      <div>PREVIEW2: {{ preview2 }}</div>
-      <div>PREVIEW3: {{ preview3 }}</div>
-    </div>
-  </div> -->
-</div>
+</ng-template>
