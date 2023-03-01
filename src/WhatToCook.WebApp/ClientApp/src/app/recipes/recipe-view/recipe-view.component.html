@@ -1,5 +1,50 @@
 <div class="container">
-  <legend>Recipe portal</legend>
+
+  <ng-container *ngIf="recipeForm">
+    <form [formGroup]="recipeForm">
+      <div class="form-group">
+        <label>Name:</label>
+        <input type="text" formControlName="name" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Ingredients:</label>
+        <input type="text" formControlName="ingredients" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Preparation Description:</label>
+        <textarea formControlName="preparationDescription" class="form-control"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Time to Prepare:</label>
+        <input type="text" formControlName="timeToPrepare" class="form-control">
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="!recipeForm.valid">Submit</button>
+    </form>
+  </ng-container>
+  
+  <ng-container *ngIf="recipe">
+    <h2>{{ recipe.name }}</h2>
+    <ul>
+      <li *ngFor="let ingredient of recipe.ingredients">{{ ingredient }}</li>
+    </ul>
+    <p>{{ recipe.preparationDescription }}</p>
+    <p>Time to prepare: {{ recipe.timeToPrepare }}</p>
+  </ng-container>
+
+  <div class="container">
+    <ng-container *ngTemplateOutlet="recipeFormTemplate; context: { recipeForm: recipeFormTemplate }"></ng-container>
+    <ng-container *ngTemplateOutlet="recipeViewTemplate; context: { recipe: recipeViewTemplate }"></ng-container>
+  </div>
+  
+  <ng-template #recipeFormTemplate let-recipeForm>
+    <app-recipe-view [recipeForm]="recipeFormTemplate"></app-recipe-view>
+  </ng-template>
+  
+  <ng-template #recipeViewTemplate let-recipe>
+    <app-recipe-view [recipe]="recipeViewTemplate"></app-recipe-view>
+  </ng-template>
+  
+  <!-- <legend>Recipe portal</legend>
 
   <div class="recipeForm">
     <div>
@@ -35,5 +80,5 @@
       <div>PREVIEW2: {{ preview2 }}</div>
       <div>PREVIEW3: {{ preview3 }}</div>
     </div>
-  </div>
+  </div> -->
 </div>

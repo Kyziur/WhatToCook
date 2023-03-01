@@ -1,5 +1,5 @@
 import {HttpClient} from '@angular/common/http';
-import {Component, Inject, OnInit, Type} from '@angular/core';
+import {Component, Inject, OnInit, Type, Input} from '@angular/core';
 import {FormControl, FormGroup, FormBuilder, FormArray} from '@angular/forms';
 import {ReactiveFormsModule} from '@angular/forms';
 import {CreateRecipe} from './CreateRecipe';
@@ -17,6 +17,7 @@ export class RecipeViewComponent implements OnInit {
   timeToPrepareOptions = ["Short", "Medium", "Long"];
   recipe?: Recipe;
 
+ 
   constructor(private fb: FormBuilder, private recipeService: RecipeService, private router: Router, private route: ActivatedRoute,) {
   }
 

@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RecipesComponent } from './recipes.component';
 import { RecipeListComponent } from './recipe-list/recipe-list.component';
 import { RecipeCardComponent } from './recipe-card/recipe-card.component';
 import { RecipeViewComponent } from './recipe-view/recipe-view.component';
@@ -27,7 +26,6 @@ const routes: Routes = [
 
 @NgModule({
   declarations: [
-    RecipesComponent,
     RecipeListComponent,
     RecipeCardComponent,
     RecipeViewComponent,
@@ -42,7 +40,6 @@ const routes: Routes = [
   exports: [
     RecipeCardComponent,
     RecipeViewComponent,
-    RecipesComponent,
     RecipeListComponent,
     RouterModule,
   ],
