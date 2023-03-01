@@ -6,6 +6,13 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {Recipe} from "../Recipe";
 import {NEVER, of, switchMap} from "rxjs";
 
+
+export enum DisplayMode {
+  New,
+  Edit,
+  View
+}
+
 @Component({
   selector: 'app-recipe-view',
   templateUrl: './recipe-view.component.html',
@@ -58,19 +65,35 @@ export class RecipeViewComponent implements OnInit {
     });
   }
 
+  getDisplayMode(): DisplayMode {
+    //If there is no recipe then it means that we want to create a new one
+    if (!this.recipe) {
+      return DisplayMode.New;
+    }
+
+    //If there is a recipe and it is editable then it means that it is edit mode
+    if (this.isEditable) {
+      return DisplayMode.Edit;
+    }
+
+    return DisplayMode.View;
+  }
+
   enableEdit() {
     this.isEditable = true;
   }
 
-  save() {
-    //TODO: ADD REQUEST TO API TO UPDATE EDITED RECIPE
-    //AFTER SAVE RELOAD DATA
-    this.isEditable = false;
+  submit() {
+    if (DisplayMode.Edit) {
+      //TODO: ADD REQUEST TO API TO UPDATE EDITED RECIPE
+      //AFTER SAVE RELOAD DATA
+    }
+
+    if (DisplayMode.New) {
+      this.recipeService.create(this.recipeForm?.value as CreateRecipe).subscribe(x => this.handleSuccesfulSave())
+    }
   }
 
-  submit() {
-    this.recipeService.create(this.recipeForm?.value as CreateRecipe).subscribe(x => this.handleSuccesfulSave())
-  }
 
   addIngredient() {
     this.ingredientsControls.push(this.fb.nonNullable.control(''));
