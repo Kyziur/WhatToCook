@@ -14,7 +14,12 @@ import {NEVER, of, switchMap} from "rxjs";
 export class RecipeViewComponent implements OnInit {
   timeToPrepareOptions = ["Short", "Medium", "Long"];
   recipe?: Recipe;
-  recipeForm: FormGroup | null = null;
+  recipeForm: FormGroup<{
+    name: FormControl<string>;
+    ingredients: FormArray<FormControl<string>>;
+    preparationDescription: FormControl<string>;
+    timeToPrepare: FormControl<string>
+  }> | null = null;
   isEditable: boolean = false;
 
   constructor(private fb: FormBuilder, private recipeService: RecipeService, private router: Router, private route: ActivatedRoute) {
@@ -42,7 +47,7 @@ export class RecipeViewComponent implements OnInit {
     this.route.params.pipe(switchMap(params => {
       console.error('params', params);
       const name = params['name']
-      if(!name){
+      if (!name) {
         return of(undefined);
       }
       return this.recipeService.getByName(name);
@@ -56,7 +61,8 @@ export class RecipeViewComponent implements OnInit {
   enableEdit() {
     this.isEditable = true;
   }
-  save(){
+
+  save() {
     //TODO: ADD REQUEST TO API TO UPDATE EDITED RECIPE
     //AFTER SAVE RELOAD DATA
     this.isEditable = false;
@@ -75,7 +81,7 @@ export class RecipeViewComponent implements OnInit {
       return this.createStringControl(ingredient)
     }) ?? [];
 
-    if(ingredientsControls.length === 0){
+    if (ingredientsControls.length === 0) {
       ingredientsControls.push(this.createStringControl(undefined))
     }
 
