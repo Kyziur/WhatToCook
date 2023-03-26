@@ -35,7 +35,7 @@ public class RecipeController : ControllerBase
             return NotFound();
         }
 
-        var recipe = await _dbcontext.Recipes.FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower());
+        var recipe = await _dbcontext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower());
         if (recipe is null)
         {
             return NotFound();
@@ -98,13 +98,7 @@ public class RecipeController : ControllerBase
         public string PreparationDescription { get; set; }
         public string TimeToPrepare { get; set; }
     }
-    
-    //[HttpPut]
-    //public void Put([FromBody]UpdateRecipeRequest request)
-    //{
-
-    //}
-
+   
     [HttpPut]
     public async Task<ActionResult> Put([FromBody] UpdateRecipeRequest request)
     {
@@ -119,6 +113,7 @@ public class RecipeController : ControllerBase
         recipe.Name = request.Name;
         recipe.Description = request.PreparationDescription;
         recipe.TimeToPrepare = request.TimeToPrepare;
+
 
         // Clear the existing ingredients and add the updated ones
         recipe.Ingredients.Clear();

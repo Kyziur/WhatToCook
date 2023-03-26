@@ -104,29 +104,6 @@ export class RecipeViewComponent implements OnInit {
       this.recipeService.create(this.recipeForm?.value as CreateRecipe).subscribe((x) => this.handleSuccesfulSave());
     }
   }
-  
-  /* submit() {
-    if (DisplayMode.Edit && this.recipeForm) {
-      const updatedRecipe= {
-        id: this.recipe?.id ?? 0,
-        ...this.recipeForm.getRawValue()
-      };
-      this.recipeService.put(updatedRecipe).subscribe(() => {
-        this.recipeService.getByName(updatedRecipe.name).subscribe(recipe => {
-          this.recipe = recipe;
-          this.loadFormData(recipe);
-        });
-      });
-    
-      //TODO: ADD REQUEST TO API TO UPDATE EDITED RECIPE
-      //AFTER SAVE RELOAD DATA
-    }
-
-    if (DisplayMode.New) {
-      this.recipeService.create(this.recipeForm?.value as CreateRecipe).subscribe(x => this.handleSuccesfulSave())
-    }
-  }
- */
 
   addIngredient() {
     this.ingredientsControls.push(this.fb.nonNullable.control(''));

@@ -29,6 +29,7 @@
         <label>Name:</label>
         <input type="text" formControlName="name" class="form-control">
       </div>
+      
       <div formArrayName="ingredients" class="mb-3">
         <label class="form-label">Ingredients</label>
         <div *ngFor="let ingredient of ingredientsControls.controls; let i=index">
