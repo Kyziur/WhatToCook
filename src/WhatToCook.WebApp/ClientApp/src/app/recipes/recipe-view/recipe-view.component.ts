@@ -84,7 +84,18 @@ export class RecipeViewComponent implements OnInit {
   }
 
   submit() {
-    if (DisplayMode.Edit) {
+    if (DisplayMode.Edit && this.recipeForm) {
+      const updatedRecipe= {
+        id: this.recipe?.id ?? 0,
+        ...this.recipeForm.getRawValue()
+      };
+      this.recipeService.put(updatedRecipe).subscribe(() => {
+        this.recipeService.getByName(updatedRecipe.name).subscribe(recipe => {
+          this.recipe = recipe;
+          this.loadFormData(recipe);
+        });
+      });
+    
       //TODO: ADD REQUEST TO API TO UPDATE EDITED RECIPE
       //AFTER SAVE RELOAD DATA
     }
@@ -115,7 +126,7 @@ export class RecipeViewComponent implements OnInit {
       timeToPrepare: this.createStringControl(recipe?.timeToPrepare)
     })
   }
-
+//return current time 
   createStringControl(value: string | undefined) {
     return this.fb.nonNullable.control(value ?? '');
   }

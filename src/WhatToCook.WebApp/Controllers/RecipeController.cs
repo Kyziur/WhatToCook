@@ -51,7 +51,7 @@ public class RecipeController : ControllerBase
         public int Id { get; set; }
         public string Name { get; set; }
         public IEnumerable<string> Ingredients { get; set; }
-        public string PreperationDescription { get; set; }
+        public string PreparationDescription { get; set; }
         public string TimeToPrepare { get; set; }
 
         public static RecipeResponse MapFrom(Recipe recipe)
@@ -61,7 +61,7 @@ public class RecipeController : ControllerBase
                 Id = recipe.Id,
                 Name = recipe.Name,
                 Ingredients = recipe.Ingredients.Select(x => x.Name),
-                PreperationDescription = recipe.Description,
+                PreparationDescription = recipe.Description,
                 TimeToPrepare = recipe.TimeToPrepare,
             };
         }
@@ -71,7 +71,7 @@ public class RecipeController : ControllerBase
     {
         public string Name { get; set; }
         public List<string> Ingredients { get; set; }
-        public string PreperationDescription { get; set; }
+        public string PreparationDescription { get; set; }
         public string TimeToPrepare { get; set; }
     }
 
@@ -82,11 +82,26 @@ public class RecipeController : ControllerBase
         {
             Name = request.Name,
             Ingredients = request.Ingredients.Select(ingredient => new Ingredient { Name = ingredient }).ToList(),
-            Description = request.PreperationDescription,
+            Description = request.PreparationDescription,
             TimeToPrepare = request.TimeToPrepare
         };
         this._dbcontext.Recipes.Add(recipe);
         this._dbcontext.SaveChanges();
         return Ok();
+    }
+
+    public class UpdateRecipeRequest
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public List<string> Ingredients { get; set; }
+        public string PreparationDescription { get; set; }
+        public string TimeToPrepare { get; set; }
+    }
+    
+    [HttpPut]
+    public void Put([FromBody]UpdateRecipeRequest request)
+    {
+
     }
 }
