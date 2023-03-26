@@ -99,9 +99,37 @@ public class RecipeController : ControllerBase
         public string TimeToPrepare { get; set; }
     }
     
-    [HttpPut]
-    public void Put([FromBody]UpdateRecipeRequest request)
-    {
+    //[HttpPut]
+    //public void Put([FromBody]UpdateRecipeRequest request)
+    //{
 
+    //}
+
+    [HttpPut]
+    public async Task<ActionResult> Put([FromBody] UpdateRecipeRequest request)
+    {
+        // Find the recipe in the database using the provided ID
+        var recipe = await _dbcontext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(r => r.Id == request.Id);
+        if (recipe == null)
+        {
+            return NotFound();
+        }
+
+        // Update the recipe properties
+        recipe.Name = request.Name;
+        recipe.Description = request.PreparationDescription;
+        recipe.TimeToPrepare = request.TimeToPrepare;
+
+        // Clear the existing ingredients and add the updated ones
+        recipe.Ingredients.Clear();
+        foreach (var ingredient in request.Ingredients)
+        {
+            recipe.Ingredients.Add(new Ingredient { Name = ingredient });
+        }
+
+        // Save the changes to the database
+        await _dbcontext.SaveChangesAsync();
+
+        return Ok();
     }
 }
