@@ -12,7 +12,9 @@ public class RecipeController : ControllerBase
     private readonly ILogger<RecipeController> _logger;
     private DatabaseContext _dbcontext;
     private readonly IWebHostEnvironment _environment;
-    public RecipeController(ILogger<RecipeController> logger, DatabaseContext dbcontext, IWebHostEnvironment environment)
+
+    public RecipeController(ILogger<RecipeController> logger, DatabaseContext dbcontext,
+        IWebHostEnvironment environment)
     {
         _logger = logger;
         _dbcontext = dbcontext;
@@ -20,14 +22,21 @@ public class RecipeController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<List<Recipe>> Get()
+    public async Task<List<RecipeResponse>> Get()
     {
-        var recipes = await _dbcontext.Recipes.ToListAsync();
-        return recipes;
+        List<Recipe> recipes = await _dbcontext.Recipes.ToListAsync(); //jest tu 10 przepisów
+        List<RecipeResponse> recipesMappingResult = new(); //każdy z 10 przepisów przerobiony na typ RecipeResponse
+        foreach (var recipe in recipes)
+        {
+          RecipeResponse recipeResponse = RecipeResponse.MapFrom(recipe);
+          recipesMappingResult.Add(recipeResponse);
+        }
+        
+        return recipesMappingResult;
     }
 
     //TODO: Secure name uniqueness by check on create and adding index on that column
-    
+
     [HttpGet("{name}")]
     public async Task<ActionResult<RecipeResponse>> GetByName(string name)
     {
@@ -36,7 +45,8 @@ public class RecipeController : ControllerBase
             return NotFound();
         }
 
-        var recipe = await _dbcontext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower());
+        var recipe = await _dbcontext.Recipes.Include(r => r.Ingredients)
+            .FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower());
         if (recipe is null)
         {
             return NotFound();
@@ -46,7 +56,7 @@ public class RecipeController : ControllerBase
 
         return Ok(recipeResponse);
     }
-    
+
     public class RecipeResponse
     {
         public int Id { get; set; }
@@ -69,7 +79,7 @@ public class RecipeController : ControllerBase
             };
         }
     }
-    
+
     public class RecipeRequest
     {
         public string Name { get; set; }
@@ -79,12 +89,10 @@ public class RecipeController : ControllerBase
         public string Image { get; set; }
     }
 
-    
-        [HttpPost]
 
+    [HttpPost]
     public ActionResult Post(RecipeRequest request)
     {
-
         string ImagePath = "";
         if (!string.IsNullOrEmpty(request.Image))
         {
@@ -103,7 +111,6 @@ public class RecipeController : ControllerBase
             Description = request.PreparationDescription,
             TimeToPrepare = request.TimeToPrepare,
             Image = ImagePath,
-            
         };
         this._dbcontext.Recipes.Add(recipe);
         this._dbcontext.SaveChanges();
@@ -119,7 +126,7 @@ public class RecipeController : ControllerBase
         public string TimeToPrepare { get; set; }
         public string Image { get; set; }
     }
-   
+
     [HttpPut]
     public async Task<ActionResult> Put([FromBody] UpdateRecipeRequest request)
     {

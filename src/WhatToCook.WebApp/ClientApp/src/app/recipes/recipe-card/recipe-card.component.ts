@@ -16,12 +16,20 @@ export class RecipeCardComponent {
 
   //redirect to details of each recipe
   constructor (private router: Router){}
-  
+
   viewRecipeDetails(name:string | undefined){
     if(name === undefined){
       return
     }
     this.router.navigate([`/recipes/${name}`])
+  }
+
+  getImagePath() {
+    if(!this.recipe){
+      return '';
+    }
+
+    return `data:image/png;base64,${this.recipe.imagePath}`
   }
 }
  // recipeCard: CreateRecipe | undefined;

@@ -26,7 +26,7 @@ export class RecipeViewComponent implements OnInit {
     ingredients: FormArray<FormControl<string>>;
     preparationDescription: FormControl<string>;
     timeToPrepare: FormControl<string>;
-    imagePath: FormControl<string>;
+    image: FormControl<string>;
   }> | null = null;
   isEditable: boolean = false;
 
@@ -95,7 +95,7 @@ export class RecipeViewComponent implements OnInit {
   reader.onload = () => {
     const image = reader.result as string;
     if (this.recipeForm) {
-      this.recipeForm.get('imagePath')?.patchValue(image.split(',')[1]);
+      this.recipeForm.get('image')?.patchValue(image.split(',')[1]);
     }
   };
   reader.readAsDataURL(file);
@@ -109,22 +109,23 @@ export class RecipeViewComponent implements OnInit {
         id: this.recipe?.id ?? 0,
         ...this.recipeForm.getRawValue(),
       };
-      
-    if (!form) 
-    { 
-      return; 
+
+    if (!form)
+    {
+      return;
     }
     for (const [key, value] of Object.entries(form)) {
       if (Array.isArray(value)) {
         for (var v = 0 ; v < value.length; v++) {
           recipeload.append(`${key}[${v}]`, value[v]);
+          console.log('Recipe load', recipeload);
         }
       } else {
         recipeload.append(key, value);
       }
     }
-      this.recipeService.put(updatedRecipe).subscribe((recipe) => {
-  
+      this.recipeService.update(updatedRecipe).subscribe((recipe) => {
+
          this.recipeService.getByName(updatedRecipe.name).subscribe((recipe) => {
           this.recipe = recipe;
           this.loadFormData(this.recipe);
@@ -134,10 +135,10 @@ export class RecipeViewComponent implements OnInit {
     }
 
     if (this.getDisplayMode() === DisplayMode.New) {
-      
-      if (!form) 
-    { 
-      return; 
+
+      if (!form)
+    {
+      return;
     }
     for (const [key, value] of Object.entries(form)) {
       if (Array.isArray(value)) {
@@ -169,10 +170,10 @@ export class RecipeViewComponent implements OnInit {
       ingredients: this.fb.array(ingredientsControls),
       preparationDescription: this.createStringControl(recipe?.preparationDescription),
       timeToPrepare: this.createStringControl(recipe?.timeToPrepare),
-      imagePath: this.createStringControl("")
+      image: this.createStringControl("")
     })
   }
-  //return current time 
+  //return current time
   createStringControl(value: string | undefined) {
     return this.fb.nonNullable.control(value ?? '');
   }

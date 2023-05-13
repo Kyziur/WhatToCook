@@ -24,8 +24,8 @@ export class RecipeService {
   getByName(name: string): Observable<Recipe> {
     return this.httpClient.get<Recipe>(`${this.recipeUrl}/${name}`);
   }
-  put(recipe: Recipe){
-    return this.httpClient.put<Recipe>(this.baseUrl + 'api/v1/Recipe', recipe)
+  update(recipe: CreateRecipe){
+    return this.httpClient.put<CreateRecipe>(this.baseUrl + 'api/v1/Recipe', recipe)
   }
 }
 
