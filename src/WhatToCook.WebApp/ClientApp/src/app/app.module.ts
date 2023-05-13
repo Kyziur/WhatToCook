@@ -10,7 +10,7 @@ import { RecipeViewComponent } from './recipes/recipe-view/recipe-view.component
 import { RecipeCardComponent } from './recipes/recipe-card/recipe-card.component';
 import { RecipesModule } from './recipes/recipes.module';
 import { MenuListComponent } from './layout/sidebar/menu-list/menu-list.component';
-
+import { CreateRecipe } from './recipes/recipe-view/CreateRecipe';
 
 
 const routes: Routes = [ 

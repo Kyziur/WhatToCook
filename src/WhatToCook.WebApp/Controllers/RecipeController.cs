@@ -11,11 +11,12 @@ public class RecipeController : ControllerBase
 {
     private readonly ILogger<RecipeController> _logger;
     private DatabaseContext _dbcontext;
-
-    public RecipeController(ILogger<RecipeController> logger, DatabaseContext dbcontext)
+    private readonly IWebHostEnvironment _environment;
+    public RecipeController(ILogger<RecipeController> logger, DatabaseContext dbcontext, IWebHostEnvironment environment)
     {
         _logger = logger;
         _dbcontext = dbcontext;
+        _environment = environment;
     }
 
     [HttpGet]
@@ -53,6 +54,7 @@ public class RecipeController : ControllerBase
         public IEnumerable<string> Ingredients { get; set; }
         public string PreparationDescription { get; set; }
         public string TimeToPrepare { get; set; }
+        public string ImagePath { get; set; }
 
         public static RecipeResponse MapFrom(Recipe recipe)
         {
@@ -63,6 +65,7 @@ public class RecipeController : ControllerBase
                 Ingredients = recipe.Ingredients.Select(x => x.Name),
                 PreparationDescription = recipe.Description,
                 TimeToPrepare = recipe.TimeToPrepare,
+                ImagePath = recipe.Image
             };
         }
     }
@@ -73,17 +76,34 @@ public class RecipeController : ControllerBase
         public List<string> Ingredients { get; set; }
         public string PreparationDescription { get; set; }
         public string TimeToPrepare { get; set; }
+        public string Image { get; set; }
     }
 
-    [HttpPost]
+    
+        [HttpPost]
+
     public ActionResult Post(RecipeRequest request)
     {
+
+        string ImagePath = "";
+        if (!string.IsNullOrEmpty(request.Image))
+        {
+            byte[] imageBytes = Convert.FromBase64String(request.Image);
+            string fileName = $"{Guid.NewGuid()}.png";
+            string filePath = Path.Combine(_environment.WebRootPath, "images", fileName);
+
+            System.IO.File.WriteAllBytes(filePath, imageBytes);
+            ImagePath = $"/Images/{fileName}";
+        }
+
         var recipe = new Recipe()
         {
             Name = request.Name,
             Ingredients = request.Ingredients.Select(ingredient => new Ingredient { Name = ingredient }).ToList(),
             Description = request.PreparationDescription,
-            TimeToPrepare = request.TimeToPrepare
+            TimeToPrepare = request.TimeToPrepare,
+            Image = ImagePath,
+            
         };
         this._dbcontext.Recipes.Add(recipe);
         this._dbcontext.SaveChanges();
@@ -97,6 +117,7 @@ public class RecipeController : ControllerBase
         public List<string> Ingredients { get; set; }
         public string PreparationDescription { get; set; }
         public string TimeToPrepare { get; set; }
+        public string Image { get; set; }
     }
    
     [HttpPut]
@@ -113,6 +134,7 @@ public class RecipeController : ControllerBase
         recipe.Name = request.Name;
         recipe.Description = request.PreparationDescription;
         recipe.TimeToPrepare = request.TimeToPrepare;
+        recipe.Image = request.Image;
 
 
         // Clear the existing ingredients and add the updated ones
@@ -121,6 +143,7 @@ public class RecipeController : ControllerBase
         {
             recipe.Ingredients.Add(new Ingredient { Name = ingredient });
         }
+
 
         // Save the changes to the database
         await _dbcontext.SaveChangesAsync();

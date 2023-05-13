@@ -1,12 +1,11 @@
-import {Component, OnInit} from '@angular/core';
-import {FormControl, FormGroup, FormBuilder, FormArray} from '@angular/forms';
-import {CreateRecipe} from './CreateRecipe';
-import {RecipeService} from '../recipe.service';
-import {ActivatedRoute, Router} from '@angular/router';
-import {Recipe} from "../Recipe";
-import {NEVER, of, switchMap} from "rxjs";
-
-
+import { Component, OnInit } from '@angular/core';
+import { FormControl, FormGroup, FormBuilder, FormArray } from '@angular/forms';
+import { CreateRecipe } from './CreateRecipe';
+import { RecipeService } from '../recipe.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Recipe } from "../Recipe";
+import { NEVER, of, switchMap } from "rxjs";
+import { HttpClient } from '@angular/common/http';
 export enum DisplayMode {
   New,
   Edit,
@@ -21,17 +20,18 @@ export enum DisplayMode {
 export class RecipeViewComponent implements OnInit {
   timeToPrepareOptions = ["Short", "Medium", "Long"];
   recipe?: Recipe;
+  selectedFile = null;
   recipeForm: FormGroup<{
     name: FormControl<string>;
     ingredients: FormArray<FormControl<string>>;
     preparationDescription: FormControl<string>;
-    timeToPrepare: FormControl<string>
+    timeToPrepare: FormControl<string>;
+    imagePath: FormControl<string>;
   }> | null = null;
   isEditable: boolean = false;
 
-  constructor(private fb: FormBuilder, private recipeService: RecipeService, private router: Router, private route: ActivatedRoute) {
+  constructor(private fb: FormBuilder, private recipeService: RecipeService, private router: Router, private route: ActivatedRoute, private http: HttpClient) {
   }
-
   handleSuccesfulSave() {
     this.router.navigate(['recipes'])
   }
@@ -50,6 +50,8 @@ export class RecipeViewComponent implements OnInit {
     //query param: https://fancypage.com/recipe?name="pierogi"
     //route param: https://fancypage.com/recipe/pierogi
     //route param: https://fancypage.com/recipe/create
+
+
 
     this.route.params.pipe(switchMap(params => {
       console.error('params', params);
@@ -83,24 +85,68 @@ export class RecipeViewComponent implements OnInit {
     this.isEditable = true;
   }
 
+  onFileSelected(event: any) {
+  const file = event.target.files[0];
+  if (!file) {
+    return;
+  }
 
+  const reader = new FileReader();
+  reader.onload = () => {
+    const image = reader.result as string;
+    if (this.recipeForm) {
+      this.recipeForm.get('imagePath')?.patchValue(image.split(',')[1]);
+    }
+  };
+  reader.readAsDataURL(file);
+}
   submit() {
+    const recipeload = new FormData();
+    let form = this.recipeForm?.getRawValue();
+
     if (this.getDisplayMode() === DisplayMode.Edit && this.recipeForm) {
       const updatedRecipe = {
         id: this.recipe?.id ?? 0,
         ...this.recipeForm.getRawValue(),
       };
       
-      this.recipeService.put(updatedRecipe).subscribe(() => {
-        this.recipeService.getByName(updatedRecipe.name).subscribe((recipe) => {
+    if (!form) 
+    { 
+      return; 
+    }
+    for (const [key, value] of Object.entries(form)) {
+      if (Array.isArray(value)) {
+        for (var v = 0 ; v < value.length; v++) {
+          recipeload.append(`${key}[${v}]`, value[v]);
+        }
+      } else {
+        recipeload.append(key, value);
+      }
+    }
+      this.recipeService.put(updatedRecipe).subscribe((recipe) => {
+  
+         this.recipeService.getByName(updatedRecipe.name).subscribe((recipe) => {
           this.recipe = recipe;
           this.loadFormData(this.recipe);
           this.isEditable = false;
         });
       });
     }
-  
+
     if (this.getDisplayMode() === DisplayMode.New) {
+      
+      if (!form) 
+    { 
+      return; 
+    }
+    for (const [key, value] of Object.entries(form)) {
+      if (Array.isArray(value)) {
+        for (var v = 0 ; v < value.length; v++) {
+          recipeload.append(`${key}[${v}]`, value[v]);
+        }
+      } else {
+        recipeload.append(key, value);
+      }}
       this.recipeService.create(this.recipeForm?.value as CreateRecipe).subscribe((x) => this.handleSuccesfulSave());
     }
   }
@@ -122,10 +168,11 @@ export class RecipeViewComponent implements OnInit {
       name: this.createStringControl(recipe?.name),
       ingredients: this.fb.array(ingredientsControls),
       preparationDescription: this.createStringControl(recipe?.preparationDescription),
-      timeToPrepare: this.createStringControl(recipe?.timeToPrepare)
+      timeToPrepare: this.createStringControl(recipe?.timeToPrepare),
+      imagePath: this.createStringControl("")
     })
   }
-//return current time 
+  //return current time 
   createStringControl(value: string | undefined) {
     return this.fb.nonNullable.control(value ?? '');
   }

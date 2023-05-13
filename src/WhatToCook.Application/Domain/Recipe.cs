@@ -8,6 +8,7 @@ public class Recipe
     public string TimeToPrepare { get; set; }
     public List<Ingredient> Ingredients { get; set; } = new();
     public Statistics Statistics { get; set; }
+    public string Image { get; set; }
 }
 
 public class Statistics

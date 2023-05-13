@@ -4,5 +4,5 @@ export interface Recipe {
   ingredients: string[];
   preparationDescription: string;
   timeToPrepare: string;
- 
+  imagePath: string;
 }

@@ -15,5 +15,6 @@ internal class RecipeEntityConfiguration : IEntityTypeConfiguration<Recipe>
         builder.Property(x => x.Description);
         builder.Property(x => x.TimeToPrepare);
         builder.OwnsOne(x => x.Statistics);
+        builder.Property(x => x.Image);
     }
 }
