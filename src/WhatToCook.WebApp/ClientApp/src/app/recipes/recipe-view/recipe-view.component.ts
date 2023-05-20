@@ -177,4 +177,12 @@ export class RecipeViewComponent implements OnInit {
   createStringControl(value: string | undefined) {
     return this.fb.nonNullable.control(value ?? '');
   }
+  getImagePath() {
+    if(!this.recipe){
+      return '';
+    }
+
+    return `data:image/png;base64,${this.recipe.imagePath}`
+  }
+
 }

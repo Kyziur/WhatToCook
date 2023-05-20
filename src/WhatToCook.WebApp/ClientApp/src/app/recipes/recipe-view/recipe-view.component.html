@@ -18,7 +18,7 @@
   </ul>
   <p>{{ recipe?.preparationDescription }}</p>
   <p>Time to prepare: {{ recipe?.timeToPrepare }}</p>
-  <img class= "recipe-card-image" src="{{ recipe?.imagePath }}" alt="{{ recipe?.name }} image" />
+  <img class= "recipe-card-image" src="{{ getImagePath() }}" alt="{{ recipe?.name }} image" />
   <button type="button" (click)="enableEdit()">Edit</button>
 </ng-template>
 

@@ -2,6 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using WhatToCook.Application.Domain;
 using WhatToCook.Application.Infrastructure;
+using WhatToCook.Application.Services;
+using WhatToCook.WebApp.DataTransferObject.Requests;
+using WhatToCook.WebApp.DataTransferObject.Responses;
 
 namespace WhatToCook.WebApp.Controllers;
 
@@ -12,27 +15,21 @@ public class RecipeController : ControllerBase
     private readonly ILogger<RecipeController> _logger;
     private DatabaseContext _dbcontext;
     private readonly IWebHostEnvironment _environment;
-
+    private readonly RecipeServiceQuery _recipeServiceQuery;
     public RecipeController(ILogger<RecipeController> logger, DatabaseContext dbcontext,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment, RecipeServiceQuery recipeServiceQuery)
     {
         _logger = logger;
         _dbcontext = dbcontext;
         _environment = environment;
+        _recipeServiceQuery= recipeServiceQuery;
     }
 
     [HttpGet]
-    public async Task<List<RecipeResponse>> Get()
+    public async Task<ActionResult<List<RecipeResponse>>> Get()
     {
-        List<Recipe> recipes = await _dbcontext.Recipes.ToListAsync(); //jest tu 10 przepisów
-        List<RecipeResponse> recipesMappingResult = new(); //każdy z 10 przepisów przerobiony na typ RecipeResponse
-        foreach (var recipe in recipes)
-        {
-          RecipeResponse recipeResponse = RecipeResponse.MapFrom(recipe);
-          recipesMappingResult.Add(recipeResponse);
-        }
-        
-        return recipesMappingResult;
+        var getRecipe = await _recipeServiceQuery.GetRecipes();
+        return Ok(getRecipe);
     }
 
     //TODO: Secure name uniqueness by check on create and adding index on that column
@@ -56,40 +53,6 @@ public class RecipeController : ControllerBase
 
         return Ok(recipeResponse);
     }
-
-    public class RecipeResponse
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public IEnumerable<string> Ingredients { get; set; }
-        public string PreparationDescription { get; set; }
-        public string TimeToPrepare { get; set; }
-        public string ImagePath { get; set; }
-
-        public static RecipeResponse MapFrom(Recipe recipe)
-        {
-            return new RecipeResponse
-            {
-                Id = recipe.Id,
-                Name = recipe.Name,
-                Ingredients = recipe.Ingredients.Select(x => x.Name),
-                PreparationDescription = recipe.Description,
-                TimeToPrepare = recipe.TimeToPrepare,
-                ImagePath = recipe.Image
-            };
-        }
-    }
-
-    public class RecipeRequest
-    {
-        public string Name { get; set; }
-        public List<string> Ingredients { get; set; }
-        public string PreparationDescription { get; set; }
-        public string TimeToPrepare { get; set; }
-        public string Image { get; set; }
-    }
-
-
     [HttpPost]
     public ActionResult Post(RecipeRequest request)
     {
@@ -117,15 +80,6 @@ public class RecipeController : ControllerBase
         return Ok();
     }
 
-    public class UpdateRecipeRequest
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public List<string> Ingredients { get; set; }
-        public string PreparationDescription { get; set; }
-        public string TimeToPrepare { get; set; }
-        public string Image { get; set; }
-    }
 
     [HttpPut]
     public async Task<ActionResult> Put([FromBody] UpdateRecipeRequest request)
