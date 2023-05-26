@@ -8,4 +8,9 @@ import { AppModule } from 'src/app/app.module';
   
 })
 export class MenuListComponent { 
+  showSidebar = false;
+  
+  toggleSidebar() {
+    this.showSidebar = !this.showSidebar;
+  }
 }

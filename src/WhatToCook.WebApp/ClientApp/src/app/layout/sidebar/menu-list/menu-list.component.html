@@ -1,7 +1,7 @@
-
+<app-meal-planning *ngIf="showSidebar"></app-meal-planning>
 <div class="menu-list">
     <div class="menu-list-item">
-        <a title="Meal planning" href="#">Meal planning</a>
+        <button (click)="toggleSidebar()">Meal planning </button>
     </div>
     <div class="menu-list-item">
         <a title="Browse" routerLink="/recipes" >Browse</a>

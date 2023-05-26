@@ -2,9 +2,10 @@
     <div class="recipe-card" (click)="viewRecipeDetails(recipe?.name)">
         <a class="card-description">
             <div class="recipe-card-title-container">
+                <img class= "recipe-card-image" src="{{ getImagePath() }}" alt="{{ recipe?.name }}" />
                 <span class="recipe-card-title">{{ recipe?.name }}</span>
-                <img class= "recipe-card-image" src="{{ getImagePath() }}" alt="{{ recipe?.name }} image" />
             </div>
         </a>
     </div>
 </div>
+ 

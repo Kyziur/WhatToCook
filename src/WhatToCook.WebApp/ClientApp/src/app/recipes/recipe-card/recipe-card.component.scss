@@ -6,12 +6,15 @@
 
 }
 
-.recipe-card-img {
-    height: 200px;
+.recipe-card-image {
+    height: 100px;
+    width: 100px;
     display: block;
 }
 
 .recipes-card {
+    min-height: 300px;
+    min-width: 300px;
     display: flex;
     justify-content: center;
     align-items: center;

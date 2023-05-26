@@ -8,11 +8,11 @@ internal class PlanOfMealsEntityConfiguration : IEntityTypeConfiguration<PlanOfM
 {
     public void Configure(EntityTypeBuilder<PlanOfMeals> builder)
     {
+        builder.Property(x => x.Name);
         builder.HasKey(x => x.Id);
         builder.HasOne(x => x.User);
-        builder.HasOne(x => x.Recipe);
+        builder.HasMany(x => x.Recipe).WithMany(x => x.PlansOfMeals);
         builder.Property(x => x.FromDate);
         builder.Property(x => x.ToDate);
     }
-
 }

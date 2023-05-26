@@ -86,20 +86,20 @@ export class RecipeViewComponent implements OnInit {
   }
 
   onFileSelected(event: any) {
-  const file = event.target.files[0];
-  if (!file) {
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    const image = reader.result as string;
-    if (this.recipeForm) {
-      this.recipeForm.get('image')?.patchValue(image.split(',')[1]);
+    const file = event.target.files[0];
+    if (!file) {
+      return;
     }
-  };
-  reader.readAsDataURL(file);
-}
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = reader.result as string;
+      if (this.recipeForm) {
+        this.recipeForm.get('image')?.patchValue(image.split(',')[1]);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
   submit() {
     const recipeload = new FormData();
     let form = this.recipeForm?.getRawValue();
@@ -110,23 +110,22 @@ export class RecipeViewComponent implements OnInit {
         ...this.recipeForm.getRawValue(),
       };
 
-    if (!form)
-    {
-      return;
-    }
-    for (const [key, value] of Object.entries(form)) {
-      if (Array.isArray(value)) {
-        for (var v = 0 ; v < value.length; v++) {
-          recipeload.append(`${key}[${v}]`, value[v]);
-          console.log('Recipe load', recipeload);
-        }
-      } else {
-        recipeload.append(key, value);
+      if (!form) {
+        return;
       }
-    }
+      for (const [key, value] of Object.entries(form)) {
+        if (Array.isArray(value)) {
+          for (var v = 0; v < value.length; v++) {
+            recipeload.append(`${key}[${v}]`, value[v]);
+            console.log('Recipe load', recipeload);
+          }
+        } else {
+          recipeload.append(key, value);
+        }
+      }
       this.recipeService.update(updatedRecipe).subscribe((recipe) => {
 
-         this.recipeService.getByName(updatedRecipe.name).subscribe((recipe) => {
+        this.recipeService.getByName(updatedRecipe.name).subscribe((recipe) => {
           this.recipe = recipe;
           this.loadFormData(this.recipe);
           this.isEditable = false;
@@ -136,18 +135,18 @@ export class RecipeViewComponent implements OnInit {
 
     if (this.getDisplayMode() === DisplayMode.New) {
 
-      if (!form)
-    {
-      return;
-    }
-    for (const [key, value] of Object.entries(form)) {
-      if (Array.isArray(value)) {
-        for (var v = 0 ; v < value.length; v++) {
-          recipeload.append(`${key}[${v}]`, value[v]);
+      if (!form) {
+        return;
+      }
+      for (const [key, value] of Object.entries(form)) {
+        if (Array.isArray(value)) {
+          for (var v = 0; v < value.length; v++) {
+            recipeload.append(`${key}[${v}]`, value[v]);
+          }
+        } else {
+          recipeload.append(key, value);
         }
-      } else {
-        recipeload.append(key, value);
-      }}
+      }
       this.recipeService.create(this.recipeForm?.value as CreateRecipe).subscribe((x) => this.handleSuccesfulSave());
     }
   }
@@ -178,7 +177,7 @@ export class RecipeViewComponent implements OnInit {
     return this.fb.nonNullable.control(value ?? '');
   }
   getImagePath() {
-    if(!this.recipe){
+    if (!this.recipe) {
       return '';
     }
 
