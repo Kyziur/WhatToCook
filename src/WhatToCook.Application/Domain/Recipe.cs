@@ -9,7 +9,7 @@ public class Recipe
     public List<Ingredient> Ingredients { get; set; } = new();
     public Statistics Statistics { get; set; }
     public string Image { get; set; }
-    public IEnumerable <PlanOfMeals> PlansOfMeals { get; set; }
+    public IEnumerable<PlanOfMeals> PlansOfMeals { get; set; }
 }
 
 public class Statistics

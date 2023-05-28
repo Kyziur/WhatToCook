@@ -6,7 +6,6 @@ public class PlanOfMeals
     public int Id { get; private set; }
     public DateTime FromDate { get; set; }
     public DateTime ToDate { get; set; }
-    public List<Recipe> Recipe { get; set; }
     public User User { get; set; }
     public IEnumerable<Recipe> Recipes { get; set; }
 }

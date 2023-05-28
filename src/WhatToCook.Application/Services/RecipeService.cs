@@ -30,7 +30,7 @@ namespace WhatToCook.Application.Services
             {
                 byte[] imageBytes = Convert.FromBase64String(request.Image);
                 string fileName = $"{Guid.NewGuid()}.png";
-                string filePath = Path.Combine(imagesDirectory, "images", fileName);
+                string filePath = Path.Combine(imagesDirectory, "Images", fileName);
 
                 System.IO.File.WriteAllBytes(filePath, imageBytes);
                 imagePath = $"/Images/{fileName}";
