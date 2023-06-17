@@ -13,6 +13,8 @@ namespace WhatToCook.Application.Services
         {
             services.AddScoped<RecipeService>();
             services.AddScoped<RecipeServiceQuery>();
+            services.AddScoped<MealPlanningService>();
+            services.AddScoped<MealPlanningServiceQuery>();
         }
     }
 }

@@ -28,14 +28,6 @@ export class RecipeService {
   update(recipe: CreateRecipe) {
     return this.httpClient.put<CreateRecipe>(this.baseUrl + 'api/v1/Recipe', recipe)
   }
-
-  createMealPlan(planOfMeals : PlanOfMeals){
-    
-  }
-
-  getMealPlan(planOfMeals: PlanOfMeals) {
-    return this.httpClient.get<PlanOfMeals>('$(this.recipeUrl)/${name}');
-  }
 }
 
 

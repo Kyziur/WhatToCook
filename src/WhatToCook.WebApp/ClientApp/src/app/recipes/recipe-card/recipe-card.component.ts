@@ -29,7 +29,7 @@ export class RecipeCardComponent {
       return '';
     }
 
-    return `data:image/png;base64,${this.recipe.imagePath}`
+    return this.recipe.imagePath
   }
 }
  // recipeCard: CreateRecipe | undefined;

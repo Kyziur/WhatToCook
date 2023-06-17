@@ -26,7 +26,12 @@ public class RecipeController : ControllerBase
         _recipeService = recipeService;
 
     }
-
+    public string GetBaseUrl()
+    {
+        var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+        return baseUrl;
+       
+    }
     [HttpGet]
     public async Task<ActionResult<List<RecipeResponse>>> Get()
     {
@@ -40,20 +45,28 @@ public class RecipeController : ControllerBase
     public async Task<ActionResult<RecipeResponse>> GetByName(string name)
     {
         var getRecipe = await _recipeServiceQuery.GetByName(name);
-        return getRecipe is null ? NotFound() : Ok(getRecipe);
+        if (getRecipe is null)
+        {
+            return NotFound();
+        }
+        getRecipe.ImagePath = $"{this.GetBaseUrl()}/{getRecipe.ImagePath}";
+        return Ok(getRecipe);
     }
     [HttpPost]
-    public ActionResult Post(RecipeRequest request, string imagesDirectory)
+    public async Task<ActionResult> Post(RecipeRequest request)
     {
-        var createRecipe = _recipeService.Create(request, imagesDirectory);
-        return Ok(createRecipe);
+
+        var filesDirectory = _environment.WebRootPath; 
+        await _recipeService.Create(request, filesDirectory);
+        return Ok();
     }
 
 
     [HttpPut]
     public async Task<ActionResult> Put(UpdateRecipeRequest request)
     {
-        var updateRecipe = await _recipeService.Update(request);
-        return Ok(updateRecipe);
+        var filesDirectory = _environment.WebRootPath;
+        await _recipeService.Update(request, filesDirectory);
+        return Ok();
     }
 }

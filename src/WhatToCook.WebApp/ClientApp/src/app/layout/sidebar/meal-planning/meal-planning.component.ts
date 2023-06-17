@@ -6,6 +6,7 @@ import { PlanOfMeals } from './plan-of-meals';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RecipeService } from 'src/app/recipes/recipe.service';
 import { HttpClient } from '@angular/common/http';
+import { MealPlanningService } from './meal-planning.service';
 @Component({
   selector: 'app-meal-planning',
   templateUrl: './meal-planning.component.html',
@@ -23,7 +24,7 @@ export class MealPlanningComponent {
   handleSuccesfulSave() {
     this.router.navigate(['recipes'])
   }
-  constructor(private fb: FormBuilder, private router: Router, private recipeService: RecipeService, private http: HttpClient) {
+  constructor(private fb: FormBuilder, private router: Router, private recipeService: MealPlanningService, private http: HttpClient) {
   }
 
   get recipesControls(): FormArray<FormControl<string>> {

@@ -181,7 +181,7 @@ export class RecipeViewComponent implements OnInit {
       return '';
     }
 
-    return `data:image/png;base64,${this.recipe.imagePath}`
+    return this.recipe.imagePath
   }
 
 }

@@ -11,7 +11,7 @@ internal class PlanOfMealsEntityConfiguration : IEntityTypeConfiguration<PlanOfM
         builder.Property(x => x.Name);
         builder.HasKey(x => x.Id);
         builder.HasOne(x => x.User);
-        builder.HasMany(x => x.Recipe).WithMany(x => x.PlansOfMeals);
+        builder.HasMany(x => x.Recipes).WithMany(x => x.PlansOfMeals);
         builder.Property(x => x.FromDate);
         builder.Property(x => x.ToDate);
     }
