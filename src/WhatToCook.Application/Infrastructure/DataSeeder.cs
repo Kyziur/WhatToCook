@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WhatToCook.Application.Domain;
 
-namespace WhatToCook.Application.Infrastructure;
-
+namespace WhatToCook.Application.Infrastructure
+{
 
 public static class DataSeeder
 {
