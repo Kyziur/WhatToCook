@@ -1,6 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { Component, NgModule } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, NgModule, Input } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { Routes, RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
@@ -20,6 +20,7 @@ const routes: Routes = [
     redirectTo: 'recipes',
     pathMatch: 'full'
   },
+
 ];
 
 @NgModule({

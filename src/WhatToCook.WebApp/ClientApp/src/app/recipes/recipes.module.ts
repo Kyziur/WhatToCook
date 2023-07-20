@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, Input} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RecipeListComponent } from './recipe-list/recipe-list.component';
 import { RecipeCardComponent } from './recipe-card/recipe-card.component';
@@ -6,14 +6,16 @@ import { RecipeViewComponent } from './recipe-view/recipe-view.component';
 import { SharedModule } from '../shared/shared.module';
 import { SearchComponent } from '../shared/search/search.component';
 import { Routes, RouterModule, Router } from '@angular/router';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { MealPlanningComponent } from '../layout/sidebar/meal-planning/meal-planning.component';
 
 const routes: Routes = [
   {
     path: 'recipes',
-    component: RecipeListComponent,
+    component: RecipeListComponent, 
   },
+
   {
     path: 'recipes/new',
     component: RecipeViewComponent,
@@ -21,7 +23,8 @@ const routes: Routes = [
   {
     path: 'recipes/:name',
     component: RecipeViewComponent,
-  }
+  },
+
 ];
 
 @NgModule({
@@ -35,13 +38,15 @@ const routes: Routes = [
     SharedModule,
     RouterModule.forChild(routes),
     ReactiveFormsModule,
-    HttpClientModule
+    HttpClientModule,
+    FormsModule
   ],
   exports: [
     RecipeCardComponent,
     RecipeViewComponent,
     RecipeListComponent,
     RouterModule,
+    ReactiveFormsModule,
   ],
 
 })

@@ -1,10 +1,17 @@
 <div class="recipe-card-wrapper">
+    <div>
+        <input 
+        type="checkbox"
+        name="{{recipe?.name}}"
+        (change)="onSelect()"
+        />
+       <div>
     <div class="recipe-card" (click)="viewRecipeDetails(recipe?.name)">
         <a class="card-description">
             <div class="recipe-card-title-container">
                 <img class= "recipe-card-image" src="{{ getImagePath() }}" alt="{{ recipe?.name }}" />
                 <span class="recipe-card-title">{{ recipe?.name }}</span>
-            </div>
+            </div>     
         </a>
     </div>
 </div>

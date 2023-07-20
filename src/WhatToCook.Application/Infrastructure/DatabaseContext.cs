@@ -22,6 +22,7 @@ public class DatabaseContext : DbContext
     }
 
     public DbSet<Recipe> Recipes => Set<Recipe>();
+    public DbSet<PlanOfMeals> PlanOfMeals => Set<PlanOfMeals>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -32,6 +33,7 @@ public class DatabaseContext : DbContext
         }
     }
 
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(RecipeEntityConfiguration).Assembly);
