@@ -11,9 +11,10 @@ import { RecipeCardComponent } from './recipes/recipe-card/recipe-card.component
 import { RecipesModule } from './recipes/recipes.module';
 import { MenuListComponent } from './layout/sidebar/menu-list/menu-list.component';
 import { CreateRecipe } from './recipes/recipe-view/CreateRecipe';
+import {MealPlannerModule} from "./meal-planner/meal-planner.module";
 
 
-const routes: Routes = [ 
+const routes: Routes = [
 
   {
     path: '',
@@ -34,7 +35,8 @@ const routes: Routes = [
     RouterModule.forRoot(routes),
     LayoutModule,
     RecipesModule,
-   
+    MealPlannerModule
+
   ],
   providers: [],
   bootstrap: [AppComponent],

@@ -1,17 +1,17 @@
-<app-meal-planning *ngIf="showSidebar"></app-meal-planning>
 <div class="menu-list">
-    <div class="menu-list-item">
-        <button (click)="toggleSidebar()">Meal planning </button>
-    </div>
-    <div class="menu-list-item">
-        <a title="Browse" routerLink="/recipes" >Browse</a>
-    </div>
-    <div class="menu-list-item">
-        <a title="Create recipe" routerLink="/recipes/new" routerLinkActive="active" ariaCurrentWhenActive="page">Create recipe</a>
-    </div>
-    <div class="menu-list-item">
-        <a title="Meal Plans" routerLink="/meal-plan" routerLinkActive="active" ariaCurrentWhenActive="page">Meal Plans</a>
-    </div>
+  <div class="menu-list-item">
+    <a title="Meal planning" routerLink="/meal-plan/new" (click)="showMealPlanningModal()">Meal planning</a>
+  </div>
+  <div class="menu-list-item">
+    <a title="Browse" routerLink="/recipes">Browse</a>
+  </div>
+  <div class="menu-list-item">
+    <a title="Create recipe" routerLink="/recipes/new" routerLinkActive="active" ariaCurrentWhenActive="page">Create
+      recipe</a>
+  </div>
+  <div class="menu-list-item">
+    <a title="Meal Plans" routerLink="/meal-plan" routerLinkActive="active" ariaCurrentWhenActive="page">Meal Plans</a>
+  </div>
 </div>
 
 

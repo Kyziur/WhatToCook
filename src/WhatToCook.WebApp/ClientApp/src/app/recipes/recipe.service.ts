@@ -1,11 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
-import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { Recipe } from './Recipe';
 import { CreateRecipe } from './recipe-view/CreateRecipe';
-import { PlanOfMeals } from '../layout/sidebar/meal-planning/plan-of-meals';
-import { HttpEvent, HttpEventType } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'

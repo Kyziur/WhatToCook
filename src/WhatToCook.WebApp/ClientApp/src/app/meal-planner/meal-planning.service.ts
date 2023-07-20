@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@angular/core';
-import { PlanOfMeals } from './plan-of-meals';
 import { HttpClient } from '@angular/common/http';
 import { Recipe } from 'src/app/recipes/Recipe';
 import { Observable } from 'rxjs';
+import {PlanOfMeals} from "./meal-plan-creator/plan-of-meals";
 
 @Injectable({
   providedIn: 'root'
@@ -10,12 +10,13 @@ import { Observable } from 'rxjs';
 export class MealPlanningService {
 
   mealPlanUrl = "";
-
   selectedRecipes: Recipe[] = [];
+  isMealPlanModalVisible = false;
+
   constructor(private httpClient: HttpClient, @Inject('BASE_URL') private baseUrl: string) {
     this.mealPlanUrl = this.baseUrl + 'api/v1/MealPlanning';
   }
-  
+
   createMealPlan(planOfMeals : PlanOfMeals){
     return this.httpClient.post<PlanOfMeals>(this.baseUrl + 'api/v1/MealPlanning', planOfMeals )
   }
@@ -26,6 +27,13 @@ export class MealPlanningService {
 
   selectRecipe(recipe: Recipe){
     this.selectedRecipes.push(recipe);
+  }
 
+  showMealPlanningModal() {
+      this.isMealPlanModalVisible = true;
+  }
+
+  hideMealPlanningModal() {
+      this.isMealPlanModalVisible = false;
   }
 }

@@ -1,0 +1,9 @@
+<div>
+  <label>Choose a list</label>
+  <select class="plan-select" (change)="selectedMealPlanChanged()" [(ngModel)]="selectedMealPlan">
+    <ng-container *ngFor="let plan of mealPlans">
+      <option [ngValue]="plan">{{plan.name}}</option>
+    </ng-container>
+  </select>
+  <button type="submit">Save</button>
+</div>
