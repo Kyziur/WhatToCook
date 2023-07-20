@@ -1,20 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace WhatToCook.Application.Services
+namespace WhatToCook.Application.Services;
+
+public static class ApllicationServicesDependencies
 {
-    public static class ApllicationServicesDependencies
+    public static void RegisterApplicationServices(this IServiceCollection services)
     {
-       public static void RegisterApplicationServices(this IServiceCollection services)
-        {
-            services.AddScoped<RecipeService>();
-            services.AddScoped<RecipeServiceQuery>();
-            services.AddScoped<MealPlanningService>();
-            services.AddScoped<MealPlanningServiceQuery>();
-        }
+        services.AddScoped<RecipeService>();
+        services.AddScoped<RecipeServiceQuery>();
+        services.AddScoped<MealPlanningService>();
+        services.AddScoped<MealPlanningServiceQuery>();
     }
 }

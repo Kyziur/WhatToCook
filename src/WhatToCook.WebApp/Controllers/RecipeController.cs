@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WhatToCook.Application.Domain;
 using WhatToCook.Application.Infrastructure;
 using WhatToCook.Application.Services;
 using WhatToCook.WebApp.DataTransferObject.Requests;
 using WhatToCook.WebApp.DataTransferObject.Responses;
+
 namespace WhatToCook.WebApp.Controllers;
 
 [ApiController]
@@ -16,6 +15,7 @@ public class RecipeController : ControllerBase
     private readonly IWebHostEnvironment _environment;
     private readonly RecipeServiceQuery _recipeServiceQuery;
     private readonly RecipeService _recipeService;
+
     public RecipeController(ILogger<RecipeController> logger, DatabaseContext dbcontext,
         IWebHostEnvironment environment, RecipeServiceQuery recipeServiceQuery, RecipeService recipeService)
     {
@@ -24,14 +24,14 @@ public class RecipeController : ControllerBase
         _environment = environment;
         _recipeServiceQuery = recipeServiceQuery;
         _recipeService = recipeService;
-
     }
+
     public string GetBaseUrl()
     {
         var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
         return baseUrl;
-       
     }
+
     [HttpGet]
     public async Task<ActionResult<List<RecipeResponse>>> Get()
     {
@@ -49,14 +49,15 @@ public class RecipeController : ControllerBase
         {
             return NotFound();
         }
+
         getRecipe.ImagePath = $"{this.GetBaseUrl()}/{getRecipe.ImagePath}";
         return Ok(getRecipe);
     }
+
     [HttpPost]
     public async Task<ActionResult> Post(RecipeRequest request)
     {
-
-        var filesDirectory = _environment.WebRootPath; 
+        var filesDirectory = _environment.WebRootPath;
         await _recipeService.Create(request, filesDirectory);
         return Ok();
     }
