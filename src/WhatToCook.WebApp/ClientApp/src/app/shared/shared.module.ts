@@ -15,6 +15,6 @@ import { ModalComponent } from './modal/modal.component';
   imports: [
     CommonModule
   ],
-exports: [FavouritesButtonComponent, SearchComponent],
+  exports: [FavouritesButtonComponent, SearchComponent, ModalComponent],
 })
 export class SharedModule { }

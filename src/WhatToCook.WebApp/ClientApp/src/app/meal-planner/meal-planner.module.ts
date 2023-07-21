@@ -6,6 +6,7 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MealPlanCreatorComponent} from "./meal-plan-creator/meal-plan-creator.component";
 import { MealPlanningComponent } from './meal-planning/meal-planning.component';
 import {RecipesModule} from "../recipes/recipes.module";
+import {SharedModule} from "../shared/shared.module";
 
 const routes: Routes = [
   {
@@ -27,12 +28,13 @@ const routes: Routes = [
   exports: [
     PlanSelectComponent
   ],
-  imports: [
-    CommonModule,
-    RouterModule.forChild(routes),
-    ReactiveFormsModule,
-    RecipesModule,
-    FormsModule,
-  ]
+    imports: [
+        CommonModule,
+        RouterModule.forChild(routes),
+        ReactiveFormsModule,
+        RecipesModule,
+        FormsModule,
+        SharedModule,
+    ]
 })
 export class MealPlannerModule { }

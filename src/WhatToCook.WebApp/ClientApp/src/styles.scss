@@ -1,5 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Provide sufficient contrast against white background */
 @import "defaults.scss";
 @import "_variables";
@@ -20,3 +24,10 @@ a {
   }
 }
 
+.d-flex {
+  display: flex;
+}
+
+.flex-center {
+  justify-content: center;
+}

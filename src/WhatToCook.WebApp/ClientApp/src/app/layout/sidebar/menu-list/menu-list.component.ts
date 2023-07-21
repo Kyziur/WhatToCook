@@ -1,6 +1,4 @@
 import { Component } from '@angular/core';
-import { AppModule } from 'src/app/app.module';
-import {MealPlanningService} from "../../../meal-planner/meal-planning.service";
 
 @Component({
   selector: 'app-menu-list',
@@ -10,9 +8,6 @@ import {MealPlanningService} from "../../../meal-planner/meal-planning.service";
 })
 export class MenuListComponent {
 
-  constructor(private mealPlanningService: MealPlanningService) {
-  }
-  showMealPlanningModal() {
-    this.mealPlanningService.showMealPlanningModal();
+  constructor() {
   }
 }

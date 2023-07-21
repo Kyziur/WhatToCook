@@ -11,7 +11,6 @@ export class MealPlanningService {
 
   mealPlanUrl = "";
   selectedRecipes: Recipe[] = [];
-  isMealPlanModalVisible = false;
 
   constructor(private httpClient: HttpClient, @Inject('BASE_URL') private baseUrl: string) {
     this.mealPlanUrl = this.baseUrl + 'api/v1/MealPlanning';
@@ -27,13 +26,5 @@ export class MealPlanningService {
 
   selectRecipe(recipe: Recipe){
     this.selectedRecipes.push(recipe);
-  }
-
-  showMealPlanningModal() {
-      this.isMealPlanModalVisible = true;
-  }
-
-  hideMealPlanningModal() {
-      this.isMealPlanModalVisible = false;
   }
 }
