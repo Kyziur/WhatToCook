@@ -1,8 +1,9 @@
 <div class="recipe-card-wrapper">
     <div>
         <input 
+        [(ngModel)]="selected"
         type="checkbox"
-        name="{{recipe?.name}}"
+        id="{{recipe?.id}}"
         (change)="onSelect()"
         />
        <div>

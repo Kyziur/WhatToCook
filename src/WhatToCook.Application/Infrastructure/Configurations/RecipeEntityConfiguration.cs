@@ -11,7 +11,7 @@ internal class RecipeEntityConfiguration : IEntityTypeConfiguration<Recipe>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name);
         builder.HasMany(x => x.Ingredients).WithOne(x => x.Recipe);
-        builder.HasIndex(x => x.Name);
+        builder.HasIndex(x => x.Name).IsUnique();
         builder.Property(x => x.Description);
         builder.Property(x => x.TimeToPrepare);
         builder.OwnsOne(x => x.Statistics);

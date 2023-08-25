@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {MealPlanningService} from "../meal-planning.service";
-import {PlanOfMeals} from "../meal-plan-creator/plan-of-meals";
+import {PlanOfMeals, UpdatePlanOfMeals} from "../meal-plan-creator/plan-of-meals";
 
 const EMPTY_MEAL_PLAN: PlanOfMeals = {
   name: "Zaznacz",
@@ -40,5 +40,22 @@ export class PlanSelectComponent {
 
   selectedMealPlanChanged() {
     this.onSelectionChange.emit(this.selectedMealPlan);
+  }
+    onSubmit() {
+   this.mealPlanService.selectedRecipes
+   this.selectedMealPlan?.name
+   if(this.selectedMealPlan === undefined || this.selectedMealPlan === null){
+    return 
+   }
+   const mealPlan: UpdatePlanOfMeals = {
+    id: this.selectedMealPlan.id,
+    fromDate: this.selectedMealPlan.fromDate,
+    toDate: this.selectedMealPlan.toDate,
+    name: this.selectedMealPlan.name,
+    recipes: this.mealPlanService.selectedRecipes.map(recipe => {
+      return recipe.name
+    })
+   }
+   this.mealPlanService.update(mealPlan).subscribe();
   }
 }

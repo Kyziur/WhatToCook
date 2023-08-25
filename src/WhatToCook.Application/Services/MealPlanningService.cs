@@ -17,7 +17,7 @@ public class MealPlanningService
     public async Task<PlanOfMeals> Create(PlanOfMealRequest planOfMealRequest)
     {
         var getRecipeForMealPlan = planOfMealRequest.Recipes.Select(x => x.Name);
-        var recipies = _dbcontext.Recipes.Include(recipe => recipe.PlansOfMeals)
+        var recipes = _dbcontext.Recipes.Include(recipe => recipe.PlansOfMeals)
             .Where(recipe => getRecipeForMealPlan.Contains(recipe.Name)).ToList();
         var planOfMeals = new PlanOfMeals()
         {
@@ -25,11 +25,30 @@ public class MealPlanningService
             Id = planOfMealRequest.Id,
             FromDate = DateTime.SpecifyKind(planOfMealRequest.FromDate, DateTimeKind.Utc),
             ToDate = DateTime.SpecifyKind(planOfMealRequest.ToDate, DateTimeKind.Utc),
-            Recipes = recipies
+            Recipes = recipes
         };
 
         await _dbcontext.PlanOfMeals.AddAsync(planOfMeals);
         await _dbcontext.SaveChangesAsync();
         return planOfMeals;
+    }
+
+    public async Task<PlanOfMeals> Update(UpdatePlanOfMealRequest planOfMealRequest)
+    {
+        var planOfMeals = await _dbcontext.PlanOfMeals.Include(r => r.Recipes).FirstOrDefaultAsync(r => r.Name == planOfMealRequest.Name);
+        var recipes = _dbcontext.Recipes.Include(recipe => recipe.PlansOfMeals)
+            .Where(recipe => planOfMealRequest.Recipes.Contains(recipe.Name)).ToList();
+        if (planOfMeals == null)
+        {
+            throw new Exception($"Cannot Update {planOfMealRequest.Name}");
+        }
+        planOfMeals.Name = planOfMealRequest.Name;
+        planOfMeals.FromDate = planOfMealRequest.FromDate;
+        planOfMeals.ToDate = planOfMealRequest.ToDate;
+        planOfMeals.Recipes = recipes;
+        _dbcontext.Update(planOfMeals);
+        await _dbcontext.SaveChangesAsync();
+        return planOfMeals;
+
     }
 }

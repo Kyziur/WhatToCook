@@ -10,6 +10,7 @@ public class Recipe
     public Statistics Statistics { get; set; }
     public string Image { get; set; }
     public IEnumerable<PlanOfMeals> PlansOfMeals { get; set; }
+    
 }
 
 public class Statistics

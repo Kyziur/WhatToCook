@@ -37,4 +37,10 @@ public class MealPlanningController : ControllerBase
         await _mealPlanningService.Create(planOfMealRequest);
         return Ok();
     }
+    [HttpPut]
+    public async Task<ActionResult>Put(UpdatePlanOfMealRequest planOfMealRequest)
+    {
+        await _mealPlanningService.Update(planOfMealRequest);
+        return Ok();
+    }
 }

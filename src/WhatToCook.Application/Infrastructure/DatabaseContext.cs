@@ -17,8 +17,6 @@ public class DatabaseContext : DbContext
     {
         _connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new Exception("Connection string is required");
         _isDevelopment = environment.IsDevelopment();
-        
-       
     }
 
     public DbSet<Recipe> Recipes => Set<Recipe>();

@@ -8,3 +8,11 @@ export interface PlanOfMeals {
     toDate: Date;
     recipes: Recipe[];
 }
+
+export interface UpdatePlanOfMeals{
+    id: number;
+    name: string;
+    fromDate: Date;
+    toDate: Date;
+    recipes: string[];
+}
