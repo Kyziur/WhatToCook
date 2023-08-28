@@ -1,84 +1,19 @@
 @import "_variables";
 
-.d-flex {
-    display: flex;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn {
+    @apply bg-transparent text-cyan-500 font-bold h-full px-4 py-2 border border-cyan-600 rounded flex items-center justify-center;
+  }
+
+  .btn:hover {
+    @apply bg-cyan-500 text-white;
+  }
+
+  .select {
+    @apply block w-full h-full bg-transparent rounded-md border-0 px-1.5 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-cyan-500 sm:max-w-xs sm:text-sm sm:leading-6;
+  }
 }
-
-.justify-center {
-    justify-content: center;
-}
-
-.btn {
-    color: black;
-    border: 0;
-    padding: 0.5rem 1rem;
-    overflow: hidden;
-
-    border-radius: 1rem 1rem 1rem 1rem;
-    display: inline-block;
-    background-color: white;
-
-
-    &-green {
-        color: $white;
-        background-color: $blue-background;
-
-        &:hover {
-            background-color: $darker-blue-background;
-            color: $white;
-        }
-    }
-}
-
-
-.pr-2 {
-    padding-right: 2rem;
-}
-
-.pl-2 {
-    padding-left: 2rem;
-}
-
-
-// $paddingDirection: (
-//     ''
-//     'right',
-//     'left',
-//     'top',
-//     'bottom'
-// );
-// $paddingLength: (
-//     1,
-//     2,
-//     3,
-//     4
-// );
-
-// @each $len in $paddingLength {
-//     .padding-#{$len} {
-//         padding: #{$len/2}rem;
-//     }
-// }
-
-// // if you want to use padding-left, padding-right etc.
-// @each $dir in $paddingDirection {
-//     @each $len in $paddingLength {
-//         .padding-#{$dir}-#{$len} {
-//             padding-#{$dir}: #{$len/2}rem;
-//         }
-//     }
-// }
-
-// @each $len in $paddingLength {
-//     %padding-#{$len} {
-//         padding: #{$len}px;
-//     }
-// }
-
-// @each $dir in $paddingDirection {
-//     @each $len in $paddingLength {
-//         %padding-#{$dir}-#{$len} {
-//             padding-#{$dir}: #{$len}px;
-//         }
-//     }
-// }
