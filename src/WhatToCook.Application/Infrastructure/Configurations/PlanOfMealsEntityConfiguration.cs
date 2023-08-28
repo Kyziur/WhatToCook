@@ -8,7 +8,8 @@ internal class PlanOfMealsEntityConfiguration : IEntityTypeConfiguration<PlanOfM
 {
     public void Configure(EntityTypeBuilder<PlanOfMeals> builder)
     {
-        builder.Property(x => x.Name);
+        builder.HasIndex(x => x.Name).IsUnique();
+        builder.Property(x => x.Name).IsRequired();
         builder.HasKey(x => x.Id);
         builder.HasOne(x => x.User);
         builder.HasMany(x => x.Recipes).WithMany(x => x.PlansOfMeals);

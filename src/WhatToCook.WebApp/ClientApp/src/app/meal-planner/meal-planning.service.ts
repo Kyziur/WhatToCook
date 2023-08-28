@@ -2,13 +2,13 @@ import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Recipe } from 'src/app/recipes/Recipe';
 import { Observable } from 'rxjs';
-import {PlanOfMeals} from "./meal-plan-creator/plan-of-meals";
+import {PlanOfMeals, UpdatePlanOfMeals} from "./meal-plan-creator/plan-of-meals";
 
 @Injectable({
   providedIn: 'root'
 })
 export class MealPlanningService {
-
+  
   mealPlanUrl = "";
   selectedRecipes: Recipe[] = [];
 
@@ -23,7 +23,9 @@ export class MealPlanningService {
   getMealPlan(): Observable<PlanOfMeals[]> {
     return this.httpClient.get<PlanOfMeals[]>(`${this.baseUrl}api/v1/MealPlanning`);
   }
-
+  update(planOfMeals: UpdatePlanOfMeals) {
+    return this.httpClient.put<UpdatePlanOfMeals>(this.baseUrl + 'api/v1/MealPlanning', planOfMeals)
+  }
   selectRecipe(recipe: Recipe){
     this.selectedRecipes.push(recipe);
   }

@@ -45,14 +45,6 @@ export class RecipeViewComponent implements OnInit {
   preview3: string = '';
 
   ngOnInit(): void {
-    //TODO: Add check if it is create or edit
-    //params examples:
-    //query param: https://fancypage.com/recipe?name="pierogi"
-    //route param: https://fancypage.com/recipe/pierogi
-    //route param: https://fancypage.com/recipe/create
-
-
-
     this.route.params.pipe(switchMap(params => {
       console.error('params', params);
       const name = params['name']
