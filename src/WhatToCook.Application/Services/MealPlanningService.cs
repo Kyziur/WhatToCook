@@ -2,23 +2,26 @@
 using WhatToCook.Application.DataTransferObjects.Requests;
 using WhatToCook.Application.Domain;
 using WhatToCook.Application.Infrastructure;
+using WhatToCook.Application.Infrastructure.Repositories;
 
 namespace WhatToCook.Application.Services;
 
 public class MealPlanningService
 {
-    private DatabaseContext _dbcontext;
+    private readonly IRecipesRepository _recipesRepository;
+    private readonly IMealPlanningRepository _mealPlanningRepository;
 
-    public MealPlanningService(DatabaseContext dbconetxt)
+    public MealPlanningService(IRecipesRepository recipesRepository, IMealPlanningRepository mealPlanningRepository)
     {
-        _dbcontext = dbconetxt;
+        _recipesRepository = recipesRepository;
+        _mealPlanningRepository = mealPlanningRepository;
     }
 
     public async Task<PlanOfMeals> Create(PlanOfMealRequest planOfMealRequest)
     {
-        var getRecipeForMealPlan = planOfMealRequest.Recipes.Select(x => x.Name);
-        var recipies = _dbcontext.Recipes.Include(recipe => recipe.PlansOfMeals)
-            .Where(recipe => getRecipeForMealPlan.Contains(recipe.Name)).ToList();
+        var recipesNamesToLookFor = planOfMealRequest.Recipes.Select(x => x.Name);
+        var recipies = _recipesRepository.GetByNames(recipesNamesToLookFor);
+        
         var planOfMeals = new PlanOfMeals()
         {
             Name = planOfMealRequest.Name,
@@ -28,8 +31,8 @@ public class MealPlanningService
             Recipes = recipies
         };
 
-        await _dbcontext.PlanOfMeals.AddAsync(planOfMeals);
-        await _dbcontext.SaveChangesAsync();
+        await _mealPlanningRepository.Create(planOfMeals);
+        
         return planOfMeals;
     }
 }

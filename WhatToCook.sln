@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatToCook.WebApp", "src\Wh
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhatToCook.Application", "src\WhatToCook.Application\WhatToCook.Application.csproj", "{7B81C5C5-68DB-431E-86E5-2A57C0F7C7C4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhatToCook.Application.Tests", "WhatToCook.Application.Tests\WhatToCook.Application.Tests.csproj", "{0F34A72B-D97C-4F6F-8ADD-0A0574602230}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{7B81C5C5-68DB-431E-86E5-2A57C0F7C7C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B81C5C5-68DB-431E-86E5-2A57C0F7C7C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7B81C5C5-68DB-431E-86E5-2A57C0F7C7C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F34A72B-D97C-4F6F-8ADD-0A0574602230}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F34A72B-D97C-4F6F-8ADD-0A0574602230}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F34A72B-D97C-4F6F-8ADD-0A0574602230}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F34A72B-D97C-4F6F-8ADD-0A0574602230}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
