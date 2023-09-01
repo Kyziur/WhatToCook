@@ -19,8 +19,6 @@ public class MealPlanningService
     {
         var getRecipeForMealPlan = planOfMealRequest.Recipes.Select(x => x.Name);
         var recipes = _recipesRepository.GetByNames(getRecipeForMealPlan);
-        var recipesNamesToLookFor = planOfMealRequest.Recipes.Select(x => x.Name);
-        var recipies = _recipesRepository.GetByNames(recipesNamesToLookFor);
         
         var planOfMeals = new PlanOfMeals()
         {
@@ -38,19 +36,20 @@ public class MealPlanningService
 
     public async Task<PlanOfMeals> Update(UpdatePlanOfMealRequest planOfMealRequest)
     {
-        var planOfMeals = await _dbcontext.PlanOfMeals.Include(r => r.Recipes).FirstOrDefaultAsync(r => r.Name == planOfMealRequest.Name);
-        var recipes = _dbcontext.Recipes.Include(recipe => recipe.PlansOfMeals)
-            .Where(recipe => planOfMealRequest.Recipes.Contains(recipe.Name)).ToList();
-        if (planOfMeals == null)
-        {
-            throw new Exception($"Cannot Update {planOfMealRequest.Name}");
-        }
-        planOfMeals.Name = planOfMealRequest.Name;
-        planOfMeals.FromDate = planOfMealRequest.FromDate;
-        planOfMeals.ToDate = planOfMealRequest.ToDate;
-        planOfMeals.Recipes = recipes;
-        _dbcontext.Update(planOfMeals);
-        await _dbcontext.SaveChangesAsync();
-        return planOfMeals;
+        //var planOfMeals = await _dbcontext.PlanOfMeals.Include(r => r.Recipes).FirstOrDefaultAsync(r => r.Name == planOfMealRequest.Name);
+        //var recipes = _dbcontext.Recipes.Include(recipe => recipe.PlansOfMeals)
+        //    .Where(recipe => planOfMealRequest.Recipes.Contains(recipe.Name)).ToList();
+        //if (planOfMeals == null)
+        //{
+        //    throw new Exception($"Cannot Update {planOfMealRequest.Name}");
+        //}
+        //planOfMeals.Name = planOfMealRequest.Name;
+        //planOfMeals.FromDate = planOfMealRequest.FromDate;
+        //planOfMeals.ToDate = planOfMealRequest.ToDate;
+        //planOfMeals.Recipes = recipes;
+        //_dbcontext.Update(planOfMeals);
+        //await _dbcontext.SaveChangesAsync();
+        //return planOfMeals;
+        return null;
     }
 }
