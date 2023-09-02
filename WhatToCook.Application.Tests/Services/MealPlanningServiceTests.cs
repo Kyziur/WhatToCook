@@ -57,7 +57,7 @@ public class MealPlanningServiceTests
     }
 
     [Fact]
-    public async Task Given_ValidData_When_CreatingMealPlan_ThenShouldUpdateMealPlan()
+    public async Task Given_ValidData_When_UpdatingMealPlan_ThenShouldUpdateMealPlan()
     {
         //Arrange old data
         var existingPlanOfMeals = new PlanOfMeals()
@@ -82,7 +82,7 @@ public class MealPlanningServiceTests
 
             new() { Name = "Recipe2" }
         };
-        //setup GetByNames method to return existing recipes
+        //setup GetByNames method to return new recipes
         _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
         //arrange instances of interfaces
         var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object);
@@ -109,7 +109,7 @@ public class MealPlanningServiceTests
         _mealPlanningRepositoryMock.Verify();
     }
     [Fact]
-    public async Task Given_GreaterToDateThanFromDate_When_CreatingMealPlan_ThenShouldThrowException()
+    public async Task Given_GreaterToDateThanFromDate_When_UpdatingMealPlan_ThenShouldThrowException()
     {
         // Arrange
         var existingPlanOfMeals = new PlanOfMeals()
@@ -127,10 +127,10 @@ public class MealPlanningServiceTests
 
         _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByNameAsync(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
 
-        var recipes = new List<Recipe>()    
-        {       
-            new() { Name = "Recipe1" },      
-            new() { Name = "Recipe2" }   
+        var recipes = new List<Recipe>()
+        {
+            new() { Name = "Recipe1" },
+            new() { Name = "Recipe2" }
         };
 
         _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
@@ -150,7 +150,7 @@ public class MealPlanningServiceTests
     }
 
     [Fact]
-    public async Task Given_NonExistentRecipes_When_CreatingMealPlan_ThenShouldThrowException()
+    public async Task Given_NonExistentRecipes_When_UpdatingMealPlan_ThenShouldThrowException()
     {
         // Arrange
         var existingPlanOfMeals = new PlanOfMeals()
