@@ -1,18 +1,20 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WhatToCook.Application.Domain;
 using WhatToCook.Application.Infrastructure;
+using WhatToCook.Application.Infrastructure.Repositories;
 using WhatToCook.WebApp.DataTransferObject.Requests;
 
 namespace WhatToCook.Application.Services;
 
 public class RecipeService
 {
-    private DatabaseContext _dbcontext;
+    private readonly IRecipesRepository _recipesRepository;
+    private readonly IMealPlanningRepository _mealPlanningRepository;
 
-
-    public RecipeService(DatabaseContext dbcontext)
+    public RecipeService(IRecipesRepository recipesRepository, IMealPlanningRepository mealPlanningRepository)
     {
-        _dbcontext = dbcontext;
+        _recipesRepository = recipesRepository;
+        _mealPlanningRepository = mealPlanningRepository;
     }
 
     public string SaveImage(string base64Image, string imagesDirectory)
@@ -42,16 +44,14 @@ public class RecipeService
             TimeToPrepare = request.TimeToPrepare,
             Image = imagePath,
         };
-        await this._dbcontext.Recipes.AddAsync(recipe);
-        await this._dbcontext.SaveChangesAsync();
+        await _recipesRepository.Create(recipe);
         return recipe;
     }
 
     public async Task<Recipe> Update(UpdateRecipeRequest request, string imagesDirectory)
     {
+        var recipe = await _recipesRepository.GetRecipeByName(request.Name);
         // Find the recipe in the database using the provided ID
-        var recipe = await _dbcontext.Recipes.Include(r => r.Ingredients)
-            .FirstOrDefaultAsync(r => r.Id == request.Id);
         if (recipe == null)
         {
             throw new Exception($"Cannot update {request.Id}");
@@ -74,7 +74,7 @@ public class RecipeService
 
 
         // Save the changes to the database
-        await _dbcontext.SaveChangesAsync();
+        await _recipesRepository.Update(recipe);
         return recipe;
     }
 }

@@ -1,11 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WhatToCook.Application.Domain;
+using WhatToCook.WebApp.DataTransferObject.Requests;
 
 namespace WhatToCook.Application.Infrastructure.Repositories;
 
 public interface IRecipesRepository
 {
+    Task<Recipe> GetRecipeByName(string name);
     List<Recipe> GetByNames(IEnumerable<string> names);
+    Task Create(Recipe recipe);
+    Task Update(Recipe recipe);
 }
 
 public class RecipesRepository : IRecipesRepository
@@ -28,5 +32,22 @@ public class RecipesRepository : IRecipesRepository
             throw new Exception($"Recipes do not exist in the database: {string.Join(", ", missingRecipeNames)}");
         }
         return recipes;
+    }
+    public async Task<Recipe> GetRecipeByName(string name)
+    {
+        return await _dbContext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(r => r.Name == name);
+    }
+
+    public async Task Create(Recipe recipe)
+    {
+        await _dbContext.Recipes.AddAsync(recipe);
+        await _dbContext.SaveChangesAsync();
+        
+    }
+    public async Task Update(Recipe recipe)
+    {
+         _dbContext.Recipes.Update(recipe);
+        await _dbContext.SaveChangesAsync();
+
     }
 }
