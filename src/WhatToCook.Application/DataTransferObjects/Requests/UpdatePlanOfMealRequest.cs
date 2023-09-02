@@ -13,6 +13,6 @@ namespace WhatToCook.Application.DataTransferObjects.Requests
         public string Name { get; set; }
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
-        public IEnumerable<string> Recipes { get; set; }
+        public IEnumerable<Recipe> Recipes { get; set; }
     }
 }

@@ -19,7 +19,14 @@ public class RecipesRepository : IRecipesRepository
 
     public List<Recipe> GetByNames(IEnumerable<string> names)
     {
-        return _dbContext.Recipes.Include(recipe => recipe.PlansOfMeals)
-            .Where(recipe => names.Contains(recipe.Name)).ToList();
+        var recipes = _dbContext.Recipes.Include(recipe => recipe.PlansOfMeals)
+        .Where(recipe => names.Contains(recipe.Name)).ToList();
+        var existingRecipeNames = recipes.Select(r => r.Name).ToList();
+        if (!existingRecipeNames.OrderBy(n => n).SequenceEqual(names.OrderBy(n => n)))
+        {
+            var missingRecipeNames = existingRecipeNames.Except(names);
+            throw new Exception($"Recipes do not exist in the database: {string.Join(", ", missingRecipeNames)}");
+        }
+        return recipes;
     }
 }

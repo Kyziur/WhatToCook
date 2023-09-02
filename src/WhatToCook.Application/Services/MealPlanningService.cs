@@ -36,20 +36,30 @@ public class MealPlanningService
 
     public async Task<PlanOfMeals> Update(UpdatePlanOfMealRequest planOfMealRequest)
     {
-        //var planOfMeals = await _dbcontext.PlanOfMeals.Include(r => r.Recipes).FirstOrDefaultAsync(r => r.Name == planOfMealRequest.Name);
-        //var recipes = _dbcontext.Recipes.Include(recipe => recipe.PlansOfMeals)
-        //    .Where(recipe => planOfMealRequest.Recipes.Contains(recipe.Name)).ToList();
-        //if (planOfMeals == null)
-        //{
-        //    throw new Exception($"Cannot Update {planOfMealRequest.Name}");
-        //}
-        //planOfMeals.Name = planOfMealRequest.Name;
-        //planOfMeals.FromDate = planOfMealRequest.FromDate;
-        //planOfMeals.ToDate = planOfMealRequest.ToDate;
-        //planOfMeals.Recipes = recipes;
-        //_dbcontext.Update(planOfMeals);
-        //await _dbcontext.SaveChangesAsync();
-        //return planOfMeals;
-        return null;
+        var getMealPlanToUpdate = await _mealPlanningRepository.GetMealPlanByNameAsync(planOfMealRequest.Name);
+        var getRecipeForMealPlanUpdate = planOfMealRequest.Recipes.Select(x => x.Name);
+        
+        var recipes = _recipesRepository.GetByNames(getRecipeForMealPlanUpdate);
+        if (getMealPlanToUpdate == null)
+        {
+            throw new Exception($"Cannot Update {planOfMealRequest.Name}");
+        }
+        //check if all recipes in the request exist in the database
+        var existingRecipes = recipes.Select(r => r.Name).ToList();
+        if (!existingRecipes.OrderBy(n => n).SequenceEqual(getRecipeForMealPlanUpdate.OrderBy(n => n)))
+        {
+            throw new Exception("Some recipes do not exist in the database");
+        }
+        //check if todate is lower than fromdate
+        if (planOfMealRequest.ToDate < planOfMealRequest.FromDate)
+        {
+            throw new Exception("ToDate can't be lower than FromDate");
+        }
+        getMealPlanToUpdate.Name = planOfMealRequest.Name;
+        getMealPlanToUpdate.FromDate = planOfMealRequest.FromDate;
+        getMealPlanToUpdate.ToDate = planOfMealRequest.ToDate;
+        getMealPlanToUpdate.Recipes = recipes;
+        await _mealPlanningRepository.Update(getMealPlanToUpdate);
+        return getMealPlanToUpdate;
     }
 }
