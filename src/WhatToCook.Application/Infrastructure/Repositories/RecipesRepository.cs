@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WhatToCook.Application.Domain;
-using WhatToCook.WebApp.DataTransferObject.Requests;
 
 namespace WhatToCook.Application.Infrastructure.Repositories;
 
@@ -57,12 +56,11 @@ public class RecipesRepository : IRecipesRepository
     {
         await _dbContext.Recipes.AddAsync(recipe);
         await _dbContext.SaveChangesAsync();
-        
+
     }
     public async Task Update(Recipe recipe)
     {
-         _dbContext.Recipes.Update(recipe);
+        _dbContext.Recipes.Update(recipe);
         await _dbContext.SaveChangesAsync();
-
     }
 }

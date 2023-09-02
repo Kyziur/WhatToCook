@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using WhatToCook.Application.Domain;
-using WhatToCook.Application.Infrastructure;
+﻿using WhatToCook.Application.Domain;
 using WhatToCook.Application.Infrastructure.Repositories;
 using WhatToCook.WebApp.DataTransferObject.Requests;
 
@@ -14,8 +12,6 @@ public class RecipeService
     {
         _recipesRepository = recipesRepository;
     }
-
-   
 
     public async Task<Recipe> Create(RecipeRequest request, string imagesDirectory)
     {
@@ -43,6 +39,10 @@ public class RecipeService
 
         var imagePath = _recipesRepository.SaveImage(request.Image, imagesDirectory);
 
+        if (string.IsNullOrWhiteSpace(recipe.Name))
+        {
+            throw new Exception("Name cannot be null, empty, or whitespace");
+        }
         // Update the recipe properties
         recipe.Name = request.Name;
         recipe.Description = request.PreparationDescription;
@@ -55,8 +55,6 @@ public class RecipeService
         {
             recipe.Ingredients.Add(new Ingredient { Name = ingredient });
         }
-
-
         // Save the changes to the database
         await _recipesRepository.Update(recipe);
         return recipe;

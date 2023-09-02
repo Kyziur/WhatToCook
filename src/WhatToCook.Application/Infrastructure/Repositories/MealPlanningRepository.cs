@@ -5,7 +5,7 @@ namespace WhatToCook.Application.Infrastructure.Repositories;
 
 public interface IMealPlanningRepository
 {
-    Task<PlanOfMeals> GetMealPlanByNameAsync(string name);
+    Task<PlanOfMeals> GetMealPlanByName(string name);
     Task Create(PlanOfMeals planOfMeals);
     Task Update(PlanOfMeals planOfMeals);
 }
@@ -24,7 +24,7 @@ public class MealPlanningRepository : IMealPlanningRepository
         await _dbContext.PlanOfMeals.AddAsync(planOfMeals);
         await _dbContext.SaveChangesAsync();
     }
-    public async Task<PlanOfMeals> GetMealPlanByNameAsync(string name)
+    public async Task<PlanOfMeals> GetMealPlanByName(string name)
     {
         return await _dbContext.PlanOfMeals.Include(r => r.Recipes).FirstOrDefaultAsync(r => r.Name == name);
     }

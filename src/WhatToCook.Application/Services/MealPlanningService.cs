@@ -36,7 +36,7 @@ public class MealPlanningService
 
     public async Task<PlanOfMeals> Update(UpdatePlanOfMealRequest planOfMealRequest)
     {
-        var getMealPlanToUpdate = await _mealPlanningRepository.GetMealPlanByNameAsync(planOfMealRequest.Name);
+        var getMealPlanToUpdate = await _mealPlanningRepository.GetMealPlanByName(planOfMealRequest.Name);
         var getRecipeForMealPlanUpdate = planOfMealRequest.Recipes.Select(x => x.Name);
         
         var recipes = _recipesRepository.GetByNames(getRecipeForMealPlanUpdate);
@@ -55,6 +55,7 @@ public class MealPlanningService
         {
             throw new Exception("ToDate can't be lower than FromDate");
         }
+        
         getMealPlanToUpdate.Name = planOfMealRequest.Name;
         getMealPlanToUpdate.FromDate = planOfMealRequest.FromDate;
         getMealPlanToUpdate.ToDate = planOfMealRequest.ToDate;

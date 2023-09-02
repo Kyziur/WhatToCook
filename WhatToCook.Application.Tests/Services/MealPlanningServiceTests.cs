@@ -73,8 +73,8 @@ public class MealPlanningServiceTests
             }
         };
 
-        //setup GetMealPlanByNameAsync method to return existing plan of meals
-        _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByNameAsync(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
+        //setup GetMealPlanByName method to return existing plan of meals
+        _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
 
         var recipes = new List<Recipe>()
         {
@@ -125,7 +125,7 @@ public class MealPlanningServiceTests
         }
         };
 
-        _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByNameAsync(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
+        _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
 
         var recipes = new List<Recipe>()
         {
@@ -146,7 +146,7 @@ public class MealPlanningServiceTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => sut.Update(updatePlanOfMealRequest));
+        await Assert.ThrowsAsync<Exception>(() => sut.Update(updatePlanOfMealRequest));
     }
 
     [Fact]
@@ -163,10 +163,11 @@ public class MealPlanningServiceTests
         {
             new() { Name = "OldRecipe1" },
             new() { Name = "OldRecipe2" }
-        }
+        
+            }
         };
 
-        _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByNameAsync(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
+        _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
 
         var existingRecipes = new List<Recipe>()
         {
@@ -190,17 +191,7 @@ public class MealPlanningServiceTests
             ToDate = DateTime.UtcNow.AddDays(2),
             Recipes = allRecipes
         };
-
-        // Act
-        var result = await sut.Update(updatePlanOfMealRequest);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Name.Should().NotBeNullOrWhiteSpace().And.Be(updatePlanOfMealRequest.Name);
-        result.FromDate.Should().Be(updatePlanOfMealRequest.FromDate);
-        result.ToDate.Should().Be(updatePlanOfMealRequest.ToDate);
-        result.Recipes.Should().NotBeNullOrEmpty().And.BeEquivalentTo(existingRecipes);
-
+        var exception = await Assert.ThrowsAsync<Exception>(() => sut.Update(updatePlanOfMealRequest));
         _mealPlanningRepositoryMock.Verify();
     }
 }

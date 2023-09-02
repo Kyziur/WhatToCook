@@ -38,9 +38,6 @@ public class RecipeController : ControllerBase
         var getRecipes = await _recipeServiceQuery.GetRecipes();
         return Ok(getRecipes);
     }
-
-    //TODO: Secure name uniqueness by check on create and adding index on that column
-
     [HttpGet("{name}")]
     public async Task<ActionResult<RecipeResponse>> GetByName(string name)
     {
