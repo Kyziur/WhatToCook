@@ -10,6 +10,7 @@ public interface IRecipesRepository
     List<Recipe> GetByNames(IEnumerable<string> names);
     Task Create(Recipe recipe);
     Task Update(Recipe recipe);
+    string SaveImage(string base64Image, string imagesDirectory);
 }
 
 public class RecipesRepository : IRecipesRepository
@@ -37,7 +38,21 @@ public class RecipesRepository : IRecipesRepository
     {
         return await _dbContext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(r => r.Name == name);
     }
+    public string SaveImage(string base64Image, string imagesDirectory)
+    {
+        string imagePath = "";
+        if (!string.IsNullOrEmpty(base64Image))
+        {
+            byte[] imageBytes = Convert.FromBase64String(base64Image);
+            string fileName = $"{Guid.NewGuid()}.png";
+            string filePath = Path.Combine(imagesDirectory, "Images", fileName);
 
+            System.IO.File.WriteAllBytes(filePath, imageBytes);
+            imagePath = $"Images/{fileName}";
+        }
+
+        return imagePath;
+    }
     public async Task Create(Recipe recipe)
     {
         await _dbContext.Recipes.AddAsync(recipe);
