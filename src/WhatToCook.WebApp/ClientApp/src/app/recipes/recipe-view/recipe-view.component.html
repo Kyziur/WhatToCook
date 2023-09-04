@@ -9,7 +9,10 @@
     <ng-container *ngTemplateOutlet="view"></ng-container>
   </div>
 </div>
-
+//TODO popup: confirmation "do u want to delete?" after delete, redirect to a main page
+//TODO:  a pleasant css for each category: name, description etc.
+//TODO: do delete button for meal plans
+//TODO: prevent choosing dates that are behind the current date, make some CSS for meal plan creating, create a list of created meal plans that are possible to edit in sub-page Meal Plans
 <ng-template #view>
   <h2>{{ recipe?.name }}</h2>
   <ul>
@@ -18,7 +21,10 @@
   <p>{{ recipe?.preparationDescription }}</p>
   <p>Time to prepare: {{ recipe?.timeToPrepare }}</p>
   <img class="recipe-card-image" src="{{ getImagePath() }}" alt="{{ recipe?.name }} image"/>
-  <button type="button" (click)="enableEdit()">Edit</button>
+  <div class="mt-6 flex items-center justify-end gap-x-6">
+    <button type="button" class="btn py-1" (click)="onDelete(recipe?.id)">Delete</button>
+      <button type="button" class="btn py-1" (click)="enableEdit()">Edit</button>
+</div>
 </ng-template>
 
 <ng-template #editable>

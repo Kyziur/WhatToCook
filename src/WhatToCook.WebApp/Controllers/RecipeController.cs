@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WhatToCook.Application.Infrastructure;
 using WhatToCook.Application.Services;
 using WhatToCook.WebApp.DataTransferObject.Requests;
@@ -66,5 +67,11 @@ public class RecipeController : ControllerBase
         var filesDirectory = _environment.WebRootPath;
         await _recipeService.Update(request, filesDirectory);
         return Ok();
+    }
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> Delete(int id)
+    {
+        await _recipeService.Delete(id);
+        return NoContent();
     }
 }

@@ -10,6 +10,7 @@ public interface IRecipesRepository
     Task Create(Recipe recipe);
     Task Update(Recipe recipe);
     string SaveImage(string base64Image, string imagesDirectory);
+    Task Delete(int id);
 }
 
 public class RecipesRepository : IRecipesRepository
@@ -61,6 +62,12 @@ public class RecipesRepository : IRecipesRepository
     public async Task Update(Recipe recipe)
     {
         _dbContext.Recipes.Update(recipe);
+        await _dbContext.SaveChangesAsync();
+    }
+    public async Task Delete(int id)
+    {
+        var recipe = await _dbContext.Recipes.FindAsync(id);
+        _dbContext.Recipes.Remove(recipe);
         await _dbContext.SaveChangesAsync();
     }
 }

@@ -25,7 +25,7 @@ namespace WhatToCook.Application.DataTransferObjects.Responses
                 Recipes = planOfMeals.Recipes.Select(recipe => new RecipeInMealPlanResponse(recipe.Name)),
                 FromDate = DateTime.SpecifyKind(planOfMeals.FromDate, DateTimeKind.Utc),
                 ToDate = DateTime.SpecifyKind(planOfMeals.ToDate, DateTimeKind.Utc)
-        };
+             };
         }
     }
 }

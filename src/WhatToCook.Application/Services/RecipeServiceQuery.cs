@@ -23,21 +23,7 @@ namespace WhatToCook.Application.Services
                 RecipeResponse recipeResponse = RecipeResponse.MapFrom(recipe);
                 recipesMappingResult.Add(recipeResponse);
             }
-
             return recipesMappingResult;
-
-            //    var query = await _dbcontext.Recipes.Select(recipe => new RecipeResponse() {
-            //        Id = recipe.Id,
-            //        Name = recipe.Name,
-            //        Ingredients = recipe.Ingredients.Select(ingredient => ingredient.Name),
-            //        PreparationDescription = recipe.Description,
-            //        TimeToPrepare = recipe.TimeToPrepare,
-            //        ImagePath = recipe.Image
-            //    }).ToListAsync(); //== select Id, Name, PreparationDescription, Ingredient TimeToPrepare, ImagePath from Recipes inner join Ingredients on Recipes.Id = Ingredients.RecipeId
-
-
-            //    return query;
-            //}
         }
 
         public async Task<RecipeResponse?> GetByName(string name)

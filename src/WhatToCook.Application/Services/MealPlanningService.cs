@@ -19,7 +19,7 @@ public class MealPlanningService
     {
         var getRecipeForMealPlan = planOfMealRequest.Recipes.Select(x => x.Name);
         var recipes = _recipesRepository.GetByNames(getRecipeForMealPlan);
-        
+
         var planOfMeals = new PlanOfMeals()
         {
             Name = planOfMealRequest.Name,
@@ -30,7 +30,7 @@ public class MealPlanningService
         };
 
         await _mealPlanningRepository.Create(planOfMeals);
-        
+
         return planOfMeals;
     }
 
@@ -38,7 +38,7 @@ public class MealPlanningService
     {
         var getMealPlanToUpdate = await _mealPlanningRepository.GetMealPlanByName(planOfMealRequest.Name);
         var getRecipeForMealPlanUpdate = planOfMealRequest.Recipes.Select(x => x.Name);
-        
+
         var recipes = _recipesRepository.GetByNames(getRecipeForMealPlanUpdate);
         if (getMealPlanToUpdate == null)
         {
@@ -55,7 +55,6 @@ public class MealPlanningService
         {
             throw new Exception("ToDate can't be lower than FromDate");
         }
-        
         getMealPlanToUpdate.Name = planOfMealRequest.Name;
         getMealPlanToUpdate.FromDate = planOfMealRequest.FromDate;
         getMealPlanToUpdate.ToDate = planOfMealRequest.ToDate;
@@ -63,4 +62,5 @@ public class MealPlanningService
         await _mealPlanningRepository.Update(getMealPlanToUpdate);
         return getMealPlanToUpdate;
     }
+
 }

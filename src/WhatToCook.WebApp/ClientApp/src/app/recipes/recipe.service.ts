@@ -25,7 +25,11 @@ export class RecipeService {
   update(recipe: CreateRecipe) {
     return this.httpClient.put<CreateRecipe>(this.baseUrl + 'api/v1/Recipe', recipe)
   }
+  deleteRecipe(id: number) {
+    return this.httpClient.delete(this.baseUrl + 'api/v1/Recipe/' + id);
 }
+}
+
 
 
 

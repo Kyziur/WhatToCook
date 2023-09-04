@@ -54,5 +54,6 @@ ngAfterContentInit(){
     }*/
     console.log("asf", this.mealPlanningService.selectedRecipes)
   }
+  
 }
 

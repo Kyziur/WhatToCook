@@ -175,5 +175,20 @@ export class RecipeViewComponent implements OnInit {
 
     return this.recipe.imagePath
   }
-
+  onDelete(id?: number) {
+    if (id === undefined) {
+      console.error('Recipe id is undefined');
+      return;
+    }
+  
+    this.recipeService.deleteRecipe(id).subscribe({
+      next: response => {
+          console.log('Recipe deleted', response);
+          // Refresh your recipes list or navigate to another page
+      },
+      error: error => {
+          console.error('Error deleting recipe', error);
+      }
+    });
+  }
 }

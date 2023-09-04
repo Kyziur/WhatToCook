@@ -59,4 +59,9 @@ public class RecipeService
         await _recipesRepository.Update(recipe);
         return recipe;
     }
+    public async Task Delete(int id)
+    {
+        await _recipesRepository.Delete(id);
+        
+    }
 }
