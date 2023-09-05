@@ -18,6 +18,8 @@ export enum DisplayMode {
   styleUrls: ['./recipe-view.component.scss']
 })
 export class RecipeViewComponent implements OnInit {
+  isDeleteConfirmationVisible = false;
+  confirmDeleteRecipe: any;
   timeToPrepareOptions = ["Short", "Medium", "Long"];
   recipe?: Recipe;
   selectedFile = null;
@@ -58,7 +60,6 @@ export class RecipeViewComponent implements OnInit {
       console.error('viewing recipe:', this.recipe);
     });
   }
-
   getDisplayMode(): DisplayMode {
     //If there is no recipe then it means that we want to create a new one
     if (!this.recipe) {
@@ -174,6 +175,15 @@ export class RecipeViewComponent implements OnInit {
     }
 
     return this.recipe.imagePath
+  }
+
+  openDeleteConfirmationModal(id: any) {
+    this.isDeleteConfirmationVisible = true;
+    this.confirmDeleteRecipe = id;
+  }
+
+  closeDeleteConfirmationModal() {
+    this.isDeleteConfirmationVisible = false;
   }
   onDelete(id?: number) {
     if (id === undefined) {

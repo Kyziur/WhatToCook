@@ -183,4 +183,54 @@ public class RecipeServiceTests
         //Assert
         await Assert.ThrowsAsync<Exception>(() => sut.Update(updateRecipeRequest, imagesDirectory));
     }
+    [Fact]
+    public async Task Given_ValidData_When_DeletingRecipe_Then_RecipeIsDeleted()
+    {
+        var existingRecipe = new Recipe()
+        {
+            Id = 1,
+            Name = "oldname1",
+            Ingredients = new List<Ingredient>()
+        {
+            new() {Name = "old ingredtient1"},
+            new() {Name = "old ingredtient2"},
+            new() {Name = "old ingredtient3"},
+            new() {Name = "old ingredtient4"},
+        },
+            Image = "old image",
+            Description = "olddescription",
+            TimeToPrepare = "short"
+        };
+
+        //setup GetRecipeByName method to return existing recipe
+        _recipesRepositoryMock.Setup(x => x.GetRecipeByName(It.IsAny<string>())).ReturnsAsync(existingRecipe);
+
+        var sut = new RecipeService(_recipesRepositoryMock.Object);
+
+        //setup Delete method to delete the recipe
+        _recipesRepositoryMock.Setup(x => x.Delete(It.IsAny<int>())).Returns(Task.CompletedTask);
+
+        //Act
+        await sut.Delete(existingRecipe.Id);
+
+        //Assert
+        _recipesRepositoryMock.Verify(x => x.Delete(existingRecipe.Id), Times.Once);
+    }
+
+    [Fact]
+    public async Task Given_InvalidData_When_DeletingRecipe_ThenThrowsException()
+    {
+        var nonExistingRecipeId = 999;
+
+        //setup Delete method to throw an exception
+        _recipesRepositoryMock.Setup(x => x.Delete(It.IsAny<int>())).ThrowsAsync(new Exception("Recipe not found"));
+
+        var sut = new RecipeService(_recipesRepositoryMock.Object);
+
+        //Act and Assert
+        await Assert.ThrowsAsync<Exception>(() => sut.Delete(nonExistingRecipeId));
+
+        _recipesRepositoryMock.Verify(x => x.Delete(nonExistingRecipeId), Times.Once);
+    }
 }
+

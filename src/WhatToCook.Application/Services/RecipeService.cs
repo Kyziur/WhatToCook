@@ -62,6 +62,5 @@ public class RecipeService
     public async Task Delete(int id)
     {
         await _recipesRepository.Delete(id);
-        
     }
 }
