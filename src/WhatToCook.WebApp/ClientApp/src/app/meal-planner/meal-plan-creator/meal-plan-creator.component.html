@@ -1,20 +1,36 @@
+//TODO: do delete button for meal plans
+//TODO: prevent choosing dates that are behind the current date, make some CSS for meal plan creating, create a list of created meal plans that are possible to edit in sub-page Meal Plans
+
 <div class="d-flex flex-center">
   <form [formGroup]="mealPlanForm" *ngIf="mealPlanForm" (ngSubmit)="submit()">
     <div>
       <div class="form-group">
         <label>Name</label>
         <input type="text" formControlName="name" class="form-control" />
+        <div *ngIf="mealPlanForm.get('name')?.hasError('required')">
+          Name is required.
+        </div>
+        <div *ngIf="mealPlanForm.get('name')?.hasError('whitespace')">
+          Name cannot be just whitespace.
+        </div>
       </div>
       <div class="form-group">
         <label>From</label>
-        <input type="date" formControlName="fromDate" class="form-control" />
+        <input type="date" formControlName="fromDate" class="form-control" (focusout)="hasInteractedWithFromDate=true" />
+        <div *ngIf="mealPlanForm.get('fromDate')?.hasError('pastDate')">
+          Date should not be in the past.
+        </div>
         <label>To</label>
-        <input type="date" formControlName="toDate" class="form-control" />
+        <input type="date" formControlName="toDate" class="form-control" (focusout)="hasInteractedWithToDate=true" />
+        <div *ngIf="mealPlanForm.errors?.dateMismatch">
+          'To' date should not be before 'From' date.
+        </div>
       </div>
-      <button type="submit">Save</button>
+      <button type="submit" [disabled]="!mealPlanForm.valid || (!hasInteractedWithFromDate && !hasInteractedWithToDate)">Save</button>
     </div>
   </form>
 </div>
+
 
 
 

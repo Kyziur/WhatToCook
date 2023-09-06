@@ -224,7 +224,7 @@ public class RecipeServiceTests
 
         //setup Delete method to throw an exception
         _recipesRepositoryMock.Setup(x => x.Delete(It.IsAny<int>())).ThrowsAsync(new Exception("Recipe not found"));
-
+            
         var sut = new RecipeService(_recipesRepositoryMock.Object);
 
         //Act and Assert

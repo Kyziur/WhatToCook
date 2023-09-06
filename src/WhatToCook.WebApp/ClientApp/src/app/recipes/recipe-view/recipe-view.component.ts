@@ -177,12 +177,12 @@ export class RecipeViewComponent implements OnInit {
     return this.recipe.imagePath
   }
 
-  openDeleteConfirmationModal(id: any) {
+  openDeleteConfirmation(id: any) {
     this.isDeleteConfirmationVisible = true;
     this.confirmDeleteRecipe = id;
   }
 
-  closeDeleteConfirmationModal() {
+  closeDeleteConfirmation() {
     this.isDeleteConfirmationVisible = false;
   }
   onDelete(id?: number) {
