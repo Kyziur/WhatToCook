@@ -4,12 +4,12 @@
 name: .NET
 
 on:
-  commit:
-    branches-ignore: [ "main" ]
   push:
-    branches: [ "main" ]
+    branches-ignore: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  pull_request_review:
+    types: [submitted]
 
 jobs:
   build:
