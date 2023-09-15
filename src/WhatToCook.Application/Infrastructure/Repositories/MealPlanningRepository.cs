@@ -24,7 +24,7 @@ public class MealPlanningRepository : IMealPlanningRepository
         await _dbContext.PlanOfMeals.AddAsync(planOfMeals);
         await _dbContext.SaveChangesAsync();
     }
-    public async Task<PlanOfMeals> GetMealPlanByName(string name)
+    public async Task<PlanOfMeals?> GetMealPlanByName(string name)
     {
         return await _dbContext.PlanOfMeals.Include(r => r.Recipes).FirstOrDefaultAsync(r => r.Name == name);
     }
@@ -33,5 +33,4 @@ public class MealPlanningRepository : IMealPlanningRepository
         _dbContext.PlanOfMeals.Update(planOfMeals);
         await _dbContext.SaveChangesAsync();
     }
-
 }

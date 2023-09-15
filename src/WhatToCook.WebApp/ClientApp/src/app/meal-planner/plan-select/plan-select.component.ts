@@ -1,6 +1,6 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {MealPlanningService} from "../meal-planning.service";
-import {PlanOfMeals, UpdatePlanOfMeals} from "../meal-plan-creator/plan-of-meals";
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { MealPlanningService } from "../meal-planning.service";
+import { PlanOfMeals, UpdatePlanOfMeals } from "../meal-plan-creator/plan-of-meals";
 
 const EMPTY_MEAL_PLAN: PlanOfMeals = {
   name: "Zaznacz",
@@ -25,37 +25,26 @@ export class PlanSelectComponent {
   }
 
   ngOnInit(): void {
-    this.mealPlanService.getMealPlan().subscribe(
-      (mealPlans) => {
-        console.log("Received plans:", mealPlans);
-        this.mealPlans = [EMPTY_MEAL_PLAN, ...mealPlans];
-        this.selectedMealPlan = this.mealPlans[0];
-
-      },
-      (error) => {
-        console.error(error);
-      }
-    );
+    this.mealPlanService.getMealPlans().subscribe({
+      next: mealPlans => { this.mealPlans = [EMPTY_MEAL_PLAN, ...mealPlans]; this.selectedMealPlan = this.mealPlans[0]; },
+      error: err => console.error(err)
+    });
   }
 
-  selectedMealPlanChanged() {
-    this.onSelectionChange.emit(this.selectedMealPlan);
-  }
-    onSubmit() {
-   this.mealPlanService.selectedRecipes
-   this.selectedMealPlan?.name
-   if(this.selectedMealPlan === undefined || this.selectedMealPlan === null){
-    return 
-   }
-   const mealPlan: UpdatePlanOfMeals = {
-    id: this.selectedMealPlan.id,
-    fromDate: this.selectedMealPlan.fromDate,
-    toDate: this.selectedMealPlan.toDate,
-    name: this.selectedMealPlan.name,
-    recipes: this.mealPlanService.selectedRecipes.map(recipe => {
-      return recipe.name
-    })
-   }
-   this.mealPlanService.update(mealPlan).subscribe();
+
+  onSubmit() {
+    if (!this.selectedMealPlan){
+      return
+    }
+    const mealPlan: UpdatePlanOfMeals = {
+      id: this.selectedMealPlan.id,
+      fromDate: this.selectedMealPlan.fromDate,
+      toDate: this.selectedMealPlan.toDate,
+      name: this.selectedMealPlan.name,
+      recipes: this.mealPlanService.selectedRecipes.map(recipe => {
+        return recipe.name
+      })
+    }
+    this.mealPlanService.update(mealPlan).subscribe();
   }
 }

@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using WhatToCook.Application.DataTransferObjects.Requests;
+using WhatToCook.Application.DataTransferObjects.Responses;
 using WhatToCook.Application.Infrastructure;
 using WhatToCook.Application.Services;
-using WhatToCook.WebApp.DataTransferObject.Requests;
-using WhatToCook.WebApp.DataTransferObject.Responses;
 
 namespace WhatToCook.WebApp.Controllers;
 
@@ -12,7 +11,7 @@ namespace WhatToCook.WebApp.Controllers;
 public class RecipeController : ControllerBase
 {
     private readonly ILogger<RecipeController> _logger;
-    private DatabaseContext _dbcontext;
+    private readonly DatabaseContext _dbcontext;
     private readonly IWebHostEnvironment _environment;
     private readonly RecipeServiceQuery _recipeServiceQuery;
     private readonly RecipeService _recipeService;

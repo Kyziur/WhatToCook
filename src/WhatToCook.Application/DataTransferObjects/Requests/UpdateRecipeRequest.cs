@@ -1,5 +1,5 @@
-﻿
-namespace WhatToCook.WebApp.DataTransferObject.Requests
+﻿namespace WhatToCook.Application.DataTransferObjects.Requests
+
 {
     public class UpdateRecipeRequest
     {

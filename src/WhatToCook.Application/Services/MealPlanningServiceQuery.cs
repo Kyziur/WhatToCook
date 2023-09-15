@@ -16,14 +16,6 @@ namespace WhatToCook.Application.Services
 
         public async Task<List<PlanOfMealResponse>> GetPlanOfMeals()
         {
-            List<PlanOfMeals> planOfMeals = await _dbcontext.PlanOfMeals.Include(b => b.Recipes).ToListAsync();
-            List<PlanOfMealResponse> planOfMealsMappingResult = new();
-            foreach (var planOfMeal in planOfMeals)
-            {
-                PlanOfMealResponse planOfMealResponse = PlanOfMealResponse.MapFrom(planOfMeal);
-                planOfMealsMappingResult.Add(planOfMealResponse);
-            }
-
             var query = await _dbcontext.PlanOfMeals.Select(planOfMeal => new PlanOfMealResponse()
             {
                 Name = planOfMeal.Name,

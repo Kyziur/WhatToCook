@@ -1,6 +1,3 @@
-//TODO: do delete button for meal plans
-//TODO: prevent choosing dates that are behind the current date, make some CSS for meal plan creating, create a list of created meal plans that are possible to edit in sub-page Meal Plans
-
 <div class="d-flex flex-center">
   <form [formGroup]="mealPlanForm" *ngIf="mealPlanForm" (ngSubmit)="submit()">
     <div>
@@ -21,6 +18,7 @@
           Date should not be in the past.
         </div>
         <label>To</label>
+        <!--focus out indicates some level of interaction, once dates are set from default to anything, the flag will change, and the form will be based on validators-->
         <input type="date" formControlName="toDate" class="form-control" (focusout)="hasInteractedWithToDate=true" />
         <div *ngIf="mealPlanForm.errors?.dateMismatch">
           'To' date should not be before 'From' date.

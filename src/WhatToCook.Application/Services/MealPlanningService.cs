@@ -1,5 +1,7 @@
-﻿using WhatToCook.Application.DataTransferObjects.Requests;
+﻿using Microsoft.Extensions.Logging;
+using WhatToCook.Application.DataTransferObjects.Requests;
 using WhatToCook.Application.Domain;
+using WhatToCook.Application.Exceptions;
 using WhatToCook.Application.Infrastructure.Repositories;
 
 namespace WhatToCook.Application.Services;
@@ -8,26 +10,26 @@ public class MealPlanningService
 {
     private readonly IRecipesRepository _recipesRepository;
     private readonly IMealPlanningRepository _mealPlanningRepository;
-
-    public MealPlanningService(IRecipesRepository recipesRepository, IMealPlanningRepository mealPlanningRepository)
+    private readonly ILogger _logger;
+    public MealPlanningService(IRecipesRepository recipesRepository, IMealPlanningRepository mealPlanningRepository, ILogger<MealPlanningService> logger)
     {
         _recipesRepository = recipesRepository;
         _mealPlanningRepository = mealPlanningRepository;
+        _logger = logger;
     }
 
     public async Task<PlanOfMeals> Create(PlanOfMealRequest planOfMealRequest)
     {
-        var getRecipeForMealPlan = planOfMealRequest.Recipes.Select(x => x.Name);
-        var recipes = _recipesRepository.GetByNames(getRecipeForMealPlan);
+        var RecipeForMealPlan = planOfMealRequest.Recipes.Select(x => x.Name);
+        var recipes = _recipesRepository.GetByNames(RecipeForMealPlan);
 
-        var planOfMeals = new PlanOfMeals()
-        {
-            Name = planOfMealRequest.Name,
-            Id = planOfMealRequest.Id,
-            FromDate = DateTime.SpecifyKind(planOfMealRequest.FromDate, DateTimeKind.Utc),
-            ToDate = DateTime.SpecifyKind(planOfMealRequest.ToDate, DateTimeKind.Utc),
-            Recipes = recipes
-        };
+        var planOfMeals = new PlanOfMeals
+    (
+        planOfMealRequest.Name,
+        DateTime.SpecifyKind(planOfMealRequest.FromDate, DateTimeKind.Utc),
+        DateTime.SpecifyKind(planOfMealRequest.ToDate, DateTimeKind.Utc),
+        recipes
+    );
 
         await _mealPlanningRepository.Create(planOfMeals);
 
@@ -36,31 +38,33 @@ public class MealPlanningService
 
     public async Task<PlanOfMeals> Update(UpdatePlanOfMealRequest planOfMealRequest)
     {
-        var getMealPlanToUpdate = await _mealPlanningRepository.GetMealPlanByName(planOfMealRequest.Name);
-        var getRecipeForMealPlanUpdate = planOfMealRequest.Recipes.Select(x => x.Name);
+        var mealPlanToUpdate = await _mealPlanningRepository.GetMealPlanByName(planOfMealRequest.Name);
+        var RecipeForMealPlanUpdate = planOfMealRequest.Recipes.Select(x => x.Name);
 
-        var recipes = _recipesRepository.GetByNames(getRecipeForMealPlanUpdate);
-        if (getMealPlanToUpdate == null)
-        {
-            throw new Exception($"Cannot Update {planOfMealRequest.Name}");
+        var recipes = _recipesRepository.GetByNames(RecipeForMealPlanUpdate);
+        if (mealPlanToUpdate == null)
+        {          
+            _logger.LogError($"Attempted to update a non-existent meal plan: {planOfMealRequest.Name}");
+            throw new NotFoundException(nameof(mealPlanToUpdate));
         }
         //check if all recipes in the request exist in the database
         var existingRecipes = recipes.Select(r => r.Name).ToList();
-        if (!existingRecipes.OrderBy(n => n).SequenceEqual(getRecipeForMealPlanUpdate.OrderBy(n => n)))
+        if (!existingRecipes.OrderBy(n => n).SequenceEqual(RecipeForMealPlanUpdate.OrderBy(n => n)))
         {
-            throw new Exception("Some recipes do not exist in the database");
+            throw new NotFoundException("Some recipes do not exist in the database");
         }
         //check if todate is lower than fromdate
         if (planOfMealRequest.ToDate < planOfMealRequest.FromDate)
         {
-            throw new Exception("ToDate can't be lower than FromDate");
+            _logger.LogError($"Attempted to update a meal plan with greated ToDate than FromDate: {planOfMealRequest.Name}");
+            throw new IncorrectDateException("ToDate can't be lower than FromDate");
         }
-        getMealPlanToUpdate.Name = planOfMealRequest.Name;
-        getMealPlanToUpdate.FromDate = planOfMealRequest.FromDate;
-        getMealPlanToUpdate.ToDate = planOfMealRequest.ToDate;
-        getMealPlanToUpdate.Recipes = recipes;
-        await _mealPlanningRepository.Update(getMealPlanToUpdate);
-        return getMealPlanToUpdate;
+        mealPlanToUpdate.Name = planOfMealRequest.Name;
+        mealPlanToUpdate.FromDate = planOfMealRequest.FromDate;
+        mealPlanToUpdate.ToDate = planOfMealRequest.ToDate;
+        mealPlanToUpdate.Recipes = recipes;
+        await _mealPlanningRepository.Update(mealPlanToUpdate);
+        return mealPlanToUpdate;
     }
 
 }

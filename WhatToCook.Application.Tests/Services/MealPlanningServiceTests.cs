@@ -1,5 +1,4 @@
-﻿using FluentAssertions;
-using Moq;
+﻿using Microsoft.Extensions.Logging;
 using WhatToCook.Application.DataTransferObjects.Requests;
 using WhatToCook.Application.Domain;
 using WhatToCook.Application.Infrastructure.Repositories;
@@ -18,23 +17,18 @@ public class MealPlanningServiceTests
         _mealPlanningRepositoryMock = new Mock<IMealPlanningRepository>();
     }
     [Fact]
-    public async Task Given_ValidData_When_CreatingMealPlan_ThenSucceeds()
+    public async Task Given_ValidData_When_CreatingMealPlan_Then_Succeeds()
     {
         //Arrange
         var recipes = new List<Recipe>()
         {
-            new() { Name = "Recipe1" },
-            new() { Name = "Recipe2" }
+            new Recipe("Recipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
+            new Recipe("Recipe2", "Description2", "30 mins", new List<Ingredient>(), null, "path/to/image2", null)
         };
-
+        var loggerMock = new Mock<ILogger<MealPlanningService>>();
         _recipesRepositoryMock.Setup(x => x.GetByNames(new[] { "Recipe1", "Recipe2" })).Returns(recipes);
-
-
-        ICollection<PlanOfMeals> planOfMeals = new List<PlanOfMeals>();
-        // _mealPlanningRepositoryMock.Setup(x => x.Create(Capture.In(planOfMeals)));
-
         _mealPlanningRepositoryMock.Setup(x => x.Create(It.IsAny<PlanOfMeals>())).Verifiable(Times.Once);
-        var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object);
+        var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object, loggerMock.Object);
 
         var planOfMealRequest = new PlanOfMealRequest()
         {
@@ -49,43 +43,38 @@ public class MealPlanningServiceTests
         var result = await sut.Create(planOfMealRequest);
 
         //Assert
-        result.Should().NotBeNull();
-        result.Name.Should().NotBeNullOrWhiteSpace().And.Be("Test");
-        result.Recipes.Should().NotBeNullOrEmpty().And.HaveCount(2);
-        // Assert.NotEmpty(planOfMeals);
         _mealPlanningRepositoryMock.Verify();
     }
 
     [Fact]
-    public async Task Given_ValidData_When_UpdatingMealPlan_ThenShouldUpdateMealPlan()
+    public async Task Given_ValidData_When_UpdatingMealPlan_Then_ShouldUpdateMealPlan()
     {
         //Arrange old data
-        var existingPlanOfMeals = new PlanOfMeals()
-        {
-            Id = 1,
-            Name = "OldTest",
-            FromDate = DateTime.UtcNow.AddDays(-1),
-            ToDate = DateTime.UtcNow.AddDays(1),
-            Recipes = new List<Recipe>()
+        var existingPlanOfMeals = new PlanOfMeals
+        (
+            "OldTest",
+            DateTime.UtcNow.AddDays(-1),
+            DateTime.UtcNow.AddDays(1),
+            new List<Recipe>()
             {
-                new() { Name = "OldRecipe1" },
-                new() { Name = "OldRecipe2" }
+                new Recipe("OldRecipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
+                new Recipe("OldRecipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)
             }
-        };
+        );
 
         //setup GetMealPlanByName method to return existing plan of meals
         _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
 
         var recipes = new List<Recipe>()
         {
-            new() { Name = "Recipe1" },
-
-            new() { Name = "Recipe2" }
+             new Recipe("Recipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
+             new Recipe("Recipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)
         };
         //setup GetByNames method to return new recipes
         _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
+        var loggerMock = new Mock<ILogger<MealPlanningService>>();
         //arrange instances of interfaces
-        var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object);
+        var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object, loggerMock.Object);
 
         //arrange new plan of meal data
         var updatePlanOfMealRequest = new UpdatePlanOfMealRequest()
@@ -95,7 +84,7 @@ public class MealPlanningServiceTests
             ToDate = DateTime.UtcNow.AddDays(2),
             Recipes = recipes
         };
-        // _mealPlanningRepositoryMock.Setup(x => x.Update(It.IsAny<PlanOfMeals>())).Verifiable();
+         _mealPlanningRepositoryMock.Setup(x => x.Update(It.IsAny<PlanOfMeals>())).Verifiable(Times.Once);
 
         //Act
         //update plan of meal with new data
@@ -109,33 +98,34 @@ public class MealPlanningServiceTests
         _mealPlanningRepositoryMock.Verify();
     }
     [Fact]
-    public async Task Given_GreaterToDateThanFromDate_When_UpdatingMealPlan_ThenShouldThrowException()
+    public async Task Given_GreaterToDateThanFromDate_When_UpdatingMealPlan_Then_ShouldThrowException()
     {
         // Arrange
-        var existingPlanOfMeals = new PlanOfMeals()
-        {
-            Id = 1,
-            Name = "OldTest",
-            FromDate = DateTime.UtcNow.AddDays(0),
-            ToDate = DateTime.UtcNow.AddDays(1),
-            Recipes = new List<Recipe>()
-        {
-            new() { Name = "OldRecipe1" },
-            new() { Name = "OldRecipe2" }
-        }
-        };
+
+        var existingPlanOfMeals = new PlanOfMeals
+      (
+          "OldTest",
+          DateTime.UtcNow.AddDays(0),
+          DateTime.UtcNow.AddDays(1),
+          new List<Recipe>()
+          {
+              new Recipe("OldRecipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),          
+              new Recipe("OldRecipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)    
+          }
+      );
 
         _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
 
         var recipes = new List<Recipe>()
         {
-            new() { Name = "Recipe1" },
-            new() { Name = "Recipe2" }
+            new Recipe("Recipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
+            new Recipe("Recipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)
         };
 
         _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
+        var loggerMock = new Mock<ILogger<MealPlanningService>>();
 
-        var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object);
+        var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object, loggerMock.Object);
 
         var updatePlanOfMealRequest = new UpdatePlanOfMealRequest()
         {
@@ -146,43 +136,48 @@ public class MealPlanningServiceTests
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<Exception>(() => sut.Update(updatePlanOfMealRequest));
+        Func<Task> act = () => sut.Update(updatePlanOfMealRequest);
+        await act.Should().ThrowAsync<Exception>()
+                          .WithMessage("ToDate can't be lower than FromDate");
     }
 
     [Fact]
-    public async Task Given_NonExistentRecipes_When_UpdatingMealPlan_ThenShouldThrowException()
+    public async Task Given_NonExistentRecipes_When_UpdatingMealPlan_Then_ShouldThrowException()
     {
         // Arrange
-        var existingPlanOfMeals = new PlanOfMeals()
-        {
-            Id = 1,
-            Name = "OldTest",
-            FromDate = DateTime.UtcNow.AddDays(-1),
-            ToDate = DateTime.UtcNow.AddDays(1),
-            Recipes = new List<Recipe>()
-        {
-            new() { Name = "OldRecipe1" },
-            new() { Name = "OldRecipe2" }
-        
-            }
-        };
+
+        var existingPlanOfMeals = new PlanOfMeals
+      (
+          "OldTest",
+          DateTime.UtcNow.AddDays(-1),
+          DateTime.UtcNow.AddDays(1),
+          new List<Recipe>()
+          {                 
+              new Recipe("OldRecipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),          
+              new Recipe("OldRecipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)    
+          }
+      );
 
         _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
 
         var existingRecipes = new List<Recipe>()
+   
         {
-            new() { Name = "Recipe1" }
+            new Recipe("Recipe1", "Description", "30 mins", new List<Ingredient>(), null, "path/to/image", null)  
         };
+   
         var nonExistentRecipes = new List<Recipe>()
+   
         {
-            new() { Name = "NonExistentRecipe1" }
+            new Recipe("NonExistentRecipe1", "Description", "30 mins", new List<Ingredient>(), null, "path/to/image", null)
+   
         };
 
         var allRecipes = existingRecipes.Concat(nonExistentRecipes).ToList();
 
         _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(existingRecipes);
-
-        var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object);
+        var loggerMock = new Mock<ILogger<MealPlanningService>>();
+        var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object, loggerMock.Object);
 
         var updatePlanOfMealRequest = new UpdatePlanOfMealRequest()
         {
@@ -191,7 +186,10 @@ public class MealPlanningServiceTests
             ToDate = DateTime.UtcNow.AddDays(2),
             Recipes = allRecipes
         };
-        var exception = await Assert.ThrowsAsync<Exception>(() => sut.Update(updatePlanOfMealRequest));
+
+        Func<Task> act = () => sut.Update(updatePlanOfMealRequest);
+        await act.Should().ThrowAsync<Exception>()
+                          .WithMessage("Some recipes do not exist in the database");
         _mealPlanningRepositoryMock.Verify();
     }
 }

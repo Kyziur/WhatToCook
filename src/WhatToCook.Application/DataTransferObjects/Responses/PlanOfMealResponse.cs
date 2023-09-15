@@ -1,8 +1,4 @@
-﻿using Azure.Core;
-using Microsoft.EntityFrameworkCore;
-using WhatToCook.Application.DataTransferObjects.Requests;
-using WhatToCook.Application.Domain;
-using WhatToCook.Application.Services;
+﻿using WhatToCook.Application.Domain;
 
 namespace WhatToCook.Application.DataTransferObjects.Responses
 {
@@ -17,7 +13,7 @@ namespace WhatToCook.Application.DataTransferObjects.Responses
         public IEnumerable<RecipeInMealPlanResponse> Recipes { get; set; }
         public static PlanOfMealResponse MapFrom(PlanOfMeals planOfMeals)
         {
-          
+
             return new PlanOfMealResponse
             {
                 Id = planOfMeals.Id,
@@ -25,7 +21,7 @@ namespace WhatToCook.Application.DataTransferObjects.Responses
                 Recipes = planOfMeals.Recipes.Select(recipe => new RecipeInMealPlanResponse(recipe.Name)),
                 FromDate = DateTime.SpecifyKind(planOfMeals.FromDate, DateTimeKind.Utc),
                 ToDate = DateTime.SpecifyKind(planOfMeals.ToDate, DateTimeKind.Utc)
-             };
+            };
         }
     }
 }

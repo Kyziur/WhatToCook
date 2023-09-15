@@ -4,7 +4,7 @@ import { CreateRecipe } from './CreateRecipe';
 import { RecipeService } from '../recipe.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Recipe } from "../Recipe";
-import { NEVER, of, switchMap } from "rxjs";
+import { of, switchMap } from "rxjs";
 import { HttpClient } from '@angular/common/http';
 export enum DisplayMode {
   New,
@@ -20,9 +20,7 @@ export enum DisplayMode {
 export class RecipeViewComponent implements OnInit {
   isDeleteConfirmationVisible = false;
   confirmDeleteRecipe: any;
-  timeToPrepareOptions = ["Short", "Medium", "Long"];
   recipe?: Recipe;
-  selectedFile = null;
   recipeForm: FormGroup<{
     name: FormControl<string>;
     ingredients: FormArray<FormControl<string>>;
@@ -41,10 +39,6 @@ export class RecipeViewComponent implements OnInit {
   get ingredientsControls(): FormArray<FormControl<string>> {
     return this.recipeForm?.get('ingredients') as FormArray<FormControl<string>>;
   }
-
-  preview: string = '';
-  preview2: string = '';
-  preview3: string = '';
 
   ngOnInit(): void {
     this.route.params.pipe(switchMap(params => {
@@ -190,14 +184,14 @@ export class RecipeViewComponent implements OnInit {
       console.error('Recipe id is undefined');
       return;
     }
-  
+
     this.recipeService.deleteRecipe(id).subscribe({
       next: response => {
-          console.log('Recipe deleted', response);
-          // Refresh your recipes list or navigate to another page
+        console.log('Recipe deleted', response);
+        // Refresh your recipes list or navigate to another page
       },
       error: error => {
-          console.error('Error deleting recipe', error);
+        console.error('Error deleting recipe', error);
       }
     });
   }

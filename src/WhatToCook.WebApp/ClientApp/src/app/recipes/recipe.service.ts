@@ -27,7 +27,7 @@ export class RecipeService {
   }
   deleteRecipe(id: number) {
     return this.httpClient.delete(this.baseUrl + 'api/v1/Recipe/' + id);
-}
+  }
 }
 
 

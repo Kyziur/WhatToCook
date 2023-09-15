@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WhatToCook.Application.Domain;
+﻿using WhatToCook.Application.Domain;
 
 namespace WhatToCook.Application.DataTransferObjects.Requests
 {

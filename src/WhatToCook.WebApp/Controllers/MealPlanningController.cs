@@ -11,7 +11,7 @@ namespace WhatToCook.WebApp.Controllers;
 public class MealPlanningController : ControllerBase
 {
     private readonly ILogger<MealPlanningController> _logger;
-    private DatabaseContext _dbcontext;
+    private readonly DatabaseContext _dbcontext;
     private readonly MealPlanningServiceQuery _mealPlanningServiceQuery;
     private readonly MealPlanningService _mealPlanningService;
 

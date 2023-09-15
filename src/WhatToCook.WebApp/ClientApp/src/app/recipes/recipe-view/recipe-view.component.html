@@ -9,7 +9,6 @@
     <ng-container *ngTemplateOutlet="view"></ng-container>
   </div>
 </div>
-//TODO:  a pleasant css for each category: name, description etc.
 <ng-template #view>
   <h2>{{ recipe?.name }}</h2>
   <ul>
@@ -17,15 +16,15 @@
   </ul>
   <p>{{ recipe?.preparationDescription }}</p>
   <p>Time to prepare: {{ recipe?.timeToPrepare }}</p>
-  <img class="recipe-card-image" src="{{ getImagePath() }}" alt="{{ recipe?.name }} image"/>
-  <div class="mt-6 flex items-center justify-end gap-x-6">  
+  <img class="recipe-card-image" src="{{ getImagePath() }}" alt="{{ recipe?.name }} image" />
+  <div class="mt-6 flex items-center justify-end gap-x-6">
     <button type="button" class="btn py-1" (click)="openDeleteConfirmation(recipe?.id)">Delete</button>
     <button type="button" class="btn py-1" (click)="enableEdit()">Edit</button>
   </div>
 </ng-template>
 
 <div *ngIf="isDeleteConfirmationVisible" class="modal">
-  <div class="mt-6 flex items-center justify-end gap-x-6"> 
+  <div class="mt-6 flex items-center justify-end gap-x-6">
     <span class="close" (click)="closeDeleteConfirmation()">&times;</span>
     <p>Are you sure you want to delete this recipe?</p>
     <button type="button" class="btn py-1" (click)="onDelete(confirmDeleteRecipe)">Yes</button>
@@ -48,17 +47,17 @@
               <label for="recipeName" class="block text-sm font-medium leading-6 text-gray-900">Name</label>
               <div class="mt-2">
                 <input formControlName="name" id="recipeName" name="email" type="email" autocomplete="email"
-                       class="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                  class="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
               </div>
             </div>
           </div>
 
           <div class="col-span-full">
             <label for="preparationDescription"
-                   class="block text-sm font-medium leading-6 text-gray-900">Preparation</label>
+              class="block text-sm font-medium leading-6 text-gray-900">Preparation</label>
             <div class="mt-2">
-            <textarea id="preparationDescription" formControlName="preparationDescription" rows="3"
-                      class="form-textarea block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></textarea>
+              <textarea id="preparationDescription" formControlName="preparationDescription" rows="3"
+                class="form-textarea block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></textarea>
             </div>
             <p class="mt-3 text-sm leading-6 text-gray-600">Write a few sentences about how to prepare this meal.</p>
           </div>
@@ -68,7 +67,7 @@
             <div class="my-2" formArrayName="ingredients">
               <div class="my-1" *ngFor="let ingredient of ingredientsControls.controls; let i=index">
                 <input id="ingredients" placeholder="Ingredient" type="text" [formControlName]="i"
-                       class="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"/>
+                  class="form-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
               </div>
             </div>
             <button class="btn h-8" type="button" (click)="addIngredient()">Add ingredient</button>
@@ -78,7 +77,7 @@
             <label for="country" class="block text-sm font-medium leading-6 text-gray-900">Time to prepare</label>
             <div class="mt-2">
               <select id="country" name="country" autocomplete="country-name"
-                      class="form-select block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6">
+                class="form-select block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6">
                 <option value="Short">Short</option>
                 <option value="Medium">Medium</option>
                 <option value="Long">Long</option>
@@ -92,12 +91,12 @@
               <div class="text-center">
                 <svg class="mx-auto h-12 w-12 text-gray-300" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path fill-rule="evenodd"
-                        d="M1.5 6a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 6v12a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6zM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0021 18v-1.94l-2.69-2.689a1.5 1.5 0 00-2.12 0l-.88.879.97.97a.75.75 0 11-1.06 1.06l-5.16-5.159a1.5 1.5 0 00-2.12 0L3 16.061zm10.125-7.81a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z"
-                        clip-rule="evenodd"/>
+                    d="M1.5 6a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 6v12a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6zM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0021 18v-1.94l-2.69-2.689a1.5 1.5 0 00-2.12 0l-.88.879.97.97a.75.75 0 11-1.06 1.06l-5.16-5.159a1.5 1.5 0 00-2.12 0L3 16.061zm10.125-7.81a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z"
+                    clip-rule="evenodd" />
                 </svg>
                 <div class="mt-4 flex text-sm leading-6 text-gray-600">
                   <label for="file-upload"
-                         class="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500">
+                    class="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500">
                     <span>Upload a file</span>
                     <input id="file-upload" name="file-upload" type="file" class="sr-only">
                   </label>

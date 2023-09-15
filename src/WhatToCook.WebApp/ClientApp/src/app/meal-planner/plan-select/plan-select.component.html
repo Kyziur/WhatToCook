@@ -1,7 +1,7 @@
 <div class="d-flex justify-center">
   <div class="flex items-center h-12 w-48">
     <label class="sr-only">Choose a list</label>
-    <select (change)="selectedMealPlanChanged()" [(ngModel)]="selectedMealPlan" class="select">
+    <select [(ngModel)]="selectedMealPlan" class="select">
       <option class="" *ngFor="let plan of mealPlans" [ngValue]="plan">{{plan.name}}</option>
     </select>
   </div>

@@ -1,6 +1,6 @@
 ﻿using WhatToCook.Application.Domain;
 
-namespace WhatToCook.WebApp.DataTransferObject.Responses
+namespace WhatToCook.Application.DataTransferObjects.Responses
 {
     public class RecipeResponse
     {
@@ -25,4 +25,3 @@ namespace WhatToCook.WebApp.DataTransferObject.Responses
         }
     }
 }
-

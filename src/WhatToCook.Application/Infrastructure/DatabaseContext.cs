@@ -10,7 +10,7 @@ public class DatabaseContext : DbContext
 {
     private readonly string _connectionString;
     private readonly bool _isDevelopment;
-   
+
 
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
     public DatabaseContext(DbContextOptions<DatabaseContext> options, IConfiguration configuration, IHostEnvironment environment)
@@ -31,7 +31,6 @@ public class DatabaseContext : DbContext
         }
     }
 
-    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(RecipeEntityConfiguration).Assembly);
