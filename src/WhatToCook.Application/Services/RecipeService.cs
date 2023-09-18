@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using WhatToCook.Application.DataTransferObjects.Requests;
 using WhatToCook.Application.Domain;
+using WhatToCook.Application.Exceptions;
 using WhatToCook.Application.Infrastructure.Repositories;
 
 namespace WhatToCook.Application.Services;
@@ -41,33 +42,16 @@ public class RecipeService
         if (recipe == null)
         {
             _logger.LogError($"Attempted to update a recipe: {request.Name}");
-            throw new Exception($"Cannot update {request.Id}");
+            throw new NotFoundException($"Cannot update {request.Id}");
         }
 
 
-        if (!string.IsNullOrWhiteSpace(recipe.Image))
-        {
-            try
-            {
-                string fullPath = Path.Combine(imagesDirectory, recipe.Image);
-                if (File.Exists(fullPath))
-                {
-                    File.Delete(fullPath);
-                }
-            }
-            catch (Exception exception)
-            {
-                throw new Exception($"Failed to delete the existing image: {exception.Message}");
-            }
-        }
-
+        recipe.RemoveImage(imagesDirectory);
         var imagePath = _recipesRepository.SaveImage(request.Image, imagesDirectory);
-
+        recipe.SetImage(imagePath);
         recipe.SetName(request.Name);
-        recipe.Description = request.PreparationDescription;
-        recipe.TimeToPrepare = request.TimeToPrepare;
-        recipe.Image = imagePath;
-
+        recipe.SetDescription(request.PreparationDescription);
+        recipe.SetTimeToPrepare(request.TimeToPrepare);
         recipe.UpdateIngredients(request.Ingredients);
         await _recipesRepository.Update(recipe);
         return recipe;

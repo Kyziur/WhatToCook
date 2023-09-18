@@ -30,7 +30,7 @@ public class MealPlanningService
         DateTime.SpecifyKind(planOfMealRequest.ToDate, DateTimeKind.Utc),
         recipes
     );
-
+        planOfMeals.ValidateDates();
         await _mealPlanningRepository.Create(planOfMeals);
 
         return planOfMeals;
@@ -51,18 +51,15 @@ public class MealPlanningService
         var existingRecipes = recipes.Select(r => r.Name).ToList();
         if (!existingRecipes.OrderBy(n => n).SequenceEqual(RecipeForMealPlanUpdate.OrderBy(n => n)))
         {
-            throw new NotFoundException("Some recipes do not exist in the database");
+            _logger.LogError($"Some recipes do not exist in the database");
+            throw new NotFoundException($"Some recipes do not exist in the database");
         }
-        //check if todate is lower than fromdate
-        if (planOfMealRequest.ToDate < planOfMealRequest.FromDate)
-        {
-            _logger.LogError($"Attempted to update a meal plan with greated ToDate than FromDate: {planOfMealRequest.Name}");
-            throw new IncorrectDateException("ToDate can't be lower than FromDate");
-        }
+
         mealPlanToUpdate.Name = planOfMealRequest.Name;
         mealPlanToUpdate.FromDate = planOfMealRequest.FromDate;
         mealPlanToUpdate.ToDate = planOfMealRequest.ToDate;
         mealPlanToUpdate.Recipes = recipes;
+        mealPlanToUpdate.ValidateDates();
         await _mealPlanningRepository.Update(mealPlanToUpdate);
         return mealPlanToUpdate;
     }

@@ -1,4 +1,6 @@
-﻿namespace WhatToCook.Application.Domain;
+﻿using WhatToCook.Application.Exceptions;
+
+namespace WhatToCook.Application.Domain;
 
 public class PlanOfMeals
 {
@@ -17,4 +19,18 @@ public class PlanOfMeals
         Recipes = recipes;
     }
     private PlanOfMeals() { }
+
+    public void ValidateDates()
+    {
+        if (FromDate < DateTime.UtcNow || ToDate < DateTime.UtcNow)
+        {
+            throw new IncorrectDateException("Dates cannot be in the past.");
+        }
+
+        if (ToDate < FromDate)
+        {
+            throw new IncorrectDateException("ToDate cannot be lower than FromDate.");
+        }
+    }
 }
+

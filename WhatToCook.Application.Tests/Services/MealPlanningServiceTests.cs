@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using WhatToCook.Application.DataTransferObjects.Requests;
 using WhatToCook.Application.Domain;
+using WhatToCook.Application.Exceptions;
 using WhatToCook.Application.Infrastructure.Repositories;
 using WhatToCook.Application.Services;
 
@@ -39,11 +40,7 @@ public class MealPlanningServiceTests
             Name = "Test"
         };
 
-        //Act
-        var result = await sut.Create(planOfMealRequest);
-
-        //Assert
-        _mealPlanningRepositoryMock.Verify();
+        await Assert.ThrowsAsync<IncorrectDateException>(() => sut.Create(planOfMealRequest));
     }
 
     [Fact]
@@ -53,12 +50,12 @@ public class MealPlanningServiceTests
         var existingPlanOfMeals = new PlanOfMeals
         (
             "OldTest",
-            DateTime.UtcNow.AddDays(-1),
             DateTime.UtcNow.AddDays(1),
+            DateTime.UtcNow.AddDays(2),
             new List<Recipe>()
             {
-                new Recipe("OldRecipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
-                new Recipe("OldRecipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)
+                new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
+                new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
             }
         );
 
@@ -67,8 +64,8 @@ public class MealPlanningServiceTests
 
         var recipes = new List<Recipe>()
         {
-             new Recipe("Recipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
-             new Recipe("Recipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)
+             new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
+             new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
         };
         //setup GetByNames method to return new recipes
         _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
@@ -80,11 +77,11 @@ public class MealPlanningServiceTests
         var updatePlanOfMealRequest = new UpdatePlanOfMealRequest()
         {
             Name = "NewTest",
-            FromDate = DateTime.UtcNow,
-            ToDate = DateTime.UtcNow.AddDays(2),
+            FromDate = DateTime.UtcNow.AddDays(2),
+            ToDate = DateTime.UtcNow.AddDays(4),
             Recipes = recipes
         };
-         _mealPlanningRepositoryMock.Setup(x => x.Update(It.IsAny<PlanOfMeals>())).Verifiable(Times.Once);
+        _mealPlanningRepositoryMock.Setup(x => x.Update(It.IsAny<PlanOfMeals>())).Verifiable(Times.Once);
 
         //Act
         //update plan of meal with new data
@@ -109,8 +106,8 @@ public class MealPlanningServiceTests
           DateTime.UtcNow.AddDays(1),
           new List<Recipe>()
           {
-              new Recipe("OldRecipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),          
-              new Recipe("OldRecipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)    
+              new Recipe("OldRecipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
+              new Recipe("OldRecipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)
           }
       );
 
@@ -137,8 +134,7 @@ public class MealPlanningServiceTests
 
         // Act & Assert
         Func<Task> act = () => sut.Update(updatePlanOfMealRequest);
-        await act.Should().ThrowAsync<Exception>()
-                          .WithMessage("ToDate can't be lower than FromDate");
+        await act.Should().ThrowAsync<Exception>();
     }
 
     [Fact]
@@ -152,25 +148,25 @@ public class MealPlanningServiceTests
           DateTime.UtcNow.AddDays(-1),
           DateTime.UtcNow.AddDays(1),
           new List<Recipe>()
-          {                 
-              new Recipe("OldRecipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),          
-              new Recipe("OldRecipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)    
+          {
+              new Recipe("OldRecipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
+              new Recipe("OldRecipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)
           }
       );
 
         _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
 
         var existingRecipes = new List<Recipe>()
-   
+
         {
-            new Recipe("Recipe1", "Description", "30 mins", new List<Ingredient>(), null, "path/to/image", null)  
+            new Recipe("Recipe1", "Description", "30 mins", new List<Ingredient>(), null, "path/to/image", null)
         };
-   
+
         var nonExistentRecipes = new List<Recipe>()
-   
+
         {
             new Recipe("NonExistentRecipe1", "Description", "30 mins", new List<Ingredient>(), null, "path/to/image", null)
-   
+
         };
 
         var allRecipes = existingRecipes.Concat(nonExistentRecipes).ToList();
@@ -191,5 +187,93 @@ public class MealPlanningServiceTests
         await act.Should().ThrowAsync<Exception>()
                           .WithMessage("Some recipes do not exist in the database");
         _mealPlanningRepositoryMock.Verify();
+    }
+
+    [Fact]
+    public async Task Given_PastFromDate_When_UpdatingMealPlan_Then_ThrowsException()
+    {
+        //Arrange old data
+        var existingPlanOfMeals = new PlanOfMeals
+        (
+            "OldTest",
+            DateTime.UtcNow.AddDays(1),
+            DateTime.UtcNow.AddDays(2),
+            new List<Recipe>()
+            {
+                new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
+                new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
+            }
+        );
+
+        //setup GetMealPlanByName method to return existing plan of meals
+        _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
+
+        var recipes = new List<Recipe>()
+        {
+             new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
+             new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
+        };
+
+        //setup GetByNames method to return new recipes
+        _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
+        var loggerMock = new Mock<ILogger<MealPlanningService>>();
+
+        //arrange instances of interfaces
+        var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object, loggerMock.Object);
+        var updatePlanOfMealRequest = new UpdatePlanOfMealRequest()
+        {
+            Name = "NewTest",
+            FromDate = DateTime.UtcNow.AddDays(-1),
+            ToDate = DateTime.UtcNow.AddDays(2),
+            Recipes = recipes
+        };
+
+        // Act and Assert
+        await Assert.ThrowsAsync<IncorrectDateException>(() => sut.Update(updatePlanOfMealRequest));
+    }
+
+    [Fact]
+    public async Task Given_ToDateBeforeFromDate_When_UpdatingMealPlan_Then_ThrowsException()
+    {
+        //Arrange old data
+        var existingPlanOfMeals = new PlanOfMeals
+        (
+            "OldTest",
+            DateTime.UtcNow.AddDays(1),
+            DateTime.UtcNow.AddDays(2),
+            new List<Recipe>()
+            {
+                new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
+                new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
+            }
+        );
+
+        //setup GetMealPlanByName method to return existing plan of meals
+        _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
+
+        var recipes = new List<Recipe>()
+        {
+             new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
+             new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
+        };
+
+        //setup GetByNames method to return new recipes
+        _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
+        var loggerMock = new Mock<ILogger<MealPlanningService>>();
+
+        //arrange instances of interfaces
+        var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object, loggerMock.Object);
+
+        // Arrange data where ToDate is before FromDate
+        var updatePlanOfMealRequest = new UpdatePlanOfMealRequest()
+        {
+            Name = "NewTest",
+            FromDate = DateTime.UtcNow.AddDays(2),
+            ToDate = DateTime.UtcNow.AddDays(1),
+            Recipes = recipes
+        };
+
+        // Act and Assert
+        await Assert.ThrowsAsync<IncorrectDateException>(() => sut.Update(updatePlanOfMealRequest));
     }
 }
