@@ -57,7 +57,6 @@ public class MealPlanningService
 
         mealPlanToUpdate.Name = planOfMealRequest.Name;
         mealPlanToUpdate.SetDates(planOfMealRequest.FromDate, planOfMealRequest.ToDate);
-        mealPlanToUpdate.ToDate = planOfMealRequest.ToDate;
         mealPlanToUpdate.Recipes = recipes;;
         await _mealPlanningRepository.Update(mealPlanToUpdate);
         return mealPlanToUpdate;
