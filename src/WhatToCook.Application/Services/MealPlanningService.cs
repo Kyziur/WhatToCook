@@ -43,7 +43,7 @@ public class MealPlanningService
 
         var recipes = _recipesRepository.GetByNames(RecipeForMealPlanUpdate);
         if (mealPlanToUpdate == null)
-        {          
+        {
             _logger.LogError($"Attempted to update a non-existent meal plan: {planOfMealRequest.Name}");
             throw new NotFoundException(nameof(mealPlanToUpdate));
         }
@@ -56,10 +56,9 @@ public class MealPlanningService
         }
 
         mealPlanToUpdate.Name = planOfMealRequest.Name;
-        mealPlanToUpdate.FromDate = planOfMealRequest.FromDate;
+        mealPlanToUpdate.SetDates(planOfMealRequest.FromDate, planOfMealRequest.ToDate);
         mealPlanToUpdate.ToDate = planOfMealRequest.ToDate;
-        mealPlanToUpdate.Recipes = recipes;
-        mealPlanToUpdate.ValidateDates();
+        mealPlanToUpdate.Recipes = recipes;;
         await _mealPlanningRepository.Update(mealPlanToUpdate);
         return mealPlanToUpdate;
     }
