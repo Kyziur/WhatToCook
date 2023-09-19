@@ -29,3 +29,5 @@ import {HttpClientModule} from '@angular/common/http';
 })
 export class LayoutModule {
 }
+export class LayoutModule {
+}

@@ -18,18 +18,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.card-description {
-    display: block;
-
-    &:hover {
-        background-color: $brigher-blue-background;
-        color: $white;
-    }
-}
-
-.recipe-card {
     -webkit-box-shadow: 4px 4px 8px -2px rgba(66, 68, 90, 1);
     -moz-box-shadow: 4px 4px 8px -2px rgba(66, 68, 90, 1);
     box-shadow: 4px 4px 8px -2px rgba(66, 68, 90, 1);
