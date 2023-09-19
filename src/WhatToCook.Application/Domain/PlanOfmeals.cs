@@ -14,8 +14,7 @@ public class PlanOfMeals
     public PlanOfMeals(string name, DateTime fromDate, DateTime toDate, IEnumerable<Recipe> recipes)
     {
         Name = name;
-        FromDate = fromDate;
-        ToDate = toDate;
+        SetDates(fromDate, toDate); 
         Recipes = recipes;
     }
     private PlanOfMeals() { }
