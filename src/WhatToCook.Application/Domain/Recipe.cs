@@ -73,7 +73,7 @@ public class Recipe
         }
         catch (Exception exception)
         {
-            throw new Exception($"Failed to delete the existing image: {exception.Message}");
+            throw new Exception($"Failed to delete the existing image: {exception.Message}", exception);
         }
     }
     public void UpdateIngredients(List<string> newIngredients)
