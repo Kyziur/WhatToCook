@@ -1,13 +1,5 @@
 <div class="d-flex">
-
-  <div class="header" *ngIf="!(isNotMobile$ | async)">
-    <button type="button" class="burger-menu" (click)="showMenu()" title="Show sidebar menu">
-      <img src="assets/icons/menu.svg" title="Menu"/>
-    </button>
-  </div>
-
-  <div [ngClass]="{'space-from-header': (isSidebarVisible$ | async)}" class="sidebar-container"
-       *ngIf="((isNotMobile$ |async) || (isSidebarVisible$ | async))">
+  <div class="sidebar-container">
     <app-sidebar></app-sidebar>
   </div>
 

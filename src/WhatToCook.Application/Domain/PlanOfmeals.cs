@@ -1,10 +1,39 @@
-﻿namespace WhatToCook.Application.Domain;
+﻿using WhatToCook.Application.Exceptions;
+
+namespace WhatToCook.Application.Domain;
 
 public class PlanOfMeals
 {
+    public string Name { get; set; }
     public int Id { get; private set; }
-    public DateTime FromDate { get; set; }
-    public DateTime ToDate { get; set; }
-    public Recipe Recipe { get; set; }
-    public User User { get; set; }
+    public DateTime FromDate { get; private set; }
+    public DateTime ToDate { get; private set; }
+    public User User { get; set; } = new User() { Email = "mail123@gmail.com" };
+    public IEnumerable<Recipe> Recipes { get; set; }
+
+    public PlanOfMeals(string name, DateTime fromDate, DateTime toDate, IEnumerable<Recipe> recipes)
+    {
+        Name = name;
+        SetDates(fromDate, toDate); 
+        Recipes = recipes;
+    }
+    private PlanOfMeals() { }
+
+ 
+    public void SetDates(DateTime fromDate, DateTime toDate)
+    {
+        if (fromDate.Day < DateTime.UtcNow.Day || toDate.Day < DateTime.UtcNow.Day)
+        {
+            throw new IncorrectDateException("Dates cannot be in the past.");
+        }
+
+        if (toDate.Day < fromDate.Day)
+        {
+            throw new IncorrectDateException("ToDate cannot be lower than FromDate.");
+        }
+
+        FromDate = fromDate;
+        ToDate = toDate;
+    }
 }
+

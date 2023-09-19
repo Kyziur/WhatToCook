@@ -1,10 +1,19 @@
-<div class="d-grid p-1">
-    <div class="recipe-card">
-        <a class="recipe-card-description" href="#">
-            <img alt="Photo of {{recipeCard?.name}}" class="recipe-card-img" src="{{recipeCard?.img ?? ''}}">
-            <div class="p-2">
-                <span class="ml-1">{{recipeCard?.name ?? ""}}</span>
-            </div>
+<div class="recipe-card-wrapper">
+    <div>
+        <input 
+        [(ngModel)]="selected"
+        type="checkbox"
+        id="{{recipe?.id}}"
+        (change)="onSelect()"
+        />
+       <div>
+    <div class="recipe-card" (click)="viewRecipeDetails(recipe?.name)">
+        <a class="card-description">
+            <div class="recipe-card-title-container">
+                <img class= "recipe-card-image" src="{{ getImagePath() }}" alt="{{ recipe?.name }}" />
+                <span class="recipe-card-title">{{ recipe?.name }}</span>
+            </div>     
         </a>
     </div>
 </div>
+ 

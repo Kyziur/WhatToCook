@@ -1,6 +1,20 @@
 @import 'variables';
 
-.recipe-card {
+.recipe-card-wrapper {
+    display: grid;
+    padding: 10px 10px;
+
+}
+
+.recipe-card-image {
+    height: 100px;
+    width: 100px;
+    display: block;
+}
+
+.recipes-card {
+    min-height: 300px;
+    min-width: 300px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -10,17 +24,13 @@
     border-radius: 5% 5% 5% 5%;
     overflow: hidden;
 
-    &-img {
-        height: 200px;
-        display: block;
-    }
-
-    &-description {
-        display: block;
-
-        &:hover {
-            background-color: $brigher-blue-background;
-            color: $white;
-        }
-    }
 }
+
+.recipe-card-title-container {
+    padding: 20px;
+}
+
+.recipe-card-title {
+    margin-left: 0.5rem;
+}
+

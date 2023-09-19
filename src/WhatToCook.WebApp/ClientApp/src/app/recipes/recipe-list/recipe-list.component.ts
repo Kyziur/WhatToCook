@@ -1,62 +1,32 @@
-import { Component, OnInit } from '@angular/core';
-import { RecipeCardViewModel } from '../recipe-card/recipe-card.component';
+import { Component, Input, OnInit } from '@angular/core';
+import { RecipeService } from '../recipe.service';
+import { Recipe } from '../Recipe';
+
+export type filterRecipePredicate = (recipe: Recipe) => boolean;
+
 @Component({
   selector: 'app-recipe-list',
   templateUrl: './recipe-list.component.html',
   styleUrls: ['./recipe-list.component.scss']
 })
 export class RecipeListComponent implements OnInit {
-  recipeCards: RecipeCardViewModel[] = [{ 
-    name: 'Flaczki',
-    description: "Opis flaczków",
-    img: "/assets/images/Tomato.jpg"
-  },
-  {
-    name: 'Flaczki 2',
-    description: "Opis flaczków 2",
-    img: "/assets/images/Tomato.jpg"
-  },
-{
-  name: 'Flaczki 3',
-  description: "Opis flaczków 2",
-  img: "/assets/images/Tomato.jpg"
-},
-{
-  name: 'Flaczki 4',
-  description: "Opis flaczków 2",
-  img: "/assets/images/Tomato.jpg"
-},
-{
-  name: 'Flaczki 5',
-  description: "Opis flaczków 2",
-  img: "/assets/images/Tomato.jpg"
-},
-{
-  name: 'Flaczki 6',
-  description: "Opis flaczków 2",
-  img: "/assets/images/Tomato.jpg"
-},
-{
-  name: 'Flaczki 7',
-  description: "Opis flaczków 2",
-  img: "/assets/images/Tomato.jpg"
-},
-{
-  name: 'Flaczki 8',
-  description: "Opis flaczków 2",
-  img: "/assets/images/Tomato.jpg"
-},
-{
-  name: 'Flaczki 9',
-  description: "Opis flaczków 2",
-  img: "/assets/images/Tomato.jpg"
-},
-];
-   
-  constructor(){
+  recipes: Recipe[] = [];
+
+  @Input() filterMethod?: filterRecipePredicate;
+
+  constructor(private recipeService: RecipeService) {
   }
 
-  ngOnInit() {
-      //Tutaj pobieramy dane z API - możemy tu wykonywać operacje z async
+  ngOnInit(): void {
+    this.recipeService.get().subscribe({
+      next:
+        (recipes) => {
+          console.log("Received recipes:", recipes);
+          this.recipes = this.filterMethod ? recipes.filter(recipe => this.filterMethod?.(recipe)) : recipes;
+        },
+      error: (error) => {
+        console.error(error);
+      }
+    });
   }
 }

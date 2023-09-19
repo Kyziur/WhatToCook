@@ -4,7 +4,10 @@ import { Component } from '@angular/core';
   selector: 'app-menu-list',
   templateUrl: './menu-list.component.html',
   styleUrls: ['./menu-list.component.scss']
-})
-export class MenuListComponent { 
 
+})
+export class MenuListComponent {
+
+  constructor() {
+  }
 }

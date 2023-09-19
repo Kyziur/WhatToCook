@@ -11,5 +11,4 @@ internal class UserEntityConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Email);
     }
-
 }

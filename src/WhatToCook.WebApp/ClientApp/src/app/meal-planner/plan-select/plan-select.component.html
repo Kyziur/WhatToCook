@@ -1,0 +1,23 @@
+<div class="d-flex justify-center">
+  <div class="flex items-center h-12 w-48">
+    <label class="sr-only">Choose a list</label>
+    <select [(ngModel)]="selectedMealPlan" class="select">
+      <option class="" *ngFor="let plan of mealPlans" [ngValue]="plan">{{plan.name}}</option>
+    </select>
+  </div>
+  <ng-container>
+
+  </ng-container>
+  <span>
+    <form (ngSubmit)="onSubmit()">
+      <button type="submit" class="btn btn-primary">
+        Save
+      </button>
+    </form>
+    </span>
+</div>
+<div>
+  <app-modal [isVisible]="false">
+    <app-meal-creator></app-meal-creator>
+  </app-modal>
+</div>

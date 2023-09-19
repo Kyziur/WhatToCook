@@ -1,6 +1,6 @@
 <app-search></app-search>
 <div class="recipes-container">
-  <div *ngFor="let recipeCard of recipeCards">
-    <app-recipe-card [recipeCard]="recipeCard"></app-recipe-card>
-  </div>
+    <div *ngFor="let recipe of recipes">
+        <app-recipe-card [recipe]="recipe"></app-recipe-card>
+    </div>
 </div>

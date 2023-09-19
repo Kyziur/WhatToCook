@@ -4,7 +4,6 @@ using WhatToCook.Application.Domain;
 
 namespace WhatToCook.Application.Infrastructure.Configurations;
 
-
 internal class ShoppingListEntityConfiguration : IEntityTypeConfiguration<ShoppingList>
 {
     public void Configure(EntityTypeBuilder<ShoppingList> builder)
