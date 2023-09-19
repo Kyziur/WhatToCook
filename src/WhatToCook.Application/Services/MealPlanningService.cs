@@ -30,7 +30,6 @@ public class MealPlanningService
         DateTime.SpecifyKind(planOfMealRequest.ToDate, DateTimeKind.Utc),
         recipes
     );
-        planOfMeals.ValidateDates();
         await _mealPlanningRepository.Create(planOfMeals);
 
         return planOfMeals;

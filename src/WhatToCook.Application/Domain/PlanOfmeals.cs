@@ -19,26 +19,15 @@ public class PlanOfMeals
     }
     private PlanOfMeals() { }
 
-    public void ValidateDates()
-    {
-        if (FromDate < DateTime.UtcNow || ToDate < DateTime.UtcNow)
-        {
-            throw new IncorrectDateException("Dates cannot be in the past.");
-        }
-
-        if (ToDate < FromDate)
-        {
-            throw new IncorrectDateException("ToDate cannot be lower than FromDate.");
-        }
-    }
+ 
     public void SetDates(DateTime fromDate, DateTime toDate)
     {
-        if (FromDate < DateTime.UtcNow || ToDate < DateTime.UtcNow)
+        if (fromDate.Day < DateTime.UtcNow.Day || toDate.Day < DateTime.UtcNow.Day)
         {
             throw new IncorrectDateException("Dates cannot be in the past.");
         }
 
-        if (ToDate < FromDate)
+        if (toDate.Day < fromDate.Day)
         {
             throw new IncorrectDateException("ToDate cannot be lower than FromDate.");
         }

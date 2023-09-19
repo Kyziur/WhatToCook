@@ -39,8 +39,8 @@ public class MealPlanningServiceTests
             Recipes = recipes,
             Name = "Test"
         };
-
-        await Assert.ThrowsAsync<IncorrectDateException>(() => sut.Create(planOfMealRequest));
+        var result = await sut.Create(planOfMealRequest);
+        _mealPlanningRepositoryMock.Verify();
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class MealPlanningServiceTests
         {
             Name = "NewTest",
             FromDate = DateTime.UtcNow.AddDays(2),
-            ToDate = DateTime.UtcNow.AddDays(4),
+            ToDate = DateTime.UtcNow.AddDays(6),
             Recipes = recipes
         };
         _mealPlanningRepositoryMock.Setup(x => x.Update(It.IsAny<PlanOfMeals>())).Verifiable(Times.Once);
@@ -95,15 +95,15 @@ public class MealPlanningServiceTests
         _mealPlanningRepositoryMock.Verify();
     }
     [Fact]
-    public async Task Given_GreaterToDateThanFromDate_When_UpdatingMealPlan_Then_ShouldThrowException()
+    public async Task Given_GreaterFromDateThanToDate_When_UpdatingMealPlan_Then_ShouldThrowException()
     {
         // Arrange
 
         var existingPlanOfMeals = new PlanOfMeals
       (
           "OldTest",
-          DateTime.UtcNow.AddDays(0),
-          DateTime.UtcNow.AddDays(1),
+          DateTime.UtcNow.AddDays(2),
+          DateTime.UtcNow.AddDays(3),
           new List<Recipe>()
           {
               new Recipe("OldRecipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
@@ -127,8 +127,8 @@ public class MealPlanningServiceTests
         var updatePlanOfMealRequest = new UpdatePlanOfMealRequest()
         {
             Name = "NewTest",
-            FromDate = DateTime.UtcNow.AddDays(7),
-            ToDate = DateTime.UtcNow.AddDays(-1),
+            FromDate = DateTime.UtcNow.AddDays(9),
+            ToDate = DateTime.UtcNow.AddDays(7),
             Recipes = recipes
         };
 
@@ -145,8 +145,8 @@ public class MealPlanningServiceTests
         var existingPlanOfMeals = new PlanOfMeals
       (
           "OldTest",
-          DateTime.UtcNow.AddDays(-1),
           DateTime.UtcNow.AddDays(1),
+          DateTime.UtcNow.AddDays(3),
           new List<Recipe>()
           {
               new Recipe("OldRecipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
@@ -179,7 +179,7 @@ public class MealPlanningServiceTests
         {
             Name = "NewTest",
             FromDate = DateTime.UtcNow,
-            ToDate = DateTime.UtcNow.AddDays(2),
+            ToDate = DateTime.UtcNow.AddDays(6),
             Recipes = allRecipes
         };
 
