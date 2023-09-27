@@ -1,15 +1,43 @@
-import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup, FormBuilder, FormArray } from '@angular/forms';
-import { CreateRecipe } from './CreateRecipe';
-import { RecipeService } from '../recipe.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Recipe } from "../Recipe";
-import { of, switchMap } from "rxjs";
-import { HttpClient } from '@angular/common/http';
+import {Component, OnInit} from '@angular/core';
+import {FormControl, FormGroup, FormBuilder, FormArray} from '@angular/forms';
+import {CreateRecipe} from './CreateRecipe';
+import {RecipeService} from '../recipe.service';
+import {ActivatedRoute, Router} from '@angular/router';
+import {Recipe} from "../Recipe";
+import {of, switchMap} from "rxjs";
+
 export enum DisplayMode {
   New,
   Edit,
   View
+}
+
+export const TimeToPrepareValues = ["Short", "Medium", "Long"];
+
+export interface RecipeForm {
+  name: FormControl<string>;
+  ingredients: FormArray<FormControl<string>>;
+  preparationDescription: FormControl<string>;
+  timeToPrepare: FormControl<string>;
+  image: FormControl<string>;
+}
+
+export type FormDataPossibleValues = string | string[];
+
+export function mapObjectToFormData(form: Record<string, FormDataPossibleValues>): FormData {
+  const formData = new FormData();
+  for (const [key, value] of Object.entries(form)) {
+    if (!Array.isArray(value)) {
+      formData.append(key, value);
+      continue;
+    }
+
+    for (let v = 0; v < value.length; v++) {
+      formData.append(`${key}[${v}]`, value[v]);
+    }
+  }
+
+  return formData;
 }
 
 @Component({
@@ -18,31 +46,22 @@ export enum DisplayMode {
   styleUrls: ['./recipe-view.component.scss']
 })
 export class RecipeViewComponent implements OnInit {
+  protected readonly TimeToPrepareValues = TimeToPrepareValues;
   isDeleteConfirmationVisible = false;
-  confirmDeleteRecipe: any;
   recipe?: Recipe;
-  recipeForm: FormGroup<{
-    name: FormControl<string>;
-    ingredients: FormArray<FormControl<string>>;
-    preparationDescription: FormControl<string>;
-    timeToPrepare: FormControl<string>;
-    image: FormControl<string>;
-  }> | null = null;
+  recipeForm: FormGroup<RecipeForm> | null = null;
   isEditable: boolean = false;
 
-  constructor(private fb: FormBuilder, private recipeService: RecipeService, private router: Router, private route: ActivatedRoute, private http: HttpClient) {
-  }
-  handleSuccesfulSave() {
-    this.router.navigate(['recipes'])
+  constructor(private fb: FormBuilder,
+              private recipeService: RecipeService, private router: Router, private route: ActivatedRoute) {
   }
 
-  get ingredientsControls(): FormArray<FormControl<string>> {
-    return this.recipeForm?.get('ingredients') as FormArray<FormControl<string>>;
+  redirectToRecipesPage() {
+    this.router.navigate(['recipes'])
   }
 
   ngOnInit(): void {
     this.route.params.pipe(switchMap(params => {
-      console.error('params', params);
       const name = params['name']
       if (!name) {
         return of(undefined);
@@ -51,9 +70,9 @@ export class RecipeViewComponent implements OnInit {
     })).subscribe(recipe => {
       this.recipe = recipe;
       this.loadFormData(recipe);
-      console.error('viewing recipe:', this.recipe);
     });
   }
+
   getDisplayMode(): DisplayMode {
     //If there is no recipe then it means that we want to create a new one
     if (!this.recipe) {
@@ -87,59 +106,46 @@ export class RecipeViewComponent implements OnInit {
     };
     reader.readAsDataURL(file);
   }
+
+
+  private updateRecipe(form: FormGroup<RecipeForm>) {
+    const updatedRecipe: CreateRecipe = {
+      id: this.recipe?.id ?? 0,
+      ...form.getRawValue(),
+    };
+
+    return this.recipeService.update(updatedRecipe).pipe(switchMap(() => {
+      return this.recipeService.getByName(updatedRecipe.name);
+    }));
+  }
+
   submit() {
-    const recipeload = new FormData();
-    let form = this.recipeForm?.getRawValue();
+    if (!this.recipeForm) {
+      const msg = 'Cannot update recipe that is undefined';
+      console.error(msg, this.recipeForm);
+      throw new Error(msg);
+    }
 
-    if (this.getDisplayMode() === DisplayMode.Edit && this.recipeForm) {
-      const updatedRecipe = {
-        id: this.recipe?.id ?? 0,
-        ...this.recipeForm.getRawValue(),
-      };
-
-      if (!form) {
-        return;
-      }
-      for (const [key, value] of Object.entries(form)) {
-        if (Array.isArray(value)) {
-          for (var v = 0; v < value.length; v++) {
-            recipeload.append(`${key}[${v}]`, value[v]);
-            console.log('Recipe load', recipeload);
-          }
-        } else {
-          recipeload.append(key, value);
-        }
-      }
-      this.recipeService.update(updatedRecipe).subscribe((recipe) => {
-
-        this.recipeService.getByName(updatedRecipe.name).subscribe((recipe) => {
+    switch (this.getDisplayMode()) {
+      case DisplayMode.New:
+        this.recipeService
+          .create(this.recipeForm.value as CreateRecipe)
+          .subscribe(() => this.redirectToRecipesPage());
+        break;
+      case DisplayMode.Edit:
+        this.updateRecipe(this.recipeForm).subscribe(recipe => {
           this.recipe = recipe;
           this.loadFormData(this.recipe);
           this.isEditable = false;
         });
-      });
-    }
-
-    if (this.getDisplayMode() === DisplayMode.New) {
-
-      if (!form) {
-        return;
-      }
-      for (const [key, value] of Object.entries(form)) {
-        if (Array.isArray(value)) {
-          for (var v = 0; v < value.length; v++) {
-            recipeload.append(`${key}[${v}]`, value[v]);
-          }
-        } else {
-          recipeload.append(key, value);
-        }
-      }
-      this.recipeService.create(this.recipeForm?.value as CreateRecipe).subscribe((x) => this.handleSuccesfulSave());
+        break;
+      case DisplayMode.View:
+        break;
     }
   }
 
   addIngredient() {
-    this.ingredientsControls.push(this.fb.nonNullable.control(''));
+    this.recipeForm?.controls.ingredients.push(this.fb.nonNullable.control(''))
   }
 
   loadFormData(recipe?: Recipe) {
@@ -148,7 +154,7 @@ export class RecipeViewComponent implements OnInit {
     }) ?? [];
 
     if (ingredientsControls.length === 0) {
-      ingredientsControls.push(this.createStringControl(undefined))
+      ingredientsControls.push(this.createStringControl())
     }
 
     this.recipeForm = this.fb.group({
@@ -156,43 +162,35 @@ export class RecipeViewComponent implements OnInit {
       ingredients: this.fb.array(ingredientsControls),
       preparationDescription: this.createStringControl(recipe?.preparationDescription),
       timeToPrepare: this.createStringControl(recipe?.timeToPrepare),
-      image: this.createStringControl("")
+      image: this.createStringControl(),
     })
   }
-  //return current time
-  createStringControl(value: string | undefined) {
+
+  createStringControl(value: string | undefined = undefined) {
     return this.fb.nonNullable.control(value ?? '');
   }
-  getImagePath() {
-    if (!this.recipe) {
-      return '';
-    }
 
-    return this.recipe.imagePath
+  getImagePath() {
+    return this.recipe ? this.recipe.imagePath : '';
   }
 
-  openDeleteConfirmation(id: any) {
+  openDeleteConfirmation() {
     this.isDeleteConfirmationVisible = true;
-    this.confirmDeleteRecipe = id;
   }
 
   closeDeleteConfirmation() {
     this.isDeleteConfirmationVisible = false;
   }
-  onDelete(id?: number) {
+
+  onDeleteClickHandler(id?: number) {
     if (id === undefined) {
-      console.error('Recipe id is undefined');
+      console.error('Cannot remove recipe because it was not saved');
       return;
     }
 
     this.recipeService.deleteRecipe(id).subscribe({
-      next: response => {
-        console.log('Recipe deleted', response);
-        // Refresh your recipes list or navigate to another page
-      },
-      error: error => {
-        console.error('Error deleting recipe', error);
-      }
+      next: () => this.redirectToRecipesPage(),
+      error: error => console.error('Error occured when deleting recipe', error)
     });
   }
 }
