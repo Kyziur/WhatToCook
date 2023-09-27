@@ -5,6 +5,7 @@ import {RecipeService} from '../recipe.service';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Recipe} from "../Recipe";
 import {of, switchMap} from "rxjs";
+import {mapTimeToPrepareToBadge, TimeToPrepare, TimeToPrepareValues} from '../TimeToPrepare';
 
 export enum DisplayMode {
   New,
@@ -12,13 +13,12 @@ export enum DisplayMode {
   View
 }
 
-export const TimeToPrepareValues = ["Short", "Medium", "Long"];
 
 export interface RecipeForm {
   name: FormControl<string>;
   ingredients: FormArray<FormControl<string>>;
   preparationDescription: FormControl<string>;
-  timeToPrepare: FormControl<string>;
+  timeToPrepare: FormControl<TimeToPrepare>;
   image: FormControl<string>;
 }
 
@@ -58,6 +58,10 @@ export class RecipeViewComponent implements OnInit {
 
   redirectToRecipesPage() {
     this.router.navigate(['recipes'])
+  }
+
+  mapPrepareTimeToBadge(recipe: Recipe) {
+    return mapTimeToPrepareToBadge(recipe.timeToPrepare);
   }
 
   ngOnInit(): void {
@@ -161,7 +165,7 @@ export class RecipeViewComponent implements OnInit {
       name: this.createStringControl(recipe?.name),
       ingredients: this.fb.array(ingredientsControls),
       preparationDescription: this.createStringControl(recipe?.preparationDescription),
-      timeToPrepare: this.createStringControl(recipe?.timeToPrepare),
+      timeToPrepare: this.fb.nonNullable.control<TimeToPrepare>(recipe?.timeToPrepare ?? 'Short'),
       image: this.createStringControl(),
     })
   }

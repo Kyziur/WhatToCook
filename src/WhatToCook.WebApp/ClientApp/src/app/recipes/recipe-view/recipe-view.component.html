@@ -10,7 +10,7 @@
   </div>
 </div>
 <ng-template #view>
-  <h2>{{ recipe?.name }}</h2>
+  <h2>{{ recipe?.name }} <app-badge *ngIf="recipe" [badge]="mapPrepareTimeToBadge(recipe)"></app-badge></h2>
   <ul>
     <li *ngFor="let ingredient of recipe?.ingredients">{{ ingredient }}</li>
   </ul>

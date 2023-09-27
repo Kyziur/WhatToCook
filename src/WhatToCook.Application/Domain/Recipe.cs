@@ -49,11 +49,7 @@ public class Recipe
     }
     public void SetImage(string imagePath)
     {
-        if (string.IsNullOrWhiteSpace(imagePath))
-        {
-            throw new Exception("Image path cannot be null, empty, or whitespace");
-        }
-        this.Image = imagePath;
+        Image = imagePath;
     }
 
     public void RemoveImage(string imagesDirectory)
