@@ -7,5 +7,6 @@ export interface Recipe {
   preparationDescription: string;
   timeToPrepare: TimeToPrepare;
   imagePath: string;
+  tags: string[]
 }
 

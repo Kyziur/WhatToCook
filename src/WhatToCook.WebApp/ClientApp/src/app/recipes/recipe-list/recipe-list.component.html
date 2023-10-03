@@ -1,6 +1,6 @@
 <app-search></app-search>
 <div class="recipes-container">
-    <div *ngFor="let recipe of recipes">
+    <div class="w-1/4" *ngFor="let recipe of recipes">
         <app-recipe-card [recipe]="recipe"></app-recipe-card>
     </div>
 </div>

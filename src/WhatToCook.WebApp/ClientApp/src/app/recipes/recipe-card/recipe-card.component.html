@@ -1,19 +1,32 @@
-<div class="recipe-card-wrapper">
-    <div>
-        <input 
-        [(ngModel)]="selected"
-        type="checkbox"
-        id="{{recipe?.id}}"
-        (change)="onSelect()"
-        />
-       <div>
-    <div class="recipe-card" (click)="viewRecipeDetails(recipe?.name)">
-        <a class="card-description">
-            <div class="recipe-card-title-container">
-                <img class= "recipe-card-image" src="{{ getImagePath() }}" alt="{{ recipe?.name }}" />
-                <span class="recipe-card-title">{{ recipe?.name }}</span>
-            </div>     
-        </a>
-    </div>
+<!--<div class="recipe-card-wrapper">-->
+<!--    <div>-->
+<!--        <input -->
+<!--        [(ngModel)]="selected"-->
+<!--        type="checkbox"-->
+<!--        id="{{recipe?.id}}"-->
+<!--        (change)="onSelect()"-->
+<!--        />-->
+<!--       <div>-->
+<!--    <div class="recipe-card" (click)="viewRecipeDetails(recipe?.name)">-->
+<!--        <a class="card-description">-->
+<!--            <div class="recipe-card-title-container">-->
+<!--                <img class= "recipe-card-image" src="{{ getImagePath() }}" alt="{{ recipe?.name }}" />-->
+<!--                <span class="recipe-card-title">{{ recipe?.name }}</span>-->
+<!--            </div>     -->
+<!--        </a>-->
+<!--    </div>-->
+<!--</div>-->
+
+<div *ngIf="recipe" (click)="viewRecipeDetails(recipe.name)" class="max-w-sm rounded overflow-hidden shadow-lg">
+  <img class="w-full" src="{{ getImagePath() }}" alt="{{ recipe.name }}">
+  <div class="px-6 py-4">
+    <div class="font-bold text-xl mb-2 flex items-center gap-2">{{ recipe.name }} <app-badge [badge]="getTimeToPrepareBadge(recipe)"></app-badge></div>
+    <p class="text-gray-700 text-base">
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Voluptatibus quia, nulla! Maiores et perferendis eaque,
+      exercitationem praesentium nihil.
+    </p>
+  </div>
+  <div class="px-6 pt-4 pb-2">
+    <span *ngFor="let tag of tags" class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">{{tag}}</span>
+  </div>
 </div>
- 

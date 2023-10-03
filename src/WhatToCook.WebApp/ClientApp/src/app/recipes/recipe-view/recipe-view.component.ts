@@ -95,6 +95,10 @@ export class RecipeViewComponent implements OnInit {
     this.isEditable = true;
   }
 
+  disableEdit() {
+    this.isEditable = false;
+  }
+
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (!file) {
@@ -196,5 +200,9 @@ export class RecipeViewComponent implements OnInit {
       next: () => this.redirectToRecipesPage(),
       error: error => console.error('Error occured when deleting recipe', error)
     });
+  }
+
+  cancelEditClickHandler() {
+    this.disableEdit()
   }
 }

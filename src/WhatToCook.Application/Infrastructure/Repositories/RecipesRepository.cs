@@ -6,7 +6,7 @@ namespace WhatToCook.Application.Infrastructure.Repositories;
 
 public interface IRecipesRepository
 {
-    Task<Recipe> GetRecipeByName(string name);
+    Task<Recipe?> GetRecipeByName(string name);
     List<Recipe> GetByNames(IEnumerable<string> names);
     Task Create(Recipe recipe);
     Task Update(Recipe recipe);
@@ -45,6 +45,13 @@ public class RecipesRepository : IRecipesRepository
     }
     public string SaveImage(string base64Image, string imagesDirectory)
     {
+        const string imagesSubDir = "Images";
+        const string defaultImageName = "default_image.png";
+        if (string.IsNullOrWhiteSpace(base64Image))
+        {
+            return $"{imagesSubDir}/{defaultImageName}";
+        }
+        
         string imagePath;
         if (string.IsNullOrEmpty(base64Image))
         {
@@ -55,10 +62,10 @@ public class RecipesRepository : IRecipesRepository
         {
             byte[] imageBytes = Convert.FromBase64String(base64Image);
             string fileName = $"{Guid.NewGuid()}.png";
-            string filePath = Path.Combine(imagesDirectory, "Images", fileName);
+            string filePath = Path.Combine(imagesDirectory, imagesSubDir, fileName);
 
-            System.IO.File.WriteAllBytes(filePath, imageBytes);
-            imagePath = $"Images/{fileName}";
+            File.WriteAllBytes(filePath, imageBytes);
+            imagePath = $"{imagesSubDir}/{fileName}";
         
         }
         catch (FormatException exception)
