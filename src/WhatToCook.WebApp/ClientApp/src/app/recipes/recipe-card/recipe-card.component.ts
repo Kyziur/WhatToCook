@@ -30,7 +30,11 @@ export class RecipeCardComponent {
 
     return this.recipe.imagePath
   }
-
+  setDefaultImage() {
+    if (this.recipe) {
+    this.recipe.imagePath = 'Images/default_image.png';
+    }
+  }
   ngAfterContentInit() {
     if (this.recipe === undefined) {
       return

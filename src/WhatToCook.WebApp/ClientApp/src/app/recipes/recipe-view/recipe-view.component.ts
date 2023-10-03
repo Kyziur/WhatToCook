@@ -170,7 +170,11 @@ export class RecipeViewComponent implements OnInit {
 
     return this.recipe.imagePath
   }
-
+  setDefaultImage() {
+    if (this.recipe) {
+    this.recipe.imagePath = 'Images/default_image.png';
+    }
+  }
   openDeleteConfirmation(id: any) {
     this.isDeleteConfirmationVisible = true;
     this.confirmDeleteRecipe = id;
