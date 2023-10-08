@@ -1,22 +1,3 @@
-<!--<div class="recipe-card-wrapper">-->
-<!--    <div>-->
-<!--        <input -->
-<!--        [(ngModel)]="selected"-->
-<!--        type="checkbox"-->
-<!--        id="{{recipe?.id}}"-->
-<!--        (change)="onSelect()"-->
-<!--        />-->
-<!--       <div>-->
-<!--    <div class="recipe-card" (click)="viewRecipeDetails(recipe?.name)">-->
-<!--        <a class="card-description">-->
-<!--            <div class="recipe-card-title-container">-->
-<!--                <img class= "recipe-card-image" src="{{ getImagePath() }}" alt="{{ recipe?.name }}" />-->
-<!--                <span class="recipe-card-title">{{ recipe?.name }}</span>-->
-<!--            </div>     -->
-<!--        </a>-->
-<!--    </div>-->
-<!--</div>-->
-
 <div *ngIf="recipe"
      class="max-w-sm rounded overflow-hidden shadow-lg cursor-pointer">
   <img (click)="viewRecipeDetails(recipe.name)" class="w-full hover:opacity-50" src="{{ getImagePath() }}"
@@ -40,5 +21,4 @@
            width="32" height="32">
     </div>
   </div>
-
 </div>
