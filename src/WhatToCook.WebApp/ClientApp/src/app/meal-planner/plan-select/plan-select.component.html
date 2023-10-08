@@ -1,16 +1,13 @@
-<div class="d-flex justify-center">
+<div class="d-flex justify-center mb-8">
   <div class="flex items-center h-12 w-48">
     <label class="sr-only">Choose a list</label>
     <select [(ngModel)]="selectedMealPlan" class="select">
       <option class="" *ngFor="let plan of mealPlans" [ngValue]="plan">{{plan.name}}</option>
     </select>
   </div>
-  <ng-container>
-
-  </ng-container>
   <span>
     <form (ngSubmit)="onSubmit()">
-      <button type="submit" class="btn btn-primary">
+      <button type="submit" class="h-12 btn btn-primary">
         Save
       </button>
     </form>
