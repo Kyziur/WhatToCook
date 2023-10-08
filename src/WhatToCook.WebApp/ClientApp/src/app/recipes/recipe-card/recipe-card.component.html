@@ -1,9 +1,11 @@
 <div *ngIf="recipe"
-     class="max-w-sm rounded overflow-hidden shadow-lg cursor-pointer">
-  <img (click)="viewRecipeDetails(recipe.name)" class="w-full hover:opacity-50" src="{{ getImagePath() }}"
+     class="max-w-sm rounded overflow-hidden shadow-lg">
+  <img class="w-full hover:opacity-50 cursor-pointer"
+       src="{{ getImagePath() }}"
        alt="{{ recipe.name }}">
   <div class="px-6 py-4">
-    <div class="font-bold text-xl mb-2 flex items-center gap-2">{{ recipe.name }}
+    <div class="font-bold text-xl mb-2 flex items-center gap-2"><span class="cursor-pointer"
+                                                                      (click)="viewRecipeDetails(recipe.name)">{{ recipe.name }}</span>
       <app-badge [badge]="getTimeToPrepareBadge(recipe)"></app-badge>
     </div>
     <p class="text-gray-700 text-base">
