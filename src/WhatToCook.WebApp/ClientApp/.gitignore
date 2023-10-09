@@ -41,3 +41,9 @@ Thumbs.db
 
 # Angular cache
 .angular
+
+# Ignore the entire 'images' folder
+/images/
+
+# Except for the 'default_image.png' file
+!/images/default_image.png

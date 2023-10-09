@@ -23,8 +23,8 @@ public class MealPlanningServiceTests
         //Arrange
         var recipes = new List<Recipe>()
         {
-            new Recipe("Recipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
-            new Recipe("Recipe2", "Description2", "30 mins", new List<Ingredient>(), null, "path/to/image2", null)
+            new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<PlanOfMeals>()),
+            new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<PlanOfMeals>())
         };
         var loggerMock = new Mock<ILogger<MealPlanningService>>();
         _recipesRepositoryMock.Setup(x => x.GetByNames(new[] { "Recipe1", "Recipe2" })).Returns(recipes);
@@ -54,8 +54,8 @@ public class MealPlanningServiceTests
             DateTime.UtcNow.AddDays(2),
             new List<Recipe>()
             {
-                new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
-                new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
+                new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<PlanOfMeals>()),
+                new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(),  new Statistics(), "path/to/image2", new List<PlanOfMeals>())
             }
         );
 
@@ -64,8 +64,8 @@ public class MealPlanningServiceTests
 
         var recipes = new List<Recipe>()
         {
-             new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
-             new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
+             new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(),  new Statistics(), "path/to/image1", new List<PlanOfMeals>()),
+             new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(),  new Statistics(), "path/to/image2", new List<PlanOfMeals>())
         };
         //setup GetByNames method to return new recipes
         _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
@@ -106,8 +106,8 @@ public class MealPlanningServiceTests
           DateTime.UtcNow.AddDays(3),
           new List<Recipe>()
           {
-              new Recipe("OldRecipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
-              new Recipe("OldRecipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)
+              new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<PlanOfMeals>()),
+              new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<PlanOfMeals>())
           }
       );
 
@@ -115,8 +115,8 @@ public class MealPlanningServiceTests
 
         var recipes = new List<Recipe>()
         {
-            new Recipe("Recipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
-            new Recipe("Recipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)
+            new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<PlanOfMeals>()),
+            new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<PlanOfMeals>())
         };
 
         _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
@@ -149,8 +149,8 @@ public class MealPlanningServiceTests
           DateTime.UtcNow.AddDays(3),
           new List<Recipe>()
           {
-              new Recipe("OldRecipe1", "Description1", "30 mins", new List<Ingredient>(), null, "path/to/image1", null),
-              new Recipe("OldRecipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)
+              new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<PlanOfMeals>()),
+              new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<PlanOfMeals>())
           }
       );
 
@@ -159,13 +159,13 @@ public class MealPlanningServiceTests
         var existingRecipes = new List<Recipe>()
 
         {
-            new Recipe("Recipe1", "Description", "30 mins", new List<Ingredient>(), null, "path/to/image", null)
+            new Recipe("Recipe1", "Description", "short", new List<Ingredient>(), new Statistics(), "path/to/image", new List<PlanOfMeals>())
         };
 
         var nonExistentRecipes = new List<Recipe>()
 
         {
-            new Recipe("NonExistentRecipe1", "Description", "30 mins", new List<Ingredient>(), null, "path/to/image", null)
+            new Recipe("NonExistentRecipe1", "Description", "short", new List<Ingredient>(), new Statistics(), "path/to/image", new List<PlanOfMeals>())
 
         };
 
@@ -200,8 +200,8 @@ public class MealPlanningServiceTests
             DateTime.UtcNow.AddDays(2),
             new List<Recipe>()
             {
-                new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
-                new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
+                new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<PlanOfMeals>()),
+                new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<PlanOfMeals>())
             }
         );
 
@@ -210,8 +210,8 @@ public class MealPlanningServiceTests
 
         var recipes = new List<Recipe>()
         {
-             new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
-             new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
+             new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<PlanOfMeals>()),
+             new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<PlanOfMeals>())
         };
 
         //setup GetByNames method to return new recipes
@@ -243,8 +243,8 @@ public class MealPlanningServiceTests
             DateTime.UtcNow.AddDays(2),
             new List<Recipe>()
             {
-                new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
-                new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
+                new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<PlanOfMeals>()),
+                new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<PlanOfMeals>())
             }
         );
 
@@ -253,8 +253,8 @@ public class MealPlanningServiceTests
 
         var recipes = new List<Recipe>()
         {
-             new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
-             new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
+             new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(),  new Statistics(), "path/to/image1", new List<PlanOfMeals>()),
+             new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(),  new Statistics(), "path/to/image2", new List<PlanOfMeals>())
         };
 
         //setup GetByNames method to return new recipes

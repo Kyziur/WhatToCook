@@ -18,7 +18,8 @@ public class RecipeService
 
     public async Task<Recipe> Create(RecipeRequest request, string imagesDirectory)
     {
-        var imagePath = _recipesRepository.SaveImage(request.Image, imagesDirectory);
+        var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
+        var imagePath = await _recipesRepository.SaveImage(imageInfo);
         var ingredients = request.Ingredients.Select(ingredient => new Ingredient(ingredient)).ToList();
         var recipe = new Recipe
             (
@@ -26,9 +27,9 @@ public class RecipeService
             description: request.PreparationDescription,
             timeToPrepare: request.TimeToPrepare,
             ingredients: ingredients,
-            statistics: null,
+            statistics : new Statistics(),
             image: imagePath,
-            plansOfMeals: null
+            plansOfMeals: new List<PlanOfMeals>()
             );
 
         await _recipesRepository.Create(recipe);
@@ -45,9 +46,10 @@ public class RecipeService
             throw new NotFoundException($"Cannot update {request.Id}");
         }
 
+         recipe.RemoveImage(imagesDirectory);
+        var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
+        var imagePath = await _recipesRepository.SaveImage(imageInfo);
 
-        recipe.RemoveImage(imagesDirectory);
-        var imagePath = _recipesRepository.SaveImage(request.Image, imagesDirectory);
         recipe.SetImage(imagePath);
         recipe.SetName(request.Name);
         recipe.SetDescription(request.PreparationDescription);
