@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WhatToCook.Application.DataTransferObjects.Requests;
 using WhatToCook.Application.DataTransferObjects.Responses;
-using WhatToCook.Application.Infrastructure;
-using WhatToCook.Application.Infrastructure.Repositories;
 using WhatToCook.Application.Services;
 
 namespace WhatToCook.WebApp.Controllers;
@@ -11,17 +9,12 @@ namespace WhatToCook.WebApp.Controllers;
 [Route("api/v1/[controller]")]
 public class RecipeController : ControllerBase
 {
-    private readonly ILogger<RecipeController> _logger;
-    private readonly DatabaseContext _dbcontext;
     private readonly IWebHostEnvironment _environment;
     private readonly RecipeServiceQuery _recipeServiceQuery;
     private readonly RecipeService _recipeService;
 
-    public RecipeController(ILogger<RecipeController> logger, DatabaseContext dbcontext,
-        IWebHostEnvironment environment, RecipeServiceQuery recipeServiceQuery, RecipeService recipeService)
+    public RecipeController(IWebHostEnvironment environment, RecipeServiceQuery recipeServiceQuery, RecipeService recipeService)
     {
-        _logger = logger;
-        _dbcontext = dbcontext;
         _environment = environment;
         _recipeServiceQuery = recipeServiceQuery;
         _recipeService = recipeService;

@@ -1,12 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using WhatToCook.Application.Domain;
+using WhatToCook.Application.Exceptions;
 
 namespace WhatToCook.Application.Infrastructure.Repositories;
 
 public interface IRecipesRepository
 {
-    Task<Recipe> GetRecipeByName(string name);
+    Task<Recipe?> GetRecipeByName(string name);
     List<Recipe> GetByNames(IEnumerable<string> names);
     Task Create(Recipe recipe);
     Task Update(Recipe recipe);
@@ -86,7 +87,14 @@ public class RecipesRepository : IRecipesRepository
     public async Task Delete(int id)
     {
         var recipe = await _dbContext.Recipes.FindAsync(id);
-        _dbContext.Recipes.Remove(recipe);
-        await _dbContext.SaveChangesAsync();
+        if (recipe != null)
+        {
+            _dbContext.Recipes.Remove(recipe);
+            await _dbContext.SaveChangesAsync();
+        }
+        else
+        {
+            throw new NotFoundException($"Recipe with ID '{id}' not found.");
+        }
     }
 }

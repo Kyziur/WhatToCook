@@ -27,9 +27,9 @@ public class RecipeService
             description: request.PreparationDescription,
             timeToPrepare: request.TimeToPrepare,
             ingredients: ingredients,
-            statistics: null,
+            statistics : new Statistics(),
             image: imagePath,
-            plansOfMeals: null
+            plansOfMeals: new List<PlanOfMeals>()
             );
 
         await _recipesRepository.Create(recipe);
@@ -46,7 +46,7 @@ public class RecipeService
             throw new NotFoundException($"Cannot update {request.Id}");
         }
 
-        recipe.RemoveImage(imagesDirectory);
+         recipe.RemoveImage(imagesDirectory);
         var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
         var imagePath = await _recipesRepository.SaveImage(imageInfo);
 
