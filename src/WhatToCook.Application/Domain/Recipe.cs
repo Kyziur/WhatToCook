@@ -56,7 +56,7 @@ public class Recipe
         this.Image = imagePath;
     }
 
-    public async void RemoveImage(string imagesDirectory)
+    public async Task RemoveImage(string imagesDirectory)
     {
         if (string.IsNullOrWhiteSpace(this.Image))
         {

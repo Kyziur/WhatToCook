@@ -16,10 +16,10 @@ public class RecipeService
         _logger = logger;
     }
 
-    public async Task<Recipe> Create(RecipeRequest request, string imagesDirectory, IFileSaver fileSaver)
+    public async Task<Recipe> Create(RecipeRequest request, string imagesDirectory)
     {
         var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
-        var imagePath = _recipesRepository.SaveImage(imageInfo, fileSaver);
+        var imagePath = _recipesRepository.SaveImage(imageInfo);
         var ingredients = request.Ingredients.Select(ingredient => new Ingredient(ingredient)).ToList();
         var recipe = new Recipe
             (
@@ -36,7 +36,7 @@ public class RecipeService
         return recipe;
     }
 
-    public async Task<Recipe> Update(UpdateRecipeRequest request, string imagesDirectory, IFileSaver fileSaver)
+    public async Task<Recipe> Update(UpdateRecipeRequest request, string imagesDirectory)
     {
         var recipe = await _recipesRepository.GetRecipeByName(request.Name);
 
@@ -48,7 +48,7 @@ public class RecipeService
 
         recipe.RemoveImage(imagesDirectory);
         var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
-        var imagePath = _recipesRepository.SaveImage(imageInfo, fileSaver);
+        var imagePath = _recipesRepository.SaveImage(imageInfo);
 
         recipe.SetImage(imagePath);
         recipe.SetName(request.Name);

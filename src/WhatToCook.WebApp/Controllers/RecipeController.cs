@@ -56,8 +56,7 @@ public class RecipeController : ControllerBase
     public async Task<ActionResult> Post(RecipeRequest request)
     {
         var filesDirectory = _environment.WebRootPath;
-        var fileSaver = new FileSaver();
-        await _recipeService.Create(request, filesDirectory, fileSaver);
+        await _recipeService.Create(request, filesDirectory);
         return Ok();
     }
 
@@ -65,8 +64,7 @@ public class RecipeController : ControllerBase
     public async Task<ActionResult> Put(UpdateRecipeRequest request)
     {
         var filesDirectory = _environment.WebRootPath;
-        var fileSaver = new FileSaver();
-        await _recipeService.Update(request, filesDirectory, fileSaver);
+        await _recipeService.Update(request, filesDirectory);
         return Ok();
     }
 

@@ -10,7 +10,7 @@ public interface IRecipesRepository
     List<Recipe> GetByNames(IEnumerable<string> names);
     Task Create(Recipe recipe);
     Task Update(Recipe recipe);
-    string SaveImage(ImageInfo imageInfo, IFileSaver fileSaver);
+    string SaveImage(ImageInfo imageInfo);
     Task Delete(int id);
 }
 
@@ -18,10 +18,12 @@ public class RecipesRepository : IRecipesRepository
 {
     private readonly DatabaseContext _dbContext;
     private readonly ILogger _logger;
-    public RecipesRepository(DatabaseContext dbContext, ILogger<RecipesRepository> logger)
+    private readonly IFileSaver _fileSaver;
+    public RecipesRepository(DatabaseContext dbContext, ILogger<RecipesRepository> logger, IFileSaver fileSaver)
     {
         _dbContext = dbContext;
         _logger = logger;
+        _fileSaver = fileSaver;
     }
 
     public List<Recipe> GetByNames(IEnumerable<string> names)
@@ -43,7 +45,7 @@ public class RecipesRepository : IRecipesRepository
     {
         return await _dbContext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(r => r.Name == name);
     }
-    public string SaveImage(ImageInfo imageInfo, IFileSaver fileSaver)
+    public string SaveImage(ImageInfo imageInfo)
     {
         string imageFullPath;
         if (string.IsNullOrEmpty(imageInfo.Base64Image))
@@ -59,7 +61,7 @@ public class RecipesRepository : IRecipesRepository
             string filePath = Path.Combine(imageInfo.ImagesDirectory, "Images", finalFileName);
             byte[] imageBytes = imageInfo.GetImageBytes();
 
-            fileSaver.SaveAsync(filePath, imageBytes);
+            _fileSaver.SaveAsync(filePath, imageBytes);
 
             imageFullPath = $"Images/{finalFileName}";
         }

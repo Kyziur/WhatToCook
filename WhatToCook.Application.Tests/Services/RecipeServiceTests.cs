@@ -40,8 +40,8 @@ public class RecipeServiceTests
         var expectedImagePath = "some path";
 
         _recipesRepositoryMock.Setup(x => x.Create(It.IsAny<Recipe>())).Returns(Task.CompletedTask).Verifiable();
-        _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>(), _fileSaverMock.Object)).Returns(expectedImagePath).Verifiable();
-        var result = await sut.Create(recipeRequest, imagesDirectory, _fileSaverMock.Object);
+        _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>())).Returns(expectedImagePath).Verifiable();
+        var result = await sut.Create(recipeRequest, imagesDirectory);
 
         result.Should().NotBeNull();
         result.Name.Should().NotBeNullOrWhiteSpace().And.Be("Test123");
@@ -81,10 +81,10 @@ public class RecipeServiceTests
 
 
         _recipesRepositoryMock.Setup(x => x.GetRecipeByName(newRecipeName)).ReturnsAsync(mockOldRecipe);
-        _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>(), _fileSaverMock.Object)).Returns("some updated path").Verifiable();
+        _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>())).Returns("some updated path").Verifiable();
         _recipesRepositoryMock.Setup(x => x.Update(It.IsAny<Recipe>())).Returns(Task.CompletedTask).Verifiable();
 
-        var result = await sut.Update(recipeUpdateRequest, imagesDirectory, _fileSaverMock.Object);
+        var result = await sut.Update(recipeUpdateRequest, imagesDirectory);
 
         result.Should().NotBeNull();
         result.Name.Should().NotBeNullOrWhiteSpace().And.Be(newRecipeName);
@@ -120,7 +120,7 @@ public class RecipeServiceTests
 
         _recipesRepositoryMock.Setup(x => x.GetRecipeByName(nonexistentRecipeName)).ReturnsAsync((Recipe)null);
 
-        await Assert.ThrowsAsync<NotFoundException>(() => sut.Update(updateRequest, imagesDirectory, _fileSaverMock.Object));
+        await Assert.ThrowsAsync<NotFoundException>(() => sut.Update(updateRequest, imagesDirectory));
 
         _recipesRepositoryMock.Verify(x => x.Update(It.IsAny<Recipe>()), Times.Never);
     }
@@ -148,7 +148,7 @@ public class RecipeServiceTests
 
         _recipesRepositoryMock.Setup(x => x.GetRecipeByName(recipeName)).ReturnsAsync(mockExistingRecipe);
 
-        await Assert.ThrowsAsync<NotFoundException>(() => sut.Update(updateRequest, imagesDirectory, _fileSaverMock.Object));
+        await Assert.ThrowsAsync<NotFoundException>(() => sut.Update(updateRequest, imagesDirectory));
 
         _recipesRepositoryMock.Verify(x => x.Update(It.IsAny<Recipe>()), Times.Never);
     }
