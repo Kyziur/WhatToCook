@@ -2,6 +2,7 @@
 using WhatToCook.Application.DataTransferObjects.Requests;
 using WhatToCook.Application.DataTransferObjects.Responses;
 using WhatToCook.Application.Infrastructure;
+using WhatToCook.Application.Infrastructure.Repositories;
 using WhatToCook.Application.Services;
 
 namespace WhatToCook.WebApp.Controllers;
@@ -55,18 +56,20 @@ public class RecipeController : ControllerBase
     public async Task<ActionResult> Post(RecipeRequest request)
     {
         var filesDirectory = _environment.WebRootPath;
-        await _recipeService.Create(request, filesDirectory);
+        var fileSaver = new FileSaver();
+        await _recipeService.Create(request, filesDirectory, fileSaver);
         return Ok();
     }
-
 
     [HttpPut]
     public async Task<ActionResult> Put(UpdateRecipeRequest request)
     {
         var filesDirectory = _environment.WebRootPath;
-        await _recipeService.Update(request, filesDirectory);
+        var fileSaver = new FileSaver();
+        await _recipeService.Update(request, filesDirectory, fileSaver);
         return Ok();
     }
+
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {

@@ -56,7 +56,7 @@ public class Recipe
         this.Image = imagePath;
     }
 
-    public void RemoveImage(string imagesDirectory)
+    public async void RemoveImage(string imagesDirectory)
     {
         if (string.IsNullOrWhiteSpace(this.Image))
         {
@@ -70,6 +70,7 @@ public class Recipe
             {
                 File.Delete(fullPath);
             }
+            this.Image = null;
         }
         catch (Exception exception)
         {

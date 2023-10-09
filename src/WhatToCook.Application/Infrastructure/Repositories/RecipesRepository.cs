@@ -10,7 +10,7 @@ public interface IRecipesRepository
     List<Recipe> GetByNames(IEnumerable<string> names);
     Task Create(Recipe recipe);
     Task Update(Recipe recipe);
-    string SaveImage(string base64Image, string imagesDirectory);
+    string SaveImage(ImageInfo imageInfo, IFileSaver fileSaver);
     Task Delete(int id);
 }
 
@@ -43,35 +43,32 @@ public class RecipesRepository : IRecipesRepository
     {
         return await _dbContext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(r => r.Name == name);
     }
-    public string SaveImage(string base64Image, string imagesDirectory)
+    public string SaveImage(ImageInfo imageInfo, IFileSaver fileSaver)
     {
-        string imagePath;
-        if (string.IsNullOrEmpty(base64Image))
+        string imageFullPath;
+        if (string.IsNullOrEmpty(imageInfo.Base64Image))
         {
             return "";
         }
 
         try
         {
-            byte[] imageBytes = Convert.FromBase64String(base64Image);
-            string fileName = $"{Guid.NewGuid()}.png";
-            string filePath = Path.Combine(imagesDirectory, "Images", fileName);
 
-            System.IO.File.WriteAllBytes(filePath, imageBytes);
-            imagePath = $"Images/{fileName}";
-        
-        }
-        catch (FormatException exception)
-        {
-            _logger.LogError($"Failed to convert the provided base64Image to bytes. Error: {exception.Message}");
-            throw;
+            string finalFileName = $"{imageInfo.FileNameWithoutExtension}{imageInfo.FileExtension}";
+
+            string filePath = Path.Combine(imageInfo.ImagesDirectory, "Images", finalFileName);
+            byte[] imageBytes = imageInfo.GetImageBytes();
+
+            fileSaver.SaveAsync(filePath, imageBytes);
+
+            imageFullPath = $"Images/{finalFileName}";
         }
         catch (Exception exception)
         {
             _logger.LogError($"An error occurred while saving the image. Error: {exception.Message}");
             throw;
         }
-        return imagePath;
+        return imageFullPath;
     }
     public async Task Create(Recipe recipe)
     {

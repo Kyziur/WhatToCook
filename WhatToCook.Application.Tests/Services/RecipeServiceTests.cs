@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using WhatToCook.Application.DataTransferObjects.Requests;
 using WhatToCook.Application.Domain;
+using WhatToCook.Application.Exceptions;
 using WhatToCook.Application.Infrastructure.Repositories;
 using WhatToCook.Application.Services;
 
@@ -9,34 +10,39 @@ namespace WhatToCook.Application.Tests.Services;
 public class RecipeServiceTests
 {
     private readonly Mock<IRecipesRepository> _recipesRepositoryMock;
+    private readonly Mock<ILogger<RecipeService>> _loggerMock;
+    private readonly Mock<IFileSaver> _fileSaverMock;
 
     public RecipeServiceTests()
     {
         _recipesRepositoryMock = new Mock<IRecipesRepository>();
+        _loggerMock = new Mock<ILogger<RecipeService>>();
+        _fileSaverMock = new Mock<IFileSaver>();
     }
+
     [Fact]
     public async Task Given_ValidData_When_CreatingRecipe_ThenSucceeds()
     {
-        //Arrange       
-        var loggerMock = new Mock<ILogger<RecipeService>>();
-        var sut = new RecipeService(_recipesRepositoryMock.Object, loggerMock.Object);
+        var sut = new RecipeService(_recipesRepositoryMock.Object, _loggerMock.Object);
+
+        var validBase64Image = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
         var recipeRequest = new RecipeRequest()
         {
             Name = "Test123",
             Ingredients = new List<string> { "boczus", "jajeczka", "maslo" },
-            Image = "asasfasfas",
+            Image = validBase64Image,
             PreparationDescription = "124asfafafas",
             TimeToPrepare = "short"
         };
+
         var imagesDirectory = "some directory";
         var expectedImagePath = "some path";
 
-        //Act
-        _recipesRepositoryMock.Setup(x => x.Create(It.IsAny<Recipe>())).Verifiable(Times.Once);
-        _recipesRepositoryMock.Setup(x => x.SaveImage(recipeRequest.Image, imagesDirectory)).Returns(expectedImagePath);
-        var result = await sut.Create(recipeRequest, imagesDirectory);
+        _recipesRepositoryMock.Setup(x => x.Create(It.IsAny<Recipe>())).Returns(Task.CompletedTask).Verifiable();
+        _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>(), _fileSaverMock.Object)).Returns(expectedImagePath).Verifiable();
+        var result = await sut.Create(recipeRequest, imagesDirectory, _fileSaverMock.Object);
 
-        //Assert
         result.Should().NotBeNull();
         result.Name.Should().NotBeNullOrWhiteSpace().And.Be("Test123");
         result.Ingredients.Should().HaveCount(3);
@@ -45,146 +51,106 @@ public class RecipeServiceTests
         Assert.Equal(recipeRequest.PreparationDescription, result.Description);
         Assert.Equal(recipeRequest.TimeToPrepare, result.TimeToPrepare);
         Assert.Equal(recipeRequest.Ingredients.Count(), result.Ingredients.Count);
-        _recipesRepositoryMock.Verify();
+
+        _recipesRepositoryMock.Verify(x => x.Create(It.IsAny<Recipe>()), Times.Once);
     }
+    
     [Fact]
-    public async Task Given_ValidData_When_UpdatingRecipe_ThenSucceeds()
+    public async Task Given_ValidUpdateData_When_UpdatingRecipe_ThenSucceeds()
     {
-        //Arrange
-        var existingRecipe = new Recipe
-            (           
-            "oldname1",        
-            "olddescription",       
-            "short",       
-            new List<Ingredient>()       
-        {         
-                new Ingredient("old ingredient1"),        
-                new Ingredient("old ingredient2"),         
-                new Ingredient("old ingredient3"),         
-                new Ingredient("old ingredient4"),    
-            },
-            null,      
-            "old image",       
-            null 
-            );
-        //setup GetRecipeByName method to return existing recipe
+        var sut = new RecipeService(_recipesRepositoryMock.Object, _loggerMock.Object);
 
-        _recipesRepositoryMock.Setup(x => x.GetRecipeByName(It.IsAny<string>())).ReturnsAsync(existingRecipe);
-        _recipesRepositoryMock.Setup(x => x.Update(It.IsAny<Recipe>())).Returns(Task.CompletedTask);
-        var loggerMock = new Mock<ILogger<RecipeService>>();
-        var sut = new RecipeService(_recipesRepositoryMock.Object, loggerMock.Object);
-        var updateRecipeRequest = new UpdateRecipeRequest()
+        var validBase64Image = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+        var oldRecipeName = "Test123";
+        var newRecipeName = "UpdatedTest123";
+
+        var mockOldRecipe = new Recipe(oldRecipeName, "old desc", "long", new List<Ingredient>(), null, "oldImagePath", null);
+
+
+        var recipeUpdateRequest = new UpdateRecipeRequest()
         {
-            Name = "Test1236",
-            Ingredients = new List<string> { "newboczus", "newjajeczka", "newmaslo", "gruszka" },
-            Image = "new image",
-            PreparationDescription = "newdescription",
-            TimeToPrepare = "short"
+            Id = 1,
+            Name = newRecipeName,
+            Ingredients = new List<string> { "chicken", "rice", "salt" },
+            Image = validBase64Image,
+            PreparationDescription = "Updated Description",
+            TimeToPrepare = "medium"
         };
-        var imagesDirectory = "some directory";
-        var expectedImagePath = "some path";
 
-        //Act
-        _recipesRepositoryMock.Setup(x => x.SaveImage(updateRecipeRequest.Image, imagesDirectory)).Returns(expectedImagePath);
-        var result = await sut.Update(updateRecipeRequest, imagesDirectory);
+        var imagesDirectory = "some updated directory";
 
-        //Assert
+
+        _recipesRepositoryMock.Setup(x => x.GetRecipeByName(newRecipeName)).ReturnsAsync(mockOldRecipe);
+        _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>(), _fileSaverMock.Object)).Returns("some updated path").Verifiable();
+        _recipesRepositoryMock.Setup(x => x.Update(It.IsAny<Recipe>())).Returns(Task.CompletedTask).Verifiable();
+
+        var result = await sut.Update(recipeUpdateRequest, imagesDirectory, _fileSaverMock.Object);
+
         result.Should().NotBeNull();
-        result.Name.Should().NotBeNullOrWhiteSpace().And.Be("Test1236");
-        result.Ingredients.Should().HaveCount(4);
-        Assert.Equal(expectedImagePath, result.Image);
-        Assert.Equal(updateRecipeRequest.Name, result.Name);
-        Assert.Equal(updateRecipeRequest.PreparationDescription, result.Description);
-        Assert.Equal(updateRecipeRequest.TimeToPrepare, result.TimeToPrepare);
-        Assert.Equal(updateRecipeRequest.Ingredients.Count(), result.Ingredients.Count);
-        _recipesRepositoryMock.Verify();
+        result.Name.Should().NotBeNullOrWhiteSpace().And.Be(newRecipeName);
+        result.Ingredients.Should().HaveCount(3);
+        Assert.Equal("some updated path", result.Image); 
+        Assert.Equal(recipeUpdateRequest.Name, result.Name);
+        Assert.Equal(recipeUpdateRequest.PreparationDescription, result.Description);
+        Assert.Equal(recipeUpdateRequest.TimeToPrepare, result.TimeToPrepare);
+        Assert.Equal(recipeUpdateRequest.Ingredients.Count(), result.Ingredients.Count);
+
+        _recipesRepositoryMock.Verify(x => x.Update(It.IsAny<Recipe>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Given_NonExistentRecipe_When_Updating_ThenThrowsNotFoundException()
+    {
+        var sut = new RecipeService(_recipesRepositoryMock.Object, _loggerMock.Object);
+
+        var validBase64Image = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+        var nonexistentRecipeName = "NonexistentRecipe";
+
+        var updateRequest = new UpdateRecipeRequest()
+        {
+            Id = 1,
+            Name = nonexistentRecipeName,
+            Ingredients = new List<string> { "chicken", "rice", "salt" },
+            Image = validBase64Image,
+            PreparationDescription = "Updated Description",
+            TimeToPrepare = "medium"
+        };
+
+        var imagesDirectory = "some directory";
+
+        _recipesRepositoryMock.Setup(x => x.GetRecipeByName(nonexistentRecipeName)).ReturnsAsync((Recipe)null);
+
+        await Assert.ThrowsAsync<NotFoundException>(() => sut.Update(updateRequest, imagesDirectory, _fileSaverMock.Object));
+
+        _recipesRepositoryMock.Verify(x => x.Update(It.IsAny<Recipe>()), Times.Never);
     }
     [Fact]
-    public async Task Given_ValidData_When_UpdatingRecipe2_ThenSucceeds()
+    public async Task Given_InvalidRecipeData_When_Updating_ThenThrowsInvalidDataException()
     {
-        //Arrange
+        var sut = new RecipeService(_recipesRepositoryMock.Object, _loggerMock.Object);
 
-        var existingRecipe = new Recipe
-           (
-           "oldname1",
-           "olddescription",
-           "short",
-           new List<Ingredient>()
-       {
-                new Ingredient("old ingredient1"),
-                new Ingredient("old ingredient2"),
-                new Ingredient("old ingredient3"),
-                new Ingredient("old ingredient4"),
-           },
-           null,
-           "old image",
-           null
-           );
-        //setup GetRecipeByName method to return existing recipe
-        _recipesRepositoryMock.Setup(x => x.GetRecipeByName(It.IsAny<string>())).ReturnsAsync(existingRecipe);
-        var loggerMock = new Mock<ILogger<RecipeService>>();
-        var sut = new RecipeService(_recipesRepositoryMock.Object, loggerMock.Object);
-        var updateRecipeRequest = new UpdateRecipeRequest()
+        var invalidBase64Image = "INVALID_IMAGE_STRING";
+        var recipeName = "ExistingRecipe";
+
+        var updateRequest = new UpdateRecipeRequest()
         {
-            Name = "Test1236",
-            Ingredients = new List<string> { "newboczus", "newjajeczka", "newmaslo", "gruszka" },
-            Image = "new image",
-            PreparationDescription = "newdescription",
-            TimeToPrepare = "short"
+            Id = 1,
+            Name = "",  
+            Ingredients = new List<string>(),  
+            Image = invalidBase64Image,
+            PreparationDescription = "Updated Description",
+            TimeToPrepare = "medium"
         };
-        var imagesDirectory = "some directory";
-        var expectedImagePath = "some path";
-        _recipesRepositoryMock.Setup(x => x.Update(It.IsAny<Recipe>())).Returns(Task.CompletedTask);
-        _recipesRepositoryMock.Setup(x => x.SaveImage(updateRecipeRequest.Image, imagesDirectory)).Returns(expectedImagePath);
-        //Act
-        var result = await sut.Update(updateRecipeRequest, imagesDirectory);
 
-        //Assert
-        _recipesRepositoryMock.Verify(x => x.Update(It.Is<Recipe>(r =>
-            r.Name == updateRecipeRequest.Name &&
-            r.Description == updateRecipeRequest.PreparationDescription &&
-            r.TimeToPrepare == updateRecipeRequest.TimeToPrepare &&
-            r.Image == result.Image &&
-            r.Ingredients.Count == updateRecipeRequest.Ingredients.Count)), Times.Once);
-    }
-    [Fact]
-    public async Task Given_InvalidData_When_UpdatingRecipe_ThenThrowsException()
-    {
-        var existingRecipe = new Recipe
-           (
-           "oldname1",
-           "olddescription",
-           "short",
-           new List<Ingredient>()
-       {
-                new Ingredient("old ingredient1"),
-                new Ingredient("old ingredient2"),
-                new Ingredient("old ingredient3"),
-                new Ingredient("old ingredient4"),
-           },
-           null,
-           "old image",
-           null
-           );
-        //setup GetRecipeByName method to return existing recipe
-        _recipesRepositoryMock.Setup(x => x.GetRecipeByName(It.IsAny<string>())).ReturnsAsync(existingRecipe);
-        var loggerMock = new Mock<ILogger<RecipeService>>();
-        var sut = new RecipeService(_recipesRepositoryMock.Object, loggerMock.Object);
-        var updateRecipeRequest = new UpdateRecipeRequest()
-        {
-            Name = " ",
-            Ingredients = new List<string> { "newboczus", "newjajeczka", "newmaslo", "gruszka" },
-            Image = "new image",
-            PreparationDescription = "newdescription",
-            TimeToPrepare = "short"
-        };
         var imagesDirectory = "some directory";
-        var expectedImagePath = "some path";
-        _recipesRepositoryMock.Setup(x => x.Update(It.IsAny<Recipe>())).Returns(Task.CompletedTask);
-        _recipesRepositoryMock.Setup(x => x.SaveImage(updateRecipeRequest.Image, imagesDirectory)).Returns(expectedImagePath);
 
-        //Assert
-        await Assert.ThrowsAsync<Exception>(() => sut.Update(updateRecipeRequest, imagesDirectory));
+        var mockExistingRecipe = new Recipe(recipeName, "desc", "long", new List<Ingredient>(), null, "imagePath", null);
+
+        _recipesRepositoryMock.Setup(x => x.GetRecipeByName(recipeName)).ReturnsAsync(mockExistingRecipe);
+
+        await Assert.ThrowsAsync<NotFoundException>(() => sut.Update(updateRequest, imagesDirectory, _fileSaverMock.Object));
+
+        _recipesRepositoryMock.Verify(x => x.Update(It.IsAny<Recipe>()), Times.Never);
     }
     [Fact]
     public async Task Given_ValidData_When_DeletingRecipe_Then_RecipeIsDeleted()
@@ -195,29 +161,25 @@ public class RecipeServiceTests
             "olddescription",
             "short",
             new List<Ingredient>()
-        {
+            {
                 new Ingredient("old ingredient1"),
                 new Ingredient("old ingredient2"),
                 new Ingredient("old ingredient3"),
                 new Ingredient("old ingredient4"),
             },
             null,
-            "old image",
+            "oldimage.png",
             null
             );
 
-        //setup GetRecipeByName method to return existing recipe
         _recipesRepositoryMock.Setup(x => x.GetRecipeByName(It.IsAny<string>())).ReturnsAsync(existingRecipe);
         var loggerMock = new Mock<ILogger<RecipeService>>();
         var sut = new RecipeService(_recipesRepositoryMock.Object, loggerMock.Object);
 
-        //setup Delete method to delete the recipe
         _recipesRepositoryMock.Setup(x => x.Delete(It.IsAny<int>())).Returns(Task.CompletedTask);
 
-        //Act
         await sut.Delete(existingRecipe.Id);
 
-        //Assert
         _recipesRepositoryMock.Verify(x => x.Delete(existingRecipe.Id), Times.Once);
     }
 
@@ -226,7 +188,6 @@ public class RecipeServiceTests
     {
         var nonExistingRecipeId = 999;
 
-        //setup Delete method to throw an exception
         _recipesRepositoryMock.Setup(x => x.Delete(It.IsAny<int>())).ThrowsAsync(new Exception("Recipe not found"));
         var loggerMock = new Mock<ILogger<RecipeService>>();
         var sut = new RecipeService(_recipesRepositoryMock.Object, loggerMock.Object);

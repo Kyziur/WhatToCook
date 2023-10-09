@@ -10,7 +10,9 @@ public class DatabaseContext : DbContext
 {
     private readonly string _connectionString;
     private readonly bool _isDevelopment;
-
+    public DatabaseContext()
+    {
+    }
 
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
     public DatabaseContext(DbContextOptions<DatabaseContext> options, IConfiguration configuration, IHostEnvironment environment)
