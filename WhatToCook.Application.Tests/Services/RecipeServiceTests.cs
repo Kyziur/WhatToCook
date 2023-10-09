@@ -40,7 +40,7 @@ public class RecipeServiceTests
         var expectedImagePath = "some path";
 
         _recipesRepositoryMock.Setup(x => x.Create(It.IsAny<Recipe>())).Returns(Task.CompletedTask).Verifiable();
-        _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>())).Returns(expectedImagePath).Verifiable();
+        _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>())).ReturnsAsync(expectedImagePath).Verifiable();
         var result = await sut.Create(recipeRequest, imagesDirectory);
 
         result.Should().NotBeNull();
@@ -81,7 +81,7 @@ public class RecipeServiceTests
 
 
         _recipesRepositoryMock.Setup(x => x.GetRecipeByName(newRecipeName)).ReturnsAsync(mockOldRecipe);
-        _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>())).Returns("some updated path").Verifiable();
+        _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>())).ReturnsAsync("some updated path").Verifiable();
         _recipesRepositoryMock.Setup(x => x.Update(It.IsAny<Recipe>())).Returns(Task.CompletedTask).Verifiable();
 
         var result = await sut.Update(recipeUpdateRequest, imagesDirectory);

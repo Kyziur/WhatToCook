@@ -66,9 +66,11 @@ public class Recipe
         try
         {
             string fullPath = Path.Combine(imagesDirectory, this.Image);
-            if (File.Exists(fullPath))
+
+            bool fileExists = await Task.Run(() => File.Exists(fullPath));
+            if (fileExists)
             {
-                File.Delete(fullPath);
+                await Task.Run(() => File.Delete(fullPath));
             }
             this.Image = null;
         }

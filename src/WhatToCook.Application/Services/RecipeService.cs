@@ -19,7 +19,7 @@ public class RecipeService
     public async Task<Recipe> Create(RecipeRequest request, string imagesDirectory)
     {
         var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
-        var imagePath = _recipesRepository.SaveImage(imageInfo);
+        var imagePath = await _recipesRepository.SaveImage(imageInfo);
         var ingredients = request.Ingredients.Select(ingredient => new Ingredient(ingredient)).ToList();
         var recipe = new Recipe
             (
@@ -48,7 +48,7 @@ public class RecipeService
 
         recipe.RemoveImage(imagesDirectory);
         var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
-        var imagePath = _recipesRepository.SaveImage(imageInfo);
+        var imagePath = await _recipesRepository.SaveImage(imageInfo);
 
         recipe.SetImage(imagePath);
         recipe.SetName(request.Name);
