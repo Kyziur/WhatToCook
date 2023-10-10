@@ -5,7 +5,7 @@ namespace WhatToCook.Application.Infrastructure.Repositories;
 
 public interface IMealPlanningRepository
 {
-    Task<PlanOfMeals> GetMealPlanByName(string name);
+    Task<PlanOfMeals?> GetMealPlanByName(string name);
     Task Create(PlanOfMeals planOfMeals);
     Task Update(PlanOfMeals planOfMeals);
 }

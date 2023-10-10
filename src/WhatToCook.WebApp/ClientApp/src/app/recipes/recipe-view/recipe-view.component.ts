@@ -183,6 +183,12 @@ export class RecipeViewComponent implements OnInit {
     });
   }
 
+  setDefaultImage() {
+    if (this.recipe) {
+      this.recipe.imagePath = 'Images/default_image.png';
+    }
+  }
+
   cancelEditClickHandler() {
     this.disableEdit()
   }

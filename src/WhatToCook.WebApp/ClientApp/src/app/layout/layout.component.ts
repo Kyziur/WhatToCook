@@ -1,10 +1,18 @@
-import {Component, OnInit} from '@angular/core';
-import {BehaviorSubject, fromEvent, map, Observable, of, startWith, tap, throttleTime} from 'rxjs';
+import { Component, OnInit } from '@angular/core';
+import {
+  BehaviorSubject,
+  fromEvent,
+  map,
+  Observable,
+  of,
+  startWith,
+  tap
+} from 'rxjs';
 
 @Component({
   selector: 'app-layout',
   templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.scss']
+  styleUrls: ['./layout.component.scss'],
 })
 export class LayoutComponent implements OnInit {
   public isNotMobile$: Observable<boolean> = of(false);
@@ -13,12 +21,15 @@ export class LayoutComponent implements OnInit {
 
   ngOnInit(): void {
     const checkScreenSize = () => document.body.offsetWidth > 767;
-    this.isNotMobile$ = fromEvent(window, 'resize').pipe(map(checkScreenSize), startWith(checkScreenSize()), tap(isNotMobile => {
-      if (isNotMobile) {
-        this.isSidebarVisible.next(false);
-      }
-    }));
-
+    this.isNotMobile$ = fromEvent(window, 'resize').pipe(
+      map(checkScreenSize),
+      startWith(checkScreenSize()),
+      tap((isNotMobile) => {
+        if (isNotMobile) {
+          this.isSidebarVisible.next(false);
+        }
+      }),
+    );
   }
 
   showMenu() {

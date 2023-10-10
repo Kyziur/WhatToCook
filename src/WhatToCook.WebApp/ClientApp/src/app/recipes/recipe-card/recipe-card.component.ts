@@ -13,12 +13,12 @@ export const DEFAULT_SELECT_BUTTON: SelectButton = {
   show: false,
   onClick: undefined
 };
+
 @Component({
   selector: 'app-recipe-card',
   templateUrl: './recipe-card.component.html',
-  styleUrls: ['./recipe-card.component.scss']
+  styleUrls: ['./recipe-card.component.scss'],
 })
-
 export class RecipeCardComponent {
   @Input() recipe?: Recipe;
   @Input() selectButton?: SelectButton;
@@ -29,9 +29,9 @@ export class RecipeCardComponent {
 
   viewRecipeDetails(name: string | undefined) {
     if (name === undefined) {
-      return
+      return;
     }
-    this.router.navigate([`/recipes/${name}`])
+    this.router.navigate([`/recipes/${name}`]);
   }
 
   getImagePath() {
@@ -39,7 +39,13 @@ export class RecipeCardComponent {
       return '';
     }
 
-    return this.recipe.imagePath
+    return this.recipe.imagePath;
+  }
+
+  setDefaultImage() {
+    if (this.recipe) {
+      this.recipe.imagePath = 'Images/default_image.png';
+    }
   }
 
   getTimeToPrepareBadge(recipe: Recipe) {
@@ -51,7 +57,7 @@ export class RecipeCardComponent {
   }
 
   onSelect() {
-    if (!this.recipe || !this.selectButton.onClick) {
+    if (!this.recipe || !this.selectButton?.onClick) {
       return
     }
 
