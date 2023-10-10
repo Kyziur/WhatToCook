@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { RecipeService } from '../recipe.service';
 import { Recipe } from '../Recipe';
+import {SelectButton} from "../recipe-card/recipe-card.component";
 
 export type filterRecipePredicate = (recipe: Recipe) => boolean;
 
@@ -11,7 +12,7 @@ export type filterRecipePredicate = (recipe: Recipe) => boolean;
 })
 export class RecipeListComponent implements OnInit {
   recipes: Recipe[] = [];
-
+  @Input() recipeCardSelectButton: SelectButton
   @Input() filterMethod?: filterRecipePredicate;
 
   constructor(private recipeService: RecipeService) {

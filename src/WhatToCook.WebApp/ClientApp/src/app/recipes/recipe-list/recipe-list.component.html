@@ -2,7 +2,7 @@
   <app-search></app-search>
   <div class="recipes-container">
     <div class="w-1/4" *ngFor="let recipe of recipes">
-      <app-recipe-card [recipe]="recipe"></app-recipe-card>
+      <app-recipe-card [recipe]="recipe" [showSelectButton]="showSelectButtonsForCards"></app-recipe-card>
     </div>
   </div>
 </div>

@@ -1,4 +1,4 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {FormControl, FormGroup, FormBuilder, FormArray} from '@angular/forms';
 import {CreateRecipe} from './CreateRecipe';
 import {RecipeService} from '../recipe.service';
@@ -13,31 +13,12 @@ export enum DisplayMode {
   View
 }
 
-
 export interface RecipeForm {
   name: FormControl<string>;
   ingredients: FormArray<FormControl<string>>;
   preparationDescription: FormControl<string>;
   timeToPrepare: FormControl<TimeToPrepare>;
   image: FormControl<string>;
-}
-
-export type FormDataPossibleValues = string | string[];
-
-export function mapObjectToFormData(form: Record<string, FormDataPossibleValues>): FormData {
-  const formData = new FormData();
-  for (const [key, value] of Object.entries(form)) {
-    if (!Array.isArray(value)) {
-      formData.append(key, value);
-      continue;
-    }
-
-    for (let v = 0; v < value.length; v++) {
-      formData.append(`${key}[${v}]`, value[v]);
-    }
-  }
-
-  return formData;
 }
 
 @Component({

@@ -1,11 +1,17 @@
 import {Component} from '@angular/core';
-import {FormControl, FormGroup, FormBuilder, FormArray, AbstractControl, ValidationErrors, Validators} from '@angular/forms';
-import {PlanOfMeals} from './plan-of-meals';
-import {ActivatedRoute, Router} from '@angular/router';
-import {HttpClient} from '@angular/common/http';
+import {FormArray, FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
+import {CreatePlanOfMeals} from './plan-of-meals';
+import {Router} from '@angular/router';
 import {MealPlanningService} from "../meal-planning.service";
-import {dateRangeValidator, notPastDateValidator } from './date-validators.component';
-import {notWhitespaceValidator } from 'src/app/not-white-space-validator.component';
+import {dateRangeValidator, notPastDateValidator} from './date-validators.component';
+import {notWhitespaceValidator} from 'src/app/not-white-space-validator.component';
+
+export interface MealPlanForm {
+  name: FormControl<string>
+  fromDate: FormControl<string | null>;
+  toDate: FormControl<string | null>;
+  recipes: FormArray<FormControl<string>>;
+}
 
 @Component({
   selector: 'app-meal-creator',
@@ -14,41 +20,82 @@ import {notWhitespaceValidator } from 'src/app/not-white-space-validator.compone
 })
 
 export class MealPlanCreatorComponent {
-  hasInteractedWithFromDate: boolean = false;
-  hasInteractedWithToDate: boolean = false;
-  mealPlanForm: FormGroup = new FormGroup({
+  selectedDate: Date | undefined;
+  mealPlanForm: FormGroup<MealPlanForm> = new FormGroup({
     name: this.fb.nonNullable.control("", [Validators.required, notWhitespaceValidator]),
-    fromDate: this.fb.nonNullable.control(new Date(),[Validators.required, notPastDateValidator]),
-    toDate: this.fb.nonNullable.control(new Date(), [Validators.required, notPastDateValidator]),
+    fromDate: this.fb.control<string | null>(null, [Validators.required, notPastDateValidator]),
+    toDate: this.fb.control<string | null>(null, [Validators.required, notPastDateValidator]),
     recipes: this.fb.nonNullable.array([] as FormControl<string>[])
-  }, { validators: dateRangeValidator });
+  }, {validators: dateRangeValidator});
 
 
-  handleSuccesfulSave() {
+  get fromDate() {
+    return this.mealPlanForm.controls.fromDate;
+  }
+
+  get toDate() {
+    return this.mealPlanForm.controls.toDate;
+  }
+
+  get name() {
+    return this.mealPlanForm.controls.name;
+  }
+
+  handleSuccessfulSave() {
     this.router.navigate(['recipes'])
   }
 
-  constructor(private fb: FormBuilder, private router: Router, public mealPlanService: MealPlanningService, private http: HttpClient, private route: ActivatedRoute) {
+  constructor(private fb: FormBuilder, private router: Router, public mealPlanService: MealPlanningService) {
+    this.fromDate.valueChanges.subscribe(_ => this.changedDateRangeHandler());
+    this.toDate.valueChanges.subscribe(_ => this.changedDateRangeHandler());
   }
 
   submit() {
-    const meaPlanLoad = new FormData();
-    let form = this.mealPlanForm?.getRawValue();
-    if (!form) {
+    if (!this.mealPlanForm || this.mealPlanForm.invalid) {
       return;
     }
-    for (const [key, value] of Object.entries(form)) {
-      if (Array.isArray(value)) {
-        for (var v = 0; v < value.length; v++) {
-          meaPlanLoad.append(`${key}[${v}]`, value[v]);
-        }
-        this.mealPlanService.createMealPlan(this.mealPlanForm?.value as PlanOfMeals).subscribe((x) => this.handleSuccesfulSave());
-      }
+
+    if (!this.fromDate.value || !this.toDate.value) {
+      return;
     }
+
+    const request: CreatePlanOfMeals = {
+      name: this.name.value,
+      fromDate: new Date(this.fromDate.value),
+      toDate: new Date(this.toDate.value),
+    };
+
+    console.error('request', request);
+
+
+    // this.mealPlanService.createMealPlan(request).subscribe(_ => this.handleSuccessfulSave());
   }
-  createStringControl(value: string | undefined) {
-    return this.fb.nonNullable.control(value ?? '');
+
+  getDaysFromSelectedDates() {
+    if (!this.toDate.value || !this.fromDate.value) {
+      return [];
+    }
+
+    return this.generateRangeOfDates(new Date(this.fromDate.value), new Date(this.toDate.value));
   }
-  protected readonly MealPlanningService = MealPlanningService;
+
+  selectDateClickHandler($event: MouseEvent, date: Date){
+    $event.preventDefault();
+    this.selectedDate = date;
+  }
+
+  changedDateRangeHandler(){
+    this.selectedDate = undefined;
+  }
+
+  generateRangeOfDates(from: Date, to: Date) {
+    let currentDate = from;
+    let rangeDates: Date[] = [];
+    while (currentDate <= to) {
+      rangeDates.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return rangeDates;
+  }
 }
 

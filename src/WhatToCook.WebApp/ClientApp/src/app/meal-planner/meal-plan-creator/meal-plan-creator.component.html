@@ -1,33 +1,90 @@
-<div class="flex justify-center">
-  <form [formGroup]="mealPlanForm" *ngIf="mealPlanForm" (ngSubmit)="submit()">
-    <div>
-      <div class="form-group">
-        <label>Name</label>
-        <input type="text" formControlName="name" class="form-control" />
-        <div *ngIf="mealPlanForm.get('name')?.hasError('required')">
+<div class="flex">
+  <!-- Left Side (Form) -->
+  <div class="w-2/6 p-6">
+    <h1 class="text-2xl font-semibold mb-4">Form</h1>
+    <form [formGroup]="mealPlanForm" *ngIf="mealPlanForm" (ngSubmit)="submit()">
+      <div class="mb-4">
+        <label [for]="name" class="block text-gray-700">Name</label>
+        <input type="text" [formControl]="name" class="w-full form-input input">
+        <div *ngIf="name.dirty && name?.hasError('required')">
           Name is required.
         </div>
-        <div *ngIf="mealPlanForm.get('name')?.hasError('whitespace')">
+        <div *ngIf="name.dirty && name?.hasError('whitespace')">
           Name cannot be just whitespace.
         </div>
       </div>
-      <div class="form-group">
-        <label>From</label>
-        <input type="date" formControlName="fromDate" class="form-control" (focusout)="hasInteractedWithFromDate=true" />
-        <div *ngIf="mealPlanForm.get('fromDate')?.hasError('pastDate')">
+      <div class="mb-4">
+        <label [for]="fromDate" class="block text-gray-700">From</label>
+        <input type="date" [formControl]="fromDate" class="w-full form-input input">
+        <div *ngIf="fromDate.dirty && fromDate?.hasError('pastDate')">
           Date should not be in the past.
         </div>
-        <label>To</label>
-        <!--focus out indicates some level of interaction, once dates are set from default to anything, the flag will change, and the form will be based on validators-->
-        <input type="date" formControlName="toDate" class="form-control" (focusout)="hasInteractedWithToDate=true" />
-        <div *ngIf="mealPlanForm.errors?.dateMismatch">
+      </div>
+
+      <div class="mb-4">
+        <label [for]="toDate" class="block text-gray-700">To</label>
+        <input type="date" [formControl]="toDate" class="w-full form-input input">
+        <div *ngIf="toDate.dirty && mealPlanForm.errors?.dateMismatch">
           'To' date should not be before 'From' date.
         </div>
       </div>
-      <button type="submit" [disabled]="!mealPlanForm.valid || (!hasInteractedWithFromDate && !hasInteractedWithToDate)">Save</button>
-    </div>
-  </form>
+
+      <div class="mb-4">
+        <label class="block text-gray-700">List of Days</label>
+        <div class="space-y-2">
+          <div class="w-64 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg">
+            <a *ngFor="let day of getDaysFromSelectedDates()" (click)="selectDateClickHandler($event,day)" href="#"
+               class="block w-full px-4 py-2 border-b border-gray-200 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700"
+               [ngClass]="{'bg-blue-300': selectedDate?.getDate() === day.getDate()}">
+              {{day | date: 'fullDate'}}
+            </a>
+          </div>
+          <span *ngIf="getDaysFromSelectedDates()?.length === 0">
+              Please select dates
+            </span>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Middle Separator -->
+  <div class="border-l p-6"></div>
+
+  <div class="w-6/6">
+    <app-recipe-list [showSelectButtonsForCards]="true"></app-recipe-list>
+  </div>
 </div>
+
+<!--<div class="flex justify-center">-->
+<!--  <form [formGroup]="mealPlanForm" *ngIf="mealPlanForm" (ngSubmit)="submit()">-->
+<!--    <div>-->
+<!--      <div class="form-group">-->
+<!--        <label>Name</label>-->
+<!--        <input type="text" [formControl]="mealPlanForm.controls.name" class="w-full form-input input" />-->
+<!--        <div *ngIf="mealPlanForm.controls.name?.hasError('required')">-->
+<!--          Name is required.-->
+<!--        </div>-->
+<!--        <div *ngIf="mealPlanForm.controls.name?.hasError('whitespace')">-->
+<!--          Name cannot be just whitespace.-->
+<!--        </div>-->
+<!--      </div>-->
+<!--      <div class="form-group">-->
+<!--        <label>From</label>-->
+<!--        <input type="date" [formControl]="mealPlanForm.controls.fromDate" class="form-input input" (focusout)="hasInteractedWithFromDate=true" />-->
+<!--        <div *ngIf="mealPlanForm.controls.fromDate?.hasError('pastDate')">-->
+<!--          Date should not be in the past.-->
+<!--        </div>-->
+<!--        <label>To</label>-->
+<!--        &lt;!&ndash;focus out indicates some level of interaction, once dates are set from default to anything, the flag will change, and the form will be based on validators&ndash;&gt;-->
+<!--        <input type="date" [formControl]="mealPlanForm.controls.toDate" class="form-input input" (focusout)="hasInteractedWithToDate=true" />-->
+<!--        <div *ngIf="mealPlanForm.errors?.dateMismatch">-->
+<!--          'To' date should not be before 'From' date.-->
+<!--        </div>-->
+<!--      </div>-->
+<!--      <button type="submit" [disabled]="!mealPlanForm.valid || (!hasInteractedWithFromDate && !hasInteractedWithToDate)">Save</button>-->
+<!--    </div>-->
+<!--  </form>-->
+<!--</div>-->
 
 
 

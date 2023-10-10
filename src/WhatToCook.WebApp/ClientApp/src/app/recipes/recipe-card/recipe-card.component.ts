@@ -2,10 +2,17 @@ import {Component, Input} from '@angular/core';
 import {Router} from '@angular/router';
 import {Recipe} from '../Recipe';
 import {MealPlanningService} from "../../meal-planner/meal-planning.service";
-import {Badge} from "../../shared/badge/badge.component";
 import {mapTimeToPrepareToBadge} from "../TimeToPrepare";
 
+export interface SelectButton {
+  show: boolean;
+  onClick?: (recipe: Recipe) => void;
+}
 
+export const DEFAULT_SELECT_BUTTON: SelectButton = {
+  show: false,
+  onClick: undefined
+};
 @Component({
   selector: 'app-recipe-card',
   templateUrl: './recipe-card.component.html',
@@ -13,11 +20,11 @@ import {mapTimeToPrepareToBadge} from "../TimeToPrepare";
 })
 
 export class RecipeCardComponent {
-  @Input()
-  recipe?: Recipe;
-  selected?: boolean;
+  @Input() recipe?: Recipe;
+  @Input() selectButton?: SelectButton;
 
   constructor(private router: Router, private mealPlanningService: MealPlanningService) {
+    this.selectButton = DEFAULT_SELECT_BUTTON;
   }
 
   viewRecipeDetails(name: string | undefined) {
@@ -44,13 +51,10 @@ export class RecipeCardComponent {
   }
 
   onSelect() {
-    if (this.recipe === undefined) {
+    if (!this.recipe || !this.selectButton.onClick) {
       return
     }
-    if (this.selected) {
-      this.mealPlanningService.selectRecipe(this.recipe)
-    } else {
-      this.mealPlanningService.selectedRecipes = this.mealPlanningService.selectedRecipes.filter(x => x.id !== this.recipe?.id)
-    }
+
+    this.selectButton.onClick(this.recipe);
   }
 }
