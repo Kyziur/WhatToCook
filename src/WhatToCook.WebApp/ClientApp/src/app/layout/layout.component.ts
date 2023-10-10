@@ -6,7 +6,7 @@ import {
   Observable,
   of,
   startWith,
-  tap
+  tap,
 } from 'rxjs';
 
 @Component({
@@ -24,11 +24,11 @@ export class LayoutComponent implements OnInit {
     this.isNotMobile$ = fromEvent(window, 'resize').pipe(
       map(checkScreenSize),
       startWith(checkScreenSize()),
-      tap((isNotMobile) => {
+      tap(isNotMobile => {
         if (isNotMobile) {
           this.isSidebarVisible.next(false);
         }
-      }),
+      })
     );
   }
 

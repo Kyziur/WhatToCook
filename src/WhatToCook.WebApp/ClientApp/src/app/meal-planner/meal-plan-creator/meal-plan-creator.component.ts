@@ -1,13 +1,22 @@
-import {Component} from '@angular/core';
-import {FormArray, FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
-import {CreatePlanOfMeals} from './plan-of-meals';
-import {Router} from '@angular/router';
-import {MealPlanningService} from "../meal-planning.service";
-import {dateRangeValidator, notPastDateValidator} from './date-validators.component';
-import {notWhitespaceValidator} from 'src/app/not-white-space-validator.component';
+import { Component } from '@angular/core';
+import {
+  FormArray,
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import { CreatePlanOfMeals } from './plan-of-meals';
+import { Router } from '@angular/router';
+import { MealPlanningService } from '../meal-planning.service';
+import {
+  dateRangeValidator,
+  notPastDateValidator,
+} from './date-validators.component';
+import { notWhitespaceValidator } from 'src/app/not-white-space-validator.component';
 
 export interface MealPlanForm {
-  name: FormControl<string>
+  name: FormControl<string>;
   fromDate: FormControl<string | null>;
   toDate: FormControl<string | null>;
   recipes: FormArray<FormControl<string>>;
@@ -16,18 +25,28 @@ export interface MealPlanForm {
 @Component({
   selector: 'app-meal-creator',
   templateUrl: './meal-plan-creator.component.html',
-  styleUrls: ['./meal-plan-creator.component.scss']
+  styleUrls: ['./meal-plan-creator.component.scss'],
 })
-
 export class MealPlanCreatorComponent {
   selectedDate: Date | undefined;
-  mealPlanForm: FormGroup<MealPlanForm> = new FormGroup({
-    name: this.fb.nonNullable.control("", [Validators.required, notWhitespaceValidator]),
-    fromDate: this.fb.control<string | null>(null, [Validators.required, notPastDateValidator]),
-    toDate: this.fb.control<string | null>(null, [Validators.required, notPastDateValidator]),
-    recipes: this.fb.nonNullable.array([] as FormControl<string>[])
-  }, {validators: dateRangeValidator});
-
+  mealPlanForm: FormGroup<MealPlanForm> = new FormGroup(
+    {
+      name: this.fb.nonNullable.control('', [
+        Validators.required,
+        notWhitespaceValidator,
+      ]),
+      fromDate: this.fb.control<string | null>(null, [
+        Validators.required,
+        notPastDateValidator,
+      ]),
+      toDate: this.fb.control<string | null>(null, [
+        Validators.required,
+        notPastDateValidator,
+      ]),
+      recipes: this.fb.nonNullable.array([] as FormControl<string>[]),
+    },
+    { validators: dateRangeValidator }
+  );
 
   get fromDate() {
     return this.mealPlanForm.controls.fromDate;
@@ -42,10 +61,14 @@ export class MealPlanCreatorComponent {
   }
 
   handleSuccessfulSave() {
-    this.router.navigate(['recipes'])
+    this.router.navigate(['recipes']);
   }
 
-  constructor(private fb: FormBuilder, private router: Router, public mealPlanService: MealPlanningService) {
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    public mealPlanService: MealPlanningService
+  ) {
     this.fromDate.valueChanges.subscribe(_ => this.changedDateRangeHandler());
     this.toDate.valueChanges.subscribe(_ => this.changedDateRangeHandler());
   }
@@ -67,7 +90,6 @@ export class MealPlanCreatorComponent {
 
     console.error('request', request);
 
-
     // this.mealPlanService.createMealPlan(request).subscribe(_ => this.handleSuccessfulSave());
   }
 
@@ -76,15 +98,18 @@ export class MealPlanCreatorComponent {
       return [];
     }
 
-    return this.generateRangeOfDates(new Date(this.fromDate.value), new Date(this.toDate.value));
+    return this.generateRangeOfDates(
+      new Date(this.fromDate.value),
+      new Date(this.toDate.value)
+    );
   }
 
-  selectDateClickHandler($event: MouseEvent, date: Date){
+  selectDateClickHandler($event: MouseEvent, date: Date) {
     $event.preventDefault();
     this.selectedDate = date;
   }
 
-  changedDateRangeHandler(){
+  changedDateRangeHandler() {
     this.selectedDate = undefined;
   }
 
@@ -98,4 +123,3 @@ export class MealPlanCreatorComponent {
     return rangeDates;
   }
 }
-

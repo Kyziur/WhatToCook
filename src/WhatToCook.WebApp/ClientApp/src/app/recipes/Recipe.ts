@@ -1,4 +1,4 @@
-import {TimeToPrepare} from "./TimeToPrepare";
+import { TimeToPrepare } from './TimeToPrepare';
 
 export interface Recipe {
   id: number;
@@ -7,6 +7,5 @@ export interface Recipe {
   preparationDescription: string;
   timeToPrepare: TimeToPrepare;
   imagePath: string;
-  tags: string[]
+  tags: string[];
 }
-

@@ -1,4 +1,4 @@
-import {TimeToPrepare} from "../TimeToPrepare";
+import { TimeToPrepare } from '../TimeToPrepare';
 
 export interface CreateRecipe {
   id: number;

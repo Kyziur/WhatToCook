@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import {CommonModule, NgOptimizedImage} from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RecipeListComponent } from './recipe-list/recipe-list.component';
 import { RecipeCardComponent } from './recipe-card/recipe-card.component';
 import { RecipeViewComponent } from './recipe-view/recipe-view.component';
@@ -21,24 +21,19 @@ const routes: Routes = [
     path: 'recipes/:name',
     component: RecipeViewComponent,
   },
-
 ];
 
 @NgModule({
-  declarations: [
-    RecipeListComponent,
-    RecipeCardComponent,
-    RecipeViewComponent,
+  declarations: [RecipeListComponent, RecipeCardComponent, RecipeViewComponent],
+  imports: [
+    CommonModule,
+    SharedModule,
+    RouterModule.forChild(routes),
+    ReactiveFormsModule,
+    HttpClientModule,
+    FormsModule,
+    NgOptimizedImage,
   ],
-    imports: [
-        CommonModule,
-        SharedModule,
-        RouterModule.forChild(routes),
-        ReactiveFormsModule,
-        HttpClientModule,
-        FormsModule,
-        NgOptimizedImage,
-    ],
   exports: [
     RecipeCardComponent,
     RecipeViewComponent,
@@ -46,6 +41,5 @@ const routes: Routes = [
     RouterModule,
     ReactiveFormsModule,
   ],
-
 })
-export class RecipesModule { }
+export class RecipesModule {}

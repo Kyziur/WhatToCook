@@ -11,14 +11,14 @@ export class RecipeService {
   recipeUrl = '';
   constructor(
     private httpClient: HttpClient,
-    @Inject('BASE_URL') private baseUrl: string,
+    @Inject('BASE_URL') private baseUrl: string
   ) {
     this.recipeUrl = this.baseUrl + 'api/v1/Recipe';
   }
   create(recipe: CreateRecipe) {
     return this.httpClient.post<CreateRecipe>(
       this.baseUrl + 'api/v1/Recipe',
-      recipe,
+      recipe
     );
   }
   get(): Observable<Recipe[]> {
@@ -31,7 +31,7 @@ export class RecipeService {
   update(recipe: CreateRecipe) {
     return this.httpClient.put<CreateRecipe>(
       this.baseUrl + 'api/v1/Recipe',
-      recipe,
+      recipe
     );
   }
   deleteRecipe(id: number) {

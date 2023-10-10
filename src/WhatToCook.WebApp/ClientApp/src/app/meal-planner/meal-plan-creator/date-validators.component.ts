@@ -1,7 +1,7 @@
 import { AbstractControl, ValidationErrors } from '@angular/forms';
 
 export function dateRangeValidator(
-  group: AbstractControl,
+  group: AbstractControl
 ): ValidationErrors | null {
   const fromDate = new Date(group.get('fromDate')?.value);
   const toDate = new Date(group.get('toDate')?.value);
@@ -9,7 +9,7 @@ export function dateRangeValidator(
 }
 
 export function notPastDateValidator(
-  control: AbstractControl,
+  control: AbstractControl
 ): ValidationErrors | null {
   const selectedDate = new Date(control.value);
   const currentDate = new Date();

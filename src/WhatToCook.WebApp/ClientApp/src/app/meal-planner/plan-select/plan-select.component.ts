@@ -29,11 +29,11 @@ export class PlanSelectComponent {
 
   ngOnInit(): void {
     this.mealPlanService.getMealPlans().subscribe({
-      next: (mealPlans) => {
+      next: mealPlans => {
         this.mealPlans = [EMPTY_MEAL_PLAN, ...mealPlans];
         this.selectedMealPlan = this.mealPlans[0];
       },
-      error: (err) => console.error(err),
+      error: err => console.error(err),
     });
   }
 
@@ -46,7 +46,7 @@ export class PlanSelectComponent {
       fromDate: this.selectedMealPlan.fromDate,
       toDate: this.selectedMealPlan.toDate,
       name: this.selectedMealPlan.name,
-      recipes: this.mealPlanService.selectedRecipes.map((recipe) => {
+      recipes: this.mealPlanService.selectedRecipes.map(recipe => {
         return recipe.name;
       }),
     };

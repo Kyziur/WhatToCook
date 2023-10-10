@@ -12,11 +12,14 @@ import { BadgeComponent } from './badge/badge.component';
     FavouritesButtonComponent,
     SearchComponent,
     ModalComponent,
-    BadgeComponent
+    BadgeComponent,
   ],
-  imports: [
-    CommonModule
+  imports: [CommonModule],
+  exports: [
+    FavouritesButtonComponent,
+    SearchComponent,
+    ModalComponent,
+    BadgeComponent,
   ],
-  exports: [FavouritesButtonComponent, SearchComponent, ModalComponent, BadgeComponent],
 })
-export class SharedModule { }
+export class SharedModule {}
