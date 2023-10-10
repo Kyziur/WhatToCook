@@ -10,11 +10,9 @@ import { ModalComponent } from './modal/modal.component';
     SharedComponent,
     FavouritesButtonComponent,
     SearchComponent,
-    ModalComponent
+    ModalComponent,
   ],
-  imports: [
-    CommonModule
-  ],
+  imports: [CommonModule],
   exports: [FavouritesButtonComponent, SearchComponent, ModalComponent],
 })
-export class SharedModule { }
+export class SharedModule {}

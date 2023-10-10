@@ -1,19 +1,15 @@
-import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {LayoutComponent} from './layout.component';
-import {RouterModule, Routes} from '@angular/router';
-import {SidebarComponent} from './sidebar/sidebar.component';
-import {MenuListComponent} from './sidebar/menu-list/menu-list.component';
-import {SharedModule} from '../shared/shared.module';
-import {ReactiveFormsModule} from '@angular/forms';
-import {HttpClientModule} from '@angular/common/http';
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { LayoutComponent } from './layout.component';
+import { RouterModule, Routes } from '@angular/router';
+import { SidebarComponent } from './sidebar/sidebar.component';
+import { MenuListComponent } from './sidebar/menu-list/menu-list.component';
+import { SharedModule } from '../shared/shared.module';
+import { ReactiveFormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
-  declarations: [
-    LayoutComponent,
-    SidebarComponent,
-    MenuListComponent,
-  ],
+  declarations: [LayoutComponent, SidebarComponent, MenuListComponent],
   imports: [
     CommonModule,
     SharedModule,
@@ -21,12 +17,6 @@ import {HttpClientModule} from '@angular/common/http';
     RouterModule,
     HttpClientModule,
   ],
-  exports: [
-    LayoutComponent,
-    ReactiveFormsModule,
-    RouterModule,
-  ]
+  exports: [LayoutComponent, ReactiveFormsModule, RouterModule],
 })
-export class LayoutModule {
-}
-
+export class LayoutModule {}
