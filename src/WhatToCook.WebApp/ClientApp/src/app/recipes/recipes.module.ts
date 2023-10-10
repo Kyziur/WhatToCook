@@ -21,15 +21,10 @@ const routes: Routes = [
     path: 'recipes/:name',
     component: RecipeViewComponent,
   },
-
 ];
 
 @NgModule({
-  declarations: [
-    RecipeListComponent,
-    RecipeCardComponent,
-    RecipeViewComponent,
-  ],
+  declarations: [RecipeListComponent, RecipeCardComponent, RecipeViewComponent],
   imports: [
     CommonModule,
     SharedModule,
@@ -45,6 +40,5 @@ const routes: Routes = [
     RouterModule,
     ReactiveFormsModule,
   ],
-
 })
-export class RecipesModule { }
+export class RecipesModule {}

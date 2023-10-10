@@ -6,23 +6,18 @@ import { Routes, RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
 import { LayoutModule } from './layout/layout.module';
 import { RecipesModule } from './recipes/recipes.module';
-import {MealPlannerModule} from "./meal-planner/meal-planner.module";
-
+import { MealPlannerModule } from './meal-planner/meal-planner.module';
 
 const routes: Routes = [
-
   {
     path: '',
     redirectTo: 'recipes',
-    pathMatch: 'full'
+    pathMatch: 'full',
   },
-
 ];
 
 @NgModule({
-  declarations: [
-    AppComponent,
-  ],
+  declarations: [AppComponent],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
     HttpClientModule,
@@ -30,11 +25,10 @@ const routes: Routes = [
     RouterModule.forRoot(routes),
     LayoutModule,
     RecipesModule,
-    MealPlannerModule
-
+    MealPlannerModule,
   ],
   providers: [],
   bootstrap: [AppComponent],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class AppModule { }
+export class AppModule {}

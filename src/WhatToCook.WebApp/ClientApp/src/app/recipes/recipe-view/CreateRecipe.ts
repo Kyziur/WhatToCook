@@ -1,4 +1,3 @@
-
 export interface CreateRecipe {
   id: number;
   name: string;

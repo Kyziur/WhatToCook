@@ -13,22 +13,36 @@
       </div>
       <div class="form-group">
         <label>From</label>
-        <input type="date" formControlName="fromDate" class="form-control" (focusout)="hasInteractedWithFromDate=true" />
+        <input
+          type="date"
+          formControlName="fromDate"
+          class="form-control"
+          (focusout)="hasInteractedWithFromDate = true"
+        />
         <div *ngIf="mealPlanForm.get('fromDate')?.hasError('pastDate')">
           Date should not be in the past.
         </div>
         <label>To</label>
         <!--focus out indicates some level of interaction, once dates are set from default to anything, the flag will change, and the form will be based on validators-->
-        <input type="date" formControlName="toDate" class="form-control" (focusout)="hasInteractedWithToDate=true" />
+        <input
+          type="date"
+          formControlName="toDate"
+          class="form-control"
+          (focusout)="hasInteractedWithToDate = true"
+        />
         <div *ngIf="mealPlanForm.errors?.dateMismatch">
           'To' date should not be before 'From' date.
         </div>
       </div>
-      <button type="submit" [disabled]="!mealPlanForm.valid || (!hasInteractedWithFromDate && !hasInteractedWithToDate)">Save</button>
+      <button
+        type="submit"
+        [disabled]="
+          !mealPlanForm.valid ||
+          (!hasInteractedWithFromDate && !hasInteractedWithToDate)
+        "
+      >
+        Save
+      </button>
     </div>
   </form>
 </div>
-
-
-
-

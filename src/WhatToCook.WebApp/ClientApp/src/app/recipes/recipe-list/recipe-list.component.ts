@@ -7,26 +7,26 @@ export type filterRecipePredicate = (recipe: Recipe) => boolean;
 @Component({
   selector: 'app-recipe-list',
   templateUrl: './recipe-list.component.html',
-  styleUrls: ['./recipe-list.component.scss']
+  styleUrls: ['./recipe-list.component.scss'],
 })
 export class RecipeListComponent implements OnInit {
   recipes: Recipe[] = [];
 
   @Input() filterMethod?: filterRecipePredicate;
 
-  constructor(private recipeService: RecipeService) {
-  }
+  constructor(private recipeService: RecipeService) {}
 
   ngOnInit(): void {
     this.recipeService.get().subscribe({
-      next:
-        (recipes) => {
-          console.log("Received recipes:", recipes);
-          this.recipes = this.filterMethod ? recipes.filter(recipe => this.filterMethod?.(recipe)) : recipes;
-        },
+      next: (recipes) => {
+        console.log('Received recipes:', recipes);
+        this.recipes = this.filterMethod
+          ? recipes.filter((recipe) => this.filterMethod?.(recipe))
+          : recipes;
+      },
       error: (error) => {
         console.error(error);
-      }
+      },
     });
   }
 }
