@@ -131,11 +131,9 @@
           }
         }
       }
-    },
-    "defaultProject": "WhatToCook",
-    "cli": {
-      "analytics": false,
-      "schematicCollections": ["@angular-eslint/schematics"]
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }
