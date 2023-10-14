@@ -8,14 +8,15 @@ export interface PlanOfMeals {
   recipes: Recipe[];
 }
 
+export interface PlanOfMealForDay {
+  day: Date;
+  recipeIds: number[];
+}
 export interface CreatePlanOfMeals {
   name: string;
   fromDate: Date;
   toDate: Date;
-  recipes: {
-    day: Date;
-    recipeIds: number[];
-  }[];
+  recipes: PlanOfMealForDay[];
 }
 export interface UpdatePlanOfMeals {
   id: number;

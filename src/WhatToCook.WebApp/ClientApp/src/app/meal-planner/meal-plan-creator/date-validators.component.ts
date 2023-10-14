@@ -1,11 +1,18 @@
-import { AbstractControl, ValidationErrors } from '@angular/forms';
+import { AbstractControl, FormGroup, ValidationErrors } from '@angular/forms';
+import { MealPlanFormDates } from './meal-plan-creator.component';
 
 export function dateRangeValidator(
   group: AbstractControl
 ): ValidationErrors | null {
-  const fromDate = new Date(group.get('fromDate')?.value);
-  const toDate = new Date(group.get('toDate')?.value);
-  return toDate >= fromDate ? null : { dateMismatch: true };
+  const datesForm = group as unknown as FormGroup<MealPlanFormDates>;
+  const error = { dateMismatch: true };
+  if (!datesForm.controls.from.value || !datesForm.controls.to.value) {
+    return error;
+  }
+
+  const fromDate = new Date(datesForm.controls.from.value);
+  const toDate = new Date(datesForm.controls.to?.value);
+  return toDate >= fromDate ? null : error;
 }
 
 export function notPastDateValidator(

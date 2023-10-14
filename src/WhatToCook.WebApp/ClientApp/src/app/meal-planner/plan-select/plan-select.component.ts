@@ -46,9 +46,10 @@ export class PlanSelectComponent {
       fromDate: this.selectedMealPlan.fromDate,
       toDate: this.selectedMealPlan.toDate,
       name: this.selectedMealPlan.name,
-      recipes: this.mealPlanService.selectedRecipes.map(recipe => {
-        return recipe.name;
-      }),
+      recipes: [],
+      //   this.mealPlanService.selectedRecipes.map(recipe => {
+      //   return recipe.name;
+      // }),
     };
     this.mealPlanService.update(mealPlan).subscribe();
   }

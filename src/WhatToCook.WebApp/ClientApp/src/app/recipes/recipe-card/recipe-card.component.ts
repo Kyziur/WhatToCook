@@ -4,6 +4,10 @@ import { Recipe } from '../Recipe';
 import { MealPlanningService } from '../../meal-planner/meal-planning.service';
 import { mapTimeToPrepareToBadge } from '../TimeToPrepare';
 
+export interface RecipeCard extends Recipe {
+  isSelected: boolean;
+}
+
 export interface SelectButton {
   show: boolean;
   onClick?: (recipe: Recipe) => void;
@@ -20,15 +24,10 @@ export const DEFAULT_SELECT_BUTTON: SelectButton = {
   styleUrls: ['./recipe-card.component.scss'],
 })
 export class RecipeCardComponent {
-  @Input() recipe?: Recipe;
-  @Input() selectButton?: SelectButton;
+  @Input() recipe?: RecipeCard;
+  @Input() showSelectButton = false;
 
-  constructor(
-    private router: Router,
-    private mealPlanningService: MealPlanningService
-  ) {
-    this.selectButton = DEFAULT_SELECT_BUTTON;
-  }
+  constructor(private router: Router) {}
 
   viewRecipeDetails(name: string | undefined) {
     if (name === undefined) {
@@ -59,11 +58,9 @@ export class RecipeCardComponent {
     return this.recipe?.tags ?? ['test1', 'test2'];
   }
 
-  onSelect() {
-    if (!this.recipe || !this.selectButton?.onClick) {
-      return;
+  selectClickHandler() {
+    if (this.recipe) {
+      this.recipe.isSelected = !this.recipe.isSelected;
     }
-
-    this.selectButton.onClick(this.recipe);
   }
 }
