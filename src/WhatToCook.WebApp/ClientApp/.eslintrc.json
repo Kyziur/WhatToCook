@@ -1,34 +1,32 @@
 {
-  "env": {
-    "browser": true,
-    "es2021": true
-  },
-  "extends": "standard-with-typescript",
-  "parserOptions": {
-    "ecmaVersion": "latest",
-    "sourceType": "module"
-  },
-  "rules": {},
   "root": true,
-  "ignorePatterns": ["projects/**/*"],
+  "ignorePatterns": [
+    "projects/**/*"
+  ],
   "overrides": [
     {
-      "files": ["*.ts"],
-      "parserOptions": {
-        "project": ["tsconfig.json", "e2e/tsconfig.json"],
-        "tsconfigRootDir": "ClientApp",
-        "createDefaultProgram": true
-      },
+      "files": [
+        "*.ts"
+      ],
       "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
         "plugin:@angular-eslint/recommended",
         "plugin:@angular-eslint/template/process-inline-templates",
         "plugin:prettier/recommended"
+        // <--- here we inherit from the recommended setup from eslint-plugin-prettier for TS
       ],
       "rules": {
-        "@angular-eslint/component-class-suffix": [
+        /**
+        * Any TypeScript source code (NOT TEMPLATE) related rules you wish to use/reconfigure over and above the
+        * recommended set provided by the @angular-eslint project would go here.
+        */
+        "@angular-eslint/directive-selector": [
           "error",
           {
-            "suffixes": ["Page", "Component"]
+            "type": "attribute",
+            "prefix": "app",
+            "style": "camelCase"
           }
         ],
         "@angular-eslint/component-selector": [
@@ -38,31 +36,19 @@
             "prefix": "app",
             "style": "kebab-case"
           }
-        ],
-        "@angular-eslint/directive-selector": [
-          "error",
-          {
-            "type": "attribute",
-            "prefix": "app",
-            "style": "camelCase"
-          }
-        ],
-        "@typescript-eslint/member-ordering": 0,
-        "@typescript-eslint/naming-convention": 0
+        ]
       }
     },
     {
-      "files": ["*.html"],
-      "extends": ["plugin:@angular-eslint/template/recommended"],
+      "files": [
+        "*.html"
+      ],
+      "extends": [
+        "plugin:@angular-eslint/template/recommended",
+        "plugin:prettier/recommended"
+        // <--- here we inherit from the recommended setup from eslint-plugin-prettier for HTML
+      ],
       "rules": {}
-    },
-    {
-      "files": ["*.html"],
-      "excludedFiles": ["*inline-template-*.component.html"],
-      "extends": ["plugin:prettier/recommended"],
-      "rules": {
-        "prettier/prettier": ["error", { "parser": "angular" }]
-      }
     }
   ]
 }
