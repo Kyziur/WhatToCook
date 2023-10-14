@@ -1,0 +1,11 @@
+<label>Choose a Meal Plan:</label>
+<select [(ngModel)]="selectedMealPlanId" (change)="onMealPlanSelected()">
+    <option *ngFor="let plan of mealPlans" [value]="plan.id">{{plan.name}}</option>
+</select>
+
+<div *ngFor="let item of shoppingListByDate">
+    <h2>From: {{ item.fromDate | date }} - To: {{ item.toDate | date }}</h2>
+        <ul>
+        <li *ngFor="let ingredient of item.Ingredients">{{ ingredient }}</li>
+    </ul>
+</div>

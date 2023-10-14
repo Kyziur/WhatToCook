@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WhatToCook.Application.DataTransferObjects.Requests;
 using WhatToCook.Application.DataTransferObjects.Responses;
-using WhatToCook.Application.Infrastructure;
 using WhatToCook.Application.Services;
 
 namespace WhatToCook.WebApp.Controllers;
@@ -10,16 +9,11 @@ namespace WhatToCook.WebApp.Controllers;
 [Route("api/v1/[controller]")]
 public class MealPlanningController : ControllerBase
 {
-    private readonly ILogger<MealPlanningController> _logger;
-    private readonly DatabaseContext _dbcontext;
     private readonly MealPlanningServiceQuery _mealPlanningServiceQuery;
     private readonly MealPlanningService _mealPlanningService;
 
-    public MealPlanningController(ILogger<MealPlanningController> logger, DatabaseContext dbcontext,
-        MealPlanningServiceQuery mealPlanningServiceQuery, MealPlanningService mealPlanningService)
+    public MealPlanningController(MealPlanningServiceQuery mealPlanningServiceQuery, MealPlanningService mealPlanningService)
     {
-        _logger = logger;
-        _dbcontext = dbcontext;
         _mealPlanningServiceQuery = mealPlanningServiceQuery;
         _mealPlanningService = mealPlanningService;
     }
@@ -38,9 +32,20 @@ public class MealPlanningController : ControllerBase
         return Ok();
     }
     [HttpPut]
-    public async Task<ActionResult>Put(UpdatePlanOfMealRequest planOfMealRequest)
+    public async Task<ActionResult> Put(UpdatePlanOfMealRequest planOfMealRequest)
     {
         await _mealPlanningService.Update(planOfMealRequest);
         return Ok();
+    }
+    [HttpGet("GetIngredients/{mealPlanId}")]
+    public async Task<ActionResult> GetIngredientsForShoppingList(int mealPlanId)
+    {
+        var response = await _mealPlanningServiceQuery.GetIngredientsForMealPlanById(mealPlanId);
+
+        if (response == null || !response.Ingredients.Any() )
+        {
+            return NotFound();
+        }
+        return Ok(response);
     }
 }

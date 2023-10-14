@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WhatToCook.Application.DataTransferObjects.Responses;
-using WhatToCook.Application.Domain;
 using WhatToCook.Application.Infrastructure;
 
 namespace WhatToCook.Application.Services;

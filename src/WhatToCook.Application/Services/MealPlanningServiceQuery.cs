@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WhatToCook.Application.DataTransferObjects.Responses;
-using WhatToCook.Application.Domain;
 using WhatToCook.Application.Infrastructure;
 
 namespace WhatToCook.Application.Services
@@ -25,6 +24,20 @@ namespace WhatToCook.Application.Services
                 Recipes = planOfMeal.Recipes.Select(recipe => new RecipeInMealPlanResponse(recipe.Name))
             }).ToListAsync();
             return query;
+        }
+        public async Task<ShoppingListResponse?> GetIngredientsForMealPlanById(int mealPlanId)
+        {
+            var shoppingListReponse = await _dbcontext.PlanOfMeals
+                .Include(mp => mp.Recipes)
+                .ThenInclude(r => r.Ingredients)
+                .Where(mp => mp.Id == mealPlanId)
+                .Select(x => new ShoppingListResponse{    
+                    ToDate = x.ToDate,
+                    FromDate = x.FromDate,
+                    Ingredients = x.Recipes.SelectMany(x => x.Ingredients).Select(i => i.Name).ToList()   
+                }).FirstOrDefaultAsync();
+
+            return shoppingListReponse;
         }
     }
 }

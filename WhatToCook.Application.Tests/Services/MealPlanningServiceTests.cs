@@ -27,7 +27,7 @@ public class MealPlanningServiceTests
             new Recipe("Recipe2", "Description2", "30 mins", new List<Ingredient>(), null, "path/to/image2", null)
         };
         var loggerMock = new Mock<ILogger<MealPlanningService>>();
-        _recipesRepositoryMock.Setup(x => x.GetByNames(new[] { "Recipe1", "Recipe2" })).Returns(recipes);
+        _recipesRepositoryMock.Setup(x => x.GetRecipesByNameForMealPlan(new[] { "Recipe1", "Recipe2" })).Returns(recipes);
         _mealPlanningRepositoryMock.Setup(x => x.Create(It.IsAny<PlanOfMeals>())).Verifiable(Times.Once);
         var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object, loggerMock.Object);
 
@@ -67,8 +67,8 @@ public class MealPlanningServiceTests
              new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), null, "path/to/image1", null),
              new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
         };
-        //setup GetByNames method to return new recipes
-        _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
+        //setup GetRecipesByNameForMealPlan method to return new recipes
+        _recipesRepositoryMock.Setup(x => x.GetRecipesByNameForMealPlan(It.IsAny<IEnumerable<string>>())).Returns(recipes);
         var loggerMock = new Mock<ILogger<MealPlanningService>>();
         //arrange instances of interfaces
         var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object, loggerMock.Object);
@@ -119,7 +119,7 @@ public class MealPlanningServiceTests
             new Recipe("Recipe2", "Description2", "45 mins", new List<Ingredient>(), null, "path/to/image2", null)
         };
 
-        _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
+        _recipesRepositoryMock.Setup(x => x.GetRecipesByNameForMealPlan(It.IsAny<IEnumerable<string>>())).Returns(recipes);
         var loggerMock = new Mock<ILogger<MealPlanningService>>();
 
         var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object, loggerMock.Object);
@@ -171,7 +171,7 @@ public class MealPlanningServiceTests
 
         var allRecipes = existingRecipes.Concat(nonExistentRecipes).ToList();
 
-        _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(existingRecipes);
+        _recipesRepositoryMock.Setup(x => x.GetRecipesByNameForMealPlan(It.IsAny<IEnumerable<string>>())).Returns(existingRecipes);
         var loggerMock = new Mock<ILogger<MealPlanningService>>();
         var sut = new MealPlanningService(_recipesRepositoryMock.Object, _mealPlanningRepositoryMock.Object, loggerMock.Object);
 
@@ -214,8 +214,8 @@ public class MealPlanningServiceTests
              new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
         };
 
-        //setup GetByNames method to return new recipes
-        _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
+        //setup GetRecipesByNameForMealPlan method to return new recipes
+        _recipesRepositoryMock.Setup(x => x.GetRecipesByNameForMealPlan(It.IsAny<IEnumerable<string>>())).Returns(recipes);
         var loggerMock = new Mock<ILogger<MealPlanningService>>();
 
         //arrange instances of interfaces
@@ -257,8 +257,8 @@ public class MealPlanningServiceTests
              new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), null, "path/to/image2", null)
         };
 
-        //setup GetByNames method to return new recipes
-        _recipesRepositoryMock.Setup(x => x.GetByNames(It.IsAny<IEnumerable<string>>())).Returns(recipes);
+        //setup GetRecipesByNameForMealPlan method to return new recipes
+        _recipesRepositoryMock.Setup(x => x.GetRecipesByNameForMealPlan(It.IsAny<IEnumerable<string>>())).Returns(recipes);
         var loggerMock = new Mock<ILogger<MealPlanningService>>();
 
         //arrange instances of interfaces

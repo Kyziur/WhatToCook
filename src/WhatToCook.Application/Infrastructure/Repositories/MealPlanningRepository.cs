@@ -12,25 +12,26 @@ public interface IMealPlanningRepository
 
 public class MealPlanningRepository : IMealPlanningRepository
 {
-    private readonly DatabaseContext _dbContext;
+    private readonly DatabaseContext _dbcontext;
 
     public MealPlanningRepository(DatabaseContext dbContext)
     {
-        _dbContext = dbContext;
+        _dbcontext = dbContext;
     }
 
     public async Task Create(PlanOfMeals planOfMeals)
     {
-        await _dbContext.PlanOfMeals.AddAsync(planOfMeals);
-        await _dbContext.SaveChangesAsync();
+        await _dbcontext.PlanOfMeals.AddAsync(planOfMeals);
+        await _dbcontext.SaveChangesAsync();
     }
     public async Task<PlanOfMeals?> GetMealPlanByName(string name)
     {
-        return await _dbContext.PlanOfMeals.Include(r => r.Recipes).FirstOrDefaultAsync(r => r.Name == name);
+        return await _dbcontext.PlanOfMeals.Include(r => r.Recipes).FirstOrDefaultAsync(r => r.Name == name);
     }
     public async Task Update(PlanOfMeals planOfMeals)
     {
-        _dbContext.PlanOfMeals.Update(planOfMeals);
-        await _dbContext.SaveChangesAsync();
+        _dbcontext.PlanOfMeals.Update(planOfMeals);
+        await _dbcontext.SaveChangesAsync();
     }
+
 }

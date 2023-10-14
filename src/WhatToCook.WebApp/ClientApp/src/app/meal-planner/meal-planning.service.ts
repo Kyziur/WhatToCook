@@ -2,8 +2,11 @@ import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Recipe } from 'src/app/recipes/Recipe';
 import { Observable } from 'rxjs';
-import { PlanOfMeals, UpdatePlanOfMeals } from "./meal-plan-creator/plan-of-meals";
-
+import {
+  PlanOfMeals,
+  UpdatePlanOfMeals,
+} from './meal-plan-creator/plan-of-meals';
+import { ShoppingListResponse } from './shopping-list/shopping-list-response.component';
 @Injectable({
   providedIn: 'root'
 })
@@ -31,5 +34,9 @@ export class MealPlanningService {
   }
   getMealPlanById(id: number): Observable<PlanOfMeals> {
     return this.httpClient.get<PlanOfMeals>(`${this.baseUrl}api/v1/MealPlanning/${id}`);
+  }
+  getIngredientsForShoppingList(id: number): Observable<ShoppingListResponse>{
+    return this.httpClient.get<ShoppingListResponse>
+    (`${this.baseUrl}api/v1/MealPlanning/GetIngredients/${id}`)
   }
 }

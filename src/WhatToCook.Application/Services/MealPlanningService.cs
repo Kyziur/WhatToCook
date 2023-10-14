@@ -21,7 +21,7 @@ public class MealPlanningService
     public async Task<PlanOfMeals> Create(PlanOfMealRequest planOfMealRequest)
     {
         var RecipeForMealPlan = planOfMealRequest.Recipes.Select(x => x.Name);
-        var recipes = _recipesRepository.GetByNames(RecipeForMealPlan);
+        var recipes = _recipesRepository.GetRecipesByNameForMealPlan(RecipeForMealPlan);
 
         var planOfMeals = new PlanOfMeals
     (
@@ -40,7 +40,7 @@ public class MealPlanningService
         var mealPlanToUpdate = await _mealPlanningRepository.GetMealPlanByName(planOfMealRequest.Name);
         var RecipeForMealPlanUpdate = planOfMealRequest.Recipes.Select(x => x.Name);
 
-        var recipes = _recipesRepository.GetByNames(RecipeForMealPlanUpdate);
+        var recipes = _recipesRepository.GetRecipesByNameForMealPlan(RecipeForMealPlanUpdate);
         if (mealPlanToUpdate == null)
         {
             _logger.LogError($"Attempted to update a non-existent meal plan: {planOfMealRequest.Name}");

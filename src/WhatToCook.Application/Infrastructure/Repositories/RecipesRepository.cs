@@ -6,8 +6,8 @@ namespace WhatToCook.Application.Infrastructure.Repositories;
 
 public interface IRecipesRepository
 {
-    Task<Recipe> GetRecipeByName(string name);
-    List<Recipe> GetByNames(IEnumerable<string> names);
+    Task<Recipe?> GetRecipeByName(string name);
+    List<Recipe> GetRecipesByNameForMealPlan(IEnumerable<string> names);
     Task Create(Recipe recipe);
     Task Update(Recipe recipe);
     string SaveImage(string base64Image, string imagesDirectory);
@@ -24,7 +24,7 @@ public class RecipesRepository : IRecipesRepository
         _logger = logger;
     }
 
-    public List<Recipe> GetByNames(IEnumerable<string> names)
+    public List<Recipe> GetRecipesByNameForMealPlan(IEnumerable<string> names)
     {
         var recipes = _dbContext.Recipes.Include(recipe => recipe.PlansOfMeals)
         .Where(recipe => names.Contains(recipe.Name)).ToList();
