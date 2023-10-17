@@ -1,16 +1,41 @@
-- AppModule - configure routing if necessary
-    - AppComponent
-- LayoutModule 
-    - LayoutComponent <router-outlet>
-    - MainComponent
-    - SidebarComponent
-    - MenuListComponent
-    - ProfileComponent
--RecipesModule (imports SharedModule) - configure routing
-    -RecipeListComponent URL: /recipes
-    -RecipeCardComponent 
-    -SearchComponent
-    -RecipeViewComponent URL: /recipes/name/
--SharedModule
-    -FavouritesButton 
-
+[
+  {
+    "name": "AppModule",
+    "configureRouting": true,
+    "components": ["AppComponent"]
+  },
+  {
+    "name": "LayoutModule",
+    "components": [
+      {
+        "name": "LayoutComponent",
+        "routerOutlet": true
+      },
+      "MainComponent",
+      "SidebarComponent",
+      "MenuListComponent",
+      "ProfileComponent"
+    ]
+  },
+  {
+    "name": "RecipesModule",
+    "imports": "SharedModule",
+    "configureRouting": true,
+    "components": [
+      {
+        "name": "RecipeListComponent",
+        "url": "/recipes"
+      },
+      "RecipeCardComponent",
+      "SearchComponent",
+      {
+        "name": "RecipeViewComponent",
+        "url": "/recipes/name/"
+      }
+    ]
+  },
+  {
+    "name": "SharedModule",
+    "components": ["FavouritesButton"]
+  }
+]

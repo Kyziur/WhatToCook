@@ -1,8 +1,7 @@
-@import '_variables';
-@import 'defaults';
+@import "_variables";
+@import "defaults";
 
 $headerHeight: 60px;
-
 
 .container {
   width: 80%;
@@ -12,18 +11,15 @@ $headerHeight: 60px;
 }
 
 .sidebar-container {
-    min-width: 216px;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background-color: $pink-background;
-    position: sticky;
-    top: 0;
+  min-width: 216px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: $pink-background;
+  position: sticky;
+  top: 0;
 
-
-    @media screen and (max-width: 576px) {
-        min-width: 108px;
-    }
+  @media screen and (max-width: 576px) {
+    min-width: 108px;
+  }
 }
-
-

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using WhatToCook.Application.Domain;
+using WhatToCook.Application.Exceptions;
 
 namespace WhatToCook.Application.Infrastructure.Repositories;
 
@@ -10,7 +11,7 @@ public interface IRecipesRepository
     List<Recipe> GetRecipesByNameForMealPlan(IEnumerable<string> names);
     Task Create(Recipe recipe);
     Task Update(Recipe recipe);
-    string SaveImage(string base64Image, string imagesDirectory);
+    Task<string> SaveImage(ImageInfo imageInfo);
     Task Delete(int id);
 }
 
@@ -18,10 +19,12 @@ public class RecipesRepository : IRecipesRepository
 {
     private readonly DatabaseContext _dbContext;
     private readonly ILogger _logger;
-    public RecipesRepository(DatabaseContext dbContext, ILogger<RecipesRepository> logger)
+    private readonly IFileSaver _fileSaver;
+    public RecipesRepository(DatabaseContext dbContext, ILogger<RecipesRepository> logger, IFileSaver fileSaver)
     {
         _dbContext = dbContext;
         _logger = logger;
+        _fileSaver = fileSaver;
     }
 
     public List<Recipe> GetRecipesByNameForMealPlan(IEnumerable<string> names)
@@ -43,35 +46,32 @@ public class RecipesRepository : IRecipesRepository
     {
         return await _dbContext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(r => r.Name == name);
     }
-    public string SaveImage(string base64Image, string imagesDirectory)
+    public async Task<string> SaveImage(ImageInfo imageInfo)
     {
-        string imagePath;
-        if (string.IsNullOrEmpty(base64Image))
+        string imageFullPath;
+        if (string.IsNullOrEmpty(imageInfo.Base64Image))
         {
             return "";
         }
 
         try
         {
-            byte[] imageBytes = Convert.FromBase64String(base64Image);
-            string fileName = $"{Guid.NewGuid()}.png";
-            string filePath = Path.Combine(imagesDirectory, "Images", fileName);
 
-            System.IO.File.WriteAllBytes(filePath, imageBytes);
-            imagePath = $"Images/{fileName}";
-        
-        }
-        catch (FormatException exception)
-        {
-            _logger.LogError($"Failed to convert the provided base64Image to bytes. Error: {exception.Message}");
-            throw;
+            string finalFileName = $"{imageInfo.FileNameWithoutExtension}{imageInfo.FileExtension}";
+
+            string filePath = Path.Combine(imageInfo.ImagesDirectory, "Images", finalFileName);
+            byte[] imageBytes = imageInfo.GetImageBytes();
+
+           await  _fileSaver.SaveAsync(filePath, imageBytes);
+
+            imageFullPath = $"Images/{finalFileName}";
         }
         catch (Exception exception)
         {
             _logger.LogError($"An error occurred while saving the image. Error: {exception.Message}");
             throw;
         }
-        return imagePath;
+        return imageFullPath;
     }
     public async Task Create(Recipe recipe)
     {
@@ -87,7 +87,14 @@ public class RecipesRepository : IRecipesRepository
     public async Task Delete(int id)
     {
         var recipe = await _dbContext.Recipes.FindAsync(id);
-        _dbContext.Recipes.Remove(recipe);
-        await _dbContext.SaveChangesAsync();
+        if (recipe != null)
+        {
+            _dbContext.Recipes.Remove(recipe);
+            await _dbContext.SaveChangesAsync();
+        }
+        else
+        {
+            throw new NotFoundException($"Recipe with ID '{id}' not found.");
+        }
     }
 }

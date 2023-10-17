@@ -21,7 +21,9 @@ public class Recipe
         PlansOfMeals = plansOfMeals;
     }
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     private Recipe() { }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     public void SetName(string name)
     {
@@ -65,10 +67,11 @@ public class Recipe
 
         try
         {
-            string fullPath = Path.Combine(imagesDirectory, this.Image);
+            string fullPath = Path.Combine(imagesDirectory, Image);
+
             if (File.Exists(fullPath))
             {
-                File.Delete(fullPath);
+               File.Delete(fullPath);
             }
         }
         catch (Exception exception)

@@ -17,9 +17,11 @@ public class PlanOfMeals
         SetDates(fromDate, toDate); 
         Recipes = recipes;
     }
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     private PlanOfMeals() { }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
- 
+
     public void SetDates(DateTime fromDate, DateTime toDate)
     {
         if (fromDate.Day < DateTime.UtcNow.Day || toDate.Day < DateTime.UtcNow.Day)
