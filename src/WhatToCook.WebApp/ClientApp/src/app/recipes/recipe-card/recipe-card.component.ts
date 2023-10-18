@@ -63,4 +63,10 @@ export class RecipeCardComponent {
       this.recipe.isSelected = !this.recipe.isSelected;
     }
   }
+
+  getSelectIcon(recipe: RecipeCard) {
+    return recipe.isSelected
+      ? 'assets/icons/plus-square-selected.svg'
+      : 'assets/icons/plus-square.svg';
+  }
 }
