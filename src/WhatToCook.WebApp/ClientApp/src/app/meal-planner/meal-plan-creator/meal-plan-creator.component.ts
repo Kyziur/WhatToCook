@@ -13,9 +13,8 @@ import {
   notPastDateValidator,
 } from './date-validators.component';
 import { notWhitespaceValidator } from 'src/app/not-white-space-validator.component';
-import { RecipeListService } from '../../recipes/recipe-list/recipe-list.service';
-import { RecipeCard } from '../../recipes/recipe-card/recipe-card.component';
 import { Badge } from '../../shared/badge/badge.component';
+import { MealPlanForDay } from './meal-plan-for.day';
 
 export interface MealPlanFormDates {
   from: FormControl<string | null>;
@@ -76,24 +75,22 @@ export class MealPlanCreatorComponent {
 
   constructor(
     private fb: FormBuilder,
-    private router: Router,
-    public recipeListService: RecipeListService
+    private router: Router
   ) {
     this.mealPlanForm.controls.dates.valueChanges.subscribe(_ => {
       this.changedDateRangeHandler();
-      this.mealPlans = this.getDaysFromSelectedDates().map(day => ({
-        day,
-        recipes: [],
-        show: false,
-      }));
-    });
+      this.mealPlans = this.getDaysFromSelectedDates().map(day => {
+        const previouslySelectedRecipes = this.mealPlans.find(
+          x => x.day.getDate() === day.getDate()
+        )?.recipes;
 
-    this.mealPlanForm.controls.dates.patchValue({
-      from: '2023-10-16',
-      to: '2023-10-18',
+        return {
+          day: day,
+          recipes: previouslySelectedRecipes ?? [],
+          show: false,
+        };
+      });
     });
-
-    this.recipeListService.showSelectButton = true;
   }
 
   submit() {
@@ -117,12 +114,9 @@ export class MealPlanCreatorComponent {
       }),
     };
 
-    console.error('request', request);
-
     // this.mealPlanService.createMealPlan(request).subscribe(_ => this.handleSuccessfulSave());
   }
 
-  //TODO: CHANGE CONCEPT - GENERATE RIGHT AWAY THE mealPlanForDay[] based on the days that were selected
   getDaysFromSelectedDates() {
     const fromDate = this.fromDate.value;
     const toDate = this.toDate.value;
@@ -141,29 +135,7 @@ export class MealPlanCreatorComponent {
 
   selectDayClickHandler($event: MouseEvent, mealPlanForDay: MealPlanForDay) {
     $event.preventDefault();
-
-    if (!this.selectedMealPlanForDay) {
-      this.saveCurrentlySelectedRecipes(mealPlanForDay);
-    } else {
-      this.saveCurrentlySelectedRecipes(this.selectedMealPlanForDay);
-    }
-
     this.selectedMealPlanForDay = mealPlanForDay;
-    this.selectRecipesForSelectedDay(this.selectedMealPlanForDay);
-  }
-
-  selectRecipesForSelectedDay(mealPlanForDay: MealPlanForDay) {
-    this.recipeListService.recipeCards = this.recipeListService.recipeCards.map(
-      recipeCard => {
-        recipeCard.isSelected =
-          mealPlanForDay.recipes.includes(recipeCard) ?? false;
-        return recipeCard;
-      }
-    );
-  }
-
-  saveCurrentlySelectedRecipes(mealPlanForDay: MealPlanForDay) {
-    mealPlanForDay.recipes = this.recipeListService.getSelectedRecipes();
   }
 
   changedDateRangeHandler() {
@@ -186,11 +158,4 @@ export class MealPlanCreatorComponent {
       level: 'info',
     };
   }
-}
-
-export interface MealPlanForDay {
-  day: Date;
-  //TODO: CHANGE LATER ON TO RECIPE OR SOMETHING ELSE
-  recipes: RecipeCard[];
-  show: boolean;
 }

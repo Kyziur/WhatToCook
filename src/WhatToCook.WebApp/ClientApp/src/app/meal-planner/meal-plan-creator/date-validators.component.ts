@@ -11,7 +11,7 @@ export function dateRangeValidator(
   }
 
   const fromDate = new Date(datesForm.controls.from.value);
-  const toDate = new Date(datesForm.controls.to?.value);
+  const toDate = new Date(datesForm.controls.to.value);
   return toDate >= fromDate ? null : error;
 }
 

@@ -15,7 +15,7 @@ public class Recipe
         SetName(name);
         SetDescription(description);
         SetTimeToPrepare(timeToPrepare);
-        Ingredients = ingredients ?? new List<Ingredient>();
+        Ingredients = ingredients;
         Statistics = statistics;
         SetImage(image);
         PlansOfMeals = plansOfMeals;
@@ -31,7 +31,7 @@ public class Recipe
         {
             throw new Exception("Name cannot be null, empty, or whitespace");
         }
-        this.Name = name;
+        Name = name;
     }
     public void SetDescription(string description)
     {
@@ -39,7 +39,7 @@ public class Recipe
         {
             throw new Exception("Description cannot be null, empty, or whitespace");
         }
-        this.Description = description;
+        Description = description;
     }
     public void SetTimeToPrepare(string timeToPrepare)
     {
@@ -47,27 +47,30 @@ public class Recipe
         {
             throw new Exception("TimeToPrepare cannot be null, empty, or whitespace");
         }
-        this.TimeToPrepare = timeToPrepare;
+        TimeToPrepare = timeToPrepare;
     }
     public void SetImage(string imagePath)
     {
+        if (string.IsNullOrWhiteSpace(imagePath))
+        {
+            throw new Exception("Image path cannot be null, empty, or whitespace");
+        }
         Image = imagePath;
     }
 
     public void RemoveImage(string imagesDirectory)
     {
-        if (string.IsNullOrWhiteSpace(this.Image))
+        if (string.IsNullOrWhiteSpace(Image))
         {
             return;
         }
 
         try
         {
-            string fullPath = Path.Combine(imagesDirectory, Image);
-
+            var fullPath = Path.Combine(imagesDirectory, Image);
             if (File.Exists(fullPath))
             {
-               File.Delete(fullPath);
+                File.Delete(fullPath);
             }
         }
         catch (Exception exception)
@@ -88,11 +91,4 @@ public class Recipe
             Ingredients.Add(new Ingredient(ingredient));
         }
     }
-}
-
-public class Statistics
-{
-    public int Id { get; set; }
-    public int Shares { get; set; }
-    public int Views { get; set; }
 }

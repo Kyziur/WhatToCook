@@ -88,6 +88,15 @@
   <div class="border-l p-6"></div>
 
   <div class="w-6/6">
-    <app-recipe-list></app-recipe-list>
+    <h1 *ngIf="!selectedMealPlanForDay" class="text-2xl font-semibold mb-4 p-6">
+      Please select day to assign recipes
+    </h1>
+
+    <app-recipe-list
+      *ngIf="selectedMealPlanForDay"
+      [allowSelection]="true"
+      [(selectedRecipeCards)]="
+        selectedMealPlanForDay.recipes
+      "></app-recipe-list>
   </div>
 </div>

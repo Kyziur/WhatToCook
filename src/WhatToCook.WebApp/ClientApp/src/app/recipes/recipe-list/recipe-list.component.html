@@ -1,10 +1,14 @@
 <div class="flex flex-col justify-center items-center">
   <app-search></app-search>
   <div class="recipes-container">
-    <div class="w-1/4" *ngFor="let recipe of service.recipeCards">
+    <div class="w-1/4" *ngFor="let recipe of recipeCards">
       <app-recipe-card
         [recipe]="recipe"
-        [showSelectButton]="service.showSelectButton"></app-recipe-card>
+        [showSelectButton]="allowSelection"
+        [selected]="isRecipeCardSelected(recipe)"
+        (recipeCardSelectionChange)="
+          recipeCardSelectionChange($event)
+        "></app-recipe-card>
     </div>
   </div>
 </div>

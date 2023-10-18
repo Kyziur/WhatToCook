@@ -1,22 +1,17 @@
-import { Component, Input } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  isDevMode,
+  Output,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { Recipe } from '../Recipe';
-import { MealPlanningService } from '../../meal-planner/meal-planning.service';
 import { mapTimeToPrepareToBadge } from '../TimeToPrepare';
 
 export interface RecipeCard extends Recipe {
   isSelected: boolean;
 }
-
-export interface SelectButton {
-  show: boolean;
-  onClick?: (recipe: Recipe) => void;
-}
-
-export const DEFAULT_SELECT_BUTTON: SelectButton = {
-  show: false,
-  onClick: undefined,
-};
 
 @Component({
   selector: 'app-recipe-card',
@@ -25,7 +20,10 @@ export const DEFAULT_SELECT_BUTTON: SelectButton = {
 })
 export class RecipeCardComponent {
   @Input() recipe?: RecipeCard;
+  @Input() selected = false;
   @Input() showSelectButton = false;
+  @Output() recipeCardSelectionChange: EventEmitter<RecipeCard> =
+    new EventEmitter();
 
   constructor(private router: Router) {}
 
@@ -54,19 +52,15 @@ export class RecipeCardComponent {
     return mapTimeToPrepareToBadge(recipe.timeToPrepare);
   }
 
-  get tags() {
-    return this.recipe?.tags ?? ['test1', 'test2'];
+  getTags(recipe: RecipeCard) {
+    return isDevMode() ? recipe.tags ?? ['test1', 'test2'] : recipe.tags;
   }
 
   selectClickHandler() {
     if (this.recipe) {
       this.recipe.isSelected = !this.recipe.isSelected;
     }
-  }
 
-  getSelectIcon(recipe: RecipeCard) {
-    return recipe.isSelected
-      ? 'assets/icons/plus-square-selected.svg'
-      : 'assets/icons/plus-square.svg';
+    this.recipeCardSelectionChange.emit(this.recipe);
   }
 }

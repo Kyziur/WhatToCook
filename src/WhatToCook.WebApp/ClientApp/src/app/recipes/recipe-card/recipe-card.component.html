@@ -21,7 +21,7 @@
   <div class="flex items-center justify-between">
     <div class="px-6 pt-4 pb-2">
       <span
-        *ngFor="let tag of tags"
+        *ngFor="let tag of getTags(recipe)"
         class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2"
         >{{ tag }}</span
       >
@@ -38,9 +38,18 @@
     </div>
     <div *ngIf="showSelectButton">
       <img
+        *ngIf="selected"
         (click)="selectClickHandler()"
         class="cursor-pointer hover:opacity-75"
-        [ngSrc]="getSelectIcon(recipe)"
+        ngSrc="assets/icons/plus-square-selected.svg"
+        alt="plus icon"
+        width="32"
+        height="32" />
+      <img
+        *ngIf="!selected"
+        (click)="selectClickHandler()"
+        class="cursor-pointer hover:opacity-75"
+        ngSrc="assets/icons/plus-square.svg"
         alt="plus icon"
         width="32"
         height="32" />
