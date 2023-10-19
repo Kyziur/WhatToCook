@@ -3,9 +3,25 @@
     <option *ngFor="let plan of mealPlans" [value]="plan.id">{{plan.name}}</option>
 </select>
 
-<div *ngFor="let item of shoppingListByDate">
-    <h2>From: {{ item.fromDate | date }} - To: {{ item.toDate | date }}</h2>
+<button (click)="toggleView()">
+    Switch to {{ isListView ? 'Aggregate View' : 'List View' }}
+</button>
+
+<!-- List View (One day view) -->
+<div *ngIf="isListView && shoppingListByDate">
+    <h2>From: {{ shoppingListByDate.fromDate | date }} - To: {{ shoppingListByDate.toDate | date }}</h2>
+    <div *ngFor="let dayIngredient of dayWiseShoppingList; let i = index">
+        <h4>Day {{ i + 1 }}</h4>
         <ul>
-        <li *ngFor="let ingredient of item.Ingredients">{{ ingredient }}</li>
+            <li *ngFor="let ingredient of dayIngredient.ingredients">{{ ingredient }}</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Aggregate View (All ingredients) -->
+<div *ngIf="!isListView && shoppingListByDate">
+    <h2>Aggregate Ingredients List</h2>
+    <ul>
+        <li *ngFor="let ingredient of shoppingListByDate.ingredients">{{ ingredient }}</li>
     </ul>
 </div>

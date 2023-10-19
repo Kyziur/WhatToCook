@@ -37,12 +37,12 @@ public class MealPlanningController : ControllerBase
         await _mealPlanningService.Update(planOfMealRequest);
         return Ok();
     }
-    [HttpGet("GetIngredients/{mealPlanId}")]
+    [HttpGet("GetShoppingList/{mealPlanId}")]
     public async Task<ActionResult> GetIngredientsForShoppingList(int mealPlanId)
     {
         var response = await _mealPlanningServiceQuery.GetIngredientsForMealPlanById(mealPlanId);
 
-        if (response == null || !response.Ingredients.Any() )
+        if (response == null || response.Ingredients == null || !response.Ingredients.Any())
         {
             return NotFound();
         }

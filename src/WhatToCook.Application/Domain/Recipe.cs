@@ -15,7 +15,7 @@ public class Recipe
         SetName(name);
         SetDescription(description);
         SetTimeToPrepare(timeToPrepare);
-        Ingredients = ingredients ?? new List<Ingredient>();
+        Ingredients = ingredients;
         Statistics = statistics;
         SetImage(image);
         PlansOfMeals = plansOfMeals;
@@ -31,7 +31,7 @@ public class Recipe
         {
             throw new Exception("Name cannot be null, empty, or whitespace");
         }
-        this.Name = name;
+        Name = name;
     }
     public void SetDescription(string description)
     {
@@ -39,7 +39,7 @@ public class Recipe
         {
             throw new Exception("Description cannot be null, empty, or whitespace");
         }
-        this.Description = description;
+        Description = description;
     }
     public void SetTimeToPrepare(string timeToPrepare)
     {
@@ -47,7 +47,7 @@ public class Recipe
         {
             throw new Exception("TimeToPrepare cannot be null, empty, or whitespace");
         }
-        this.TimeToPrepare = timeToPrepare;
+        TimeToPrepare = timeToPrepare;
     }
     public void SetImage(string imagePath)
     {
@@ -55,12 +55,12 @@ public class Recipe
         {
             throw new Exception("Image path cannot be null, empty, or whitespace");
         }
-        this.Image = imagePath;
+        Image = imagePath;
     }
 
     public void RemoveImage(string imagesDirectory)
     {
-        if (string.IsNullOrWhiteSpace(this.Image))
+        if (string.IsNullOrWhiteSpace(Image))
         {
             return;
         }

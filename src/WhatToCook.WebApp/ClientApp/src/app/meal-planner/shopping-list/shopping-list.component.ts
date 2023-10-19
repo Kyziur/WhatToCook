@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MealPlanningService } from '../meal-planning.service';
-import { ShoppingListResponse } from './shopping-list-response.component';
+import { DayWiseIngredients, shoppingListResponse } from './shopping-list-response.component';
 import { PlanOfMeals } from '../meal-plan-creator/plan-of-meals';
 
 @Component({
@@ -11,8 +11,9 @@ import { PlanOfMeals } from '../meal-plan-creator/plan-of-meals';
 export class ShoppingListComponent implements OnInit {
   mealPlans: PlanOfMeals[] = [];
   selectedMealPlanId: number | null = null;
-  shoppingListByDate: ShoppingListResponse[] = [];
-
+  shoppingListByDate?: shoppingListResponse;
+  isListView : boolean = true;
+  dayWiseShoppingList: DayWiseIngredients[] = [];
   constructor(
       private mealPlanService: MealPlanningService,
   ) {}
@@ -22,14 +23,17 @@ export class ShoppingListComponent implements OnInit {
         this.mealPlans = plans;
     });
 }
-
+toggleView() {
+  this.isListView = !this.isListView;
+}
 onMealPlanSelected() {
   if (this.selectedMealPlanId) {
-      this.mealPlanService.getIngredientsForShoppingList(this.selectedMealPlanId)
-          .subscribe(response => {
-              console.log(response);  
-              this.shoppingListByDate = [response];
-          });
+    this.mealPlanService.getIngredientsForShoppingList(this.selectedMealPlanId)
+    .subscribe(list => {
+        this.shoppingListByDate = list;
+        this.dayWiseShoppingList = list.dayWiseIngredientsList || [];
+        console.log(this.shoppingListByDate); 
+    });
   }
 }
 }

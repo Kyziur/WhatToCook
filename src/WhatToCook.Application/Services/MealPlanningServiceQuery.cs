@@ -27,17 +27,26 @@ namespace WhatToCook.Application.Services
         }
         public async Task<ShoppingListResponse?> GetIngredientsForMealPlanById(int mealPlanId)
         {
-            var shoppingListReponse = await _dbcontext.PlanOfMeals
+            var mealPlan = await _dbcontext.PlanOfMeals
                 .Include(mp => mp.Recipes)
                 .ThenInclude(r => r.Ingredients)
-                .Where(mp => mp.Id == mealPlanId)
-                .Select(x => new ShoppingListResponse{    
-                    ToDate = x.ToDate,
-                    FromDate = x.FromDate,
-                    Ingredients = x.Recipes.SelectMany(x => x.Ingredients).Select(i => i.Name).ToList()   
-                }).FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(mp => mp.Id == mealPlanId);
 
-            return shoppingListReponse;
+            if (mealPlan == null) return null;
+
+            // Assuming each recipe corresponds to a day, this logic should be modified if this isn't the case
+            var dayWiseIngredientsList = mealPlan.Recipes.Select(r => new DayWiseIngredients
+            {
+                Ingredients = r.Ingredients.Select(i => i.Name).ToList()
+            }).ToList();
+
+            return new ShoppingListResponse
+            {
+                ToDate = mealPlan.ToDate,
+                FromDate = mealPlan.FromDate,
+                Ingredients = mealPlan.Recipes.SelectMany(x => x.Ingredients).Select(i => i.Name).Distinct().ToList(),
+                DayWiseIngredientsList = dayWiseIngredientsList
+            };
         }
     }
 }

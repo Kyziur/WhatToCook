@@ -6,7 +6,7 @@ import {
   PlanOfMeals,
   UpdatePlanOfMeals,
 } from './meal-plan-creator/plan-of-meals';
-import { ShoppingListResponse } from './shopping-list/shopping-list-response.component';
+import { shoppingListResponse } from './shopping-list/shopping-list-response.component';
 
 @Injectable({
   providedIn: 'root',
@@ -48,8 +48,8 @@ export class MealPlanningService {
       `${this.baseUrl}api/v1/MealPlanning/${id}`,
     );
   }
-  getIngredientsForShoppingList(id: number): Observable<ShoppingListResponse>{
-    return this.httpClient.get<ShoppingListResponse>
-    (`${this.baseUrl}api/v1/MealPlanning/GetIngredients/${id}`)
+  getIngredientsForShoppingList(id: number): Observable<shoppingListResponse>{
+    return this.httpClient.get<shoppingListResponse>
+    (`${this.baseUrl}api/v1/MealPlanning/GetShoppingList/${id}`)
   }
 }
