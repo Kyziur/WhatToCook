@@ -5,11 +5,7 @@ import { RecipeService } from '../recipe.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Recipe } from '../Recipe';
 import { of, switchMap } from 'rxjs';
-import {
-  mapTimeToPrepareToBadge,
-  TimeToPrepare,
-  TimeToPrepareValues,
-} from '../TimeToPrepare';
+import { TimeToPrepare, TimeToPrepareValues } from '../TimeToPrepare';
 
 export enum DisplayMode {
   New,
@@ -35,7 +31,7 @@ export class RecipeViewComponent implements OnInit {
   isDeleteConfirmationVisible = false;
   recipe?: Recipe;
   recipeForm: FormGroup<RecipeForm> | null = null;
-  isEditable: boolean = false;
+  isEditable = false;
 
   constructor(
     private fb: FormBuilder,
@@ -45,11 +41,7 @@ export class RecipeViewComponent implements OnInit {
   ) {}
 
   redirectToRecipesPage() {
-    this.router.navigate(['recipes']);
-  }
-
-  mapPrepareTimeToBadge(recipe: Recipe) {
-    return mapTimeToPrepareToBadge(recipe.timeToPrepare);
+    this.router.navigate(['recipes']).then();
   }
 
   ngOnInit(): void {
@@ -91,8 +83,14 @@ export class RecipeViewComponent implements OnInit {
     this.isEditable = false;
   }
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
+  onFileSelected($event: Event) {
+    const target = $event.target as HTMLInputElement;
+
+    if (!target || !target.files?.length) {
+      return;
+    }
+
+    const file = target.files[0];
     if (!file) {
       return;
     }
@@ -176,10 +174,6 @@ export class RecipeViewComponent implements OnInit {
     return this.fb.nonNullable.control(value ?? '');
   }
 
-  getImagePath() {
-    return this.recipe ? this.recipe.imagePath : '';
-  }
-
   openDeleteConfirmation() {
     this.isDeleteConfirmationVisible = true;
   }
@@ -199,12 +193,6 @@ export class RecipeViewComponent implements OnInit {
       error: error =>
         console.error('Error occured when deleting recipe', error),
     });
-  }
-
-  setDefaultImage() {
-    if (this.recipe) {
-      this.recipe.imagePath = 'Images/default_image.png';
-    }
   }
 
   cancelEditClickHandler() {

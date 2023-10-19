@@ -19,52 +19,26 @@
         Delete
       </button>
     </div>
-    <!-- Modal Container -->
-    <div
-      *ngIf="isDeleteConfirmationVisible"
-      class="fixed inset-0 flex items-center justify-center z-50">
-      <!-- Modal Card -->
-      <div
-        class="bg-white rounded-lg shadow-lg p-6 w-full md:w-2/3 lg:w-1/3 opacity-100">
-        <!-- Close Button -->
-        <span
-          class="absolute top-0 right-0 p-2 cursor-pointer"
-          (click)="closeDeleteConfirmation()"
-          >&times;</span
-        >
-
-        <!-- Modal Content -->
-        <div class="mt-6 flex items-center flex-col justify-center gap-x-6">
-          <p class="text-gray-800">
-            Are you sure you want to delete this recipe?
-          </p>
-          <div class="w-full flex justify-center gap-4">
-            <button
-              type="button"
-              class="bg-red-500 text-white py-1 px-4 rounded hover:bg-red-600"
-              (click)="onDeleteClickHandler(recipe?.id)">
-              Yes
-            </button>
-            <button
-              type="button"
-              class="bg-gray-300 text-gray-800 py-1 px-4 rounded hover:bg-gray-400"
-              (click)="closeDeleteConfirmation()">
-              No
-            </button>
-          </div>
+    <app-modal [(visible)]="isDeleteConfirmationVisible">
+      <p class="text-gray-800">Are you sure you want to delete this recipe?</p>
+      <div modal-footer>
+        <div class="w-full flex justify-center gap-4">
+          <button
+            type="button"
+            class="bg-red-500 text-white py-1 px-4 rounded hover:bg-red-600"
+            (click)="onDeleteClickHandler(recipe?.id)">
+            Yes
+          </button>
+          <button
+            type="button"
+            class="bg-gray-300 text-gray-800 py-1 px-4 rounded hover:bg-gray-400"
+            (click)="closeDeleteConfirmation()">
+            No
+          </button>
         </div>
       </div>
-    </div>
+    </app-modal>
 
-    <!--    <div *ngIf="isDeleteConfirmationVisible">-->
-    <!--      <div class="mt-6 flex items-center justify-end gap-x-6">-->
-    <!--        <span class="close" (click)="closeDeleteConfirmation()">&times;</span>-->
-    <!--        <p>Are you sure you want to delete this recipe?</p>-->
-    <!--        <button type="button" class="btn py-1" (click)="onDeleteClickHandler(recipe?.id)">Yes</button>-->
-    <!--        <button type="button" class="btn py-1" (click)="closeDeleteConfirmation()">No</button>-->
-    <!--      </div>-->
-    <!--    </div>-->
-    <!-- Recipe Name and Image Section -->
     <section
       class="mb-8 flex flex-col md:flex-row items-center justify-between">
       <div

@@ -1,14 +1,4 @@
-import { Component, Input } from '@angular/core';
-
-export interface Button {
-  isVisible: boolean;
-  text: string;
-}
-
-export const EMPTY_BUTTON: Button = {
-  text: '',
-  isVisible: false,
-};
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
   selector: 'app-modal',
@@ -16,10 +6,11 @@ export const EMPTY_BUTTON: Button = {
   styleUrls: ['./modal.component.scss'],
 })
 export class ModalComponent {
-  @Input() public isVisible = false;
-  @Input() public header = '';
+  @Input() public visible = false;
+  @Output() public visibleChange = new EventEmitter<boolean>();
 
-  @Input() public cancelButton = EMPTY_BUTTON;
-  @Input() public acceptButton = EMPTY_BUTTON;
-  constructor() {}
+  closeClickHandler() {
+    this.visible = false;
+    this.visibleChange.emit(this.visible);
+  }
 }
