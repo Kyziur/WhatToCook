@@ -1,8 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { RecipeCard } from '../recipe-card/recipe-card.component';
 import { RecipeService } from '../recipe.service';
-import { Recipe } from '../Recipe';
-
-export type filterRecipePredicate = (recipe: Recipe) => boolean;
 
 @Component({
   selector: 'app-recipe-list',
@@ -10,23 +8,47 @@ export type filterRecipePredicate = (recipe: Recipe) => boolean;
   styleUrls: ['./recipe-list.component.scss'],
 })
 export class RecipeListComponent implements OnInit {
-  recipes: Recipe[] = [];
+  recipeCards: RecipeCard[] = [];
+  @Input() allowSelection = false;
+  @Input() selectedRecipeCards: RecipeCard[] = [];
+  @Output() selectedRecipeCardsChange = new EventEmitter<RecipeCard[]>();
 
-  @Input() filterMethod?: filterRecipePredicate;
-
-  constructor(private recipeService: RecipeService) {}
+  constructor(public service: RecipeService) {}
 
   ngOnInit(): void {
-    this.recipeService.get().subscribe({
-      next: (recipes) => {
-        console.log('Received recipes:', recipes);
-        this.recipes = this.filterMethod
-          ? recipes.filter((recipe) => this.filterMethod?.(recipe))
-          : recipes;
-      },
-      error: (error) => {
-        console.error(error);
+    this.service.get().subscribe({
+      next: recipes => {
+        this.recipeCards = recipes.map(recipe => ({
+          ...recipe,
+          isSelected: false,
+        }));
       },
     });
+  }
+
+  recipeCardSelectionChange($event: RecipeCard) {
+    if (!this.allowSelection) {
+      return;
+    }
+
+    const selectionIndex = this.findIndexInSelected($event);
+
+    if (selectionIndex === -1) {
+      this.selectedRecipeCards.push($event);
+    } else {
+      this.selectedRecipeCards = this.selectedRecipeCards.filter(
+        r => r.id !== $event.id
+      );
+    }
+
+    this.selectedRecipeCardsChange.emit(this.selectedRecipeCards);
+  }
+
+  isRecipeCardSelected(recipeCard: RecipeCard) {
+    return this.findIndexInSelected(recipeCard) > -1;
+  }
+
+  findIndexInSelected(recipeCard: RecipeCard) {
+    return this.selectedRecipeCards.findIndex(x => x.id === recipeCard.id);
   }
 }

@@ -67,11 +67,10 @@ public class Recipe
 
         try
         {
-            string fullPath = Path.Combine(imagesDirectory, Image);
-
+            var fullPath = Path.Combine(imagesDirectory, Image);
             if (File.Exists(fullPath))
             {
-               File.Delete(fullPath);
+                File.Delete(fullPath);
             }
         }
         catch (Exception exception)
@@ -92,11 +91,4 @@ public class Recipe
             Ingredients.Add(new Ingredient(ingredient));
         }
     }
-}
-
-public class Statistics
-{
-    public int Id { get; set; }
-    public int Shares { get; set; }
-    public int Views { get; set; }
 }
