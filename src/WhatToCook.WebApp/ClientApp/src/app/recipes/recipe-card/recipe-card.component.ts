@@ -1,7 +1,17 @@
-import { Component, Input, OnInit } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  isDevMode,
+  Output,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { Recipe } from '../Recipe';
-import { MealPlanningService } from '../../meal-planner/meal-planning.service';
+import { mapTimeToPrepareToBadge } from '../TimeToPrepare';
+
+export interface RecipeCard extends Recipe {
+  isSelected: boolean;
+}
 
 @Component({
   selector: 'app-recipe-card',
@@ -9,13 +19,13 @@ import { MealPlanningService } from '../../meal-planner/meal-planning.service';
   styleUrls: ['./recipe-card.component.scss'],
 })
 export class RecipeCardComponent {
-  @Input()
-  recipe?: Recipe;
-  selected?: boolean;
-  constructor(
-    private router: Router,
-    private mealPlanningService: MealPlanningService,
-  ) {}
+  @Input() recipe?: RecipeCard;
+  @Input() selected = false;
+  @Input() showSelectButton = false;
+  @Output() recipeCardSelectionChange: EventEmitter<RecipeCard> =
+    new EventEmitter();
+
+  constructor(private router: Router) {}
 
   viewRecipeDetails(name: string | undefined) {
     if (name === undefined) {
@@ -31,31 +41,26 @@ export class RecipeCardComponent {
 
     return this.recipe.imagePath;
   }
+
   setDefaultImage() {
     if (this.recipe) {
       this.recipe.imagePath = 'Images/default_image.png';
     }
   }
-  ngAfterContentInit() {
-    if (this.recipe === undefined) {
-      return;
-    }
-    this.selected = this.mealPlanningService.selectedRecipes.some(
-      (x) => x.id === this.recipe?.id,
-    );
+
+  getTimeToPrepareBadge(recipe: Recipe) {
+    return mapTimeToPrepareToBadge(recipe.timeToPrepare);
   }
 
-  onSelect() {
-    if (this.recipe === undefined) {
-      return;
+  getTags(recipe: RecipeCard) {
+    return isDevMode() ? recipe.tags ?? ['test1', 'test2'] : recipe.tags;
+  }
+
+  selectClickHandler() {
+    if (this.recipe) {
+      this.recipe.isSelected = !this.recipe.isSelected;
     }
-    if (this.selected) {
-      this.mealPlanningService.selectRecipe(this.recipe);
-    } else {
-      this.mealPlanningService.selectedRecipes =
-        this.mealPlanningService.selectedRecipes.filter(
-          (x) => x.id !== this.recipe?.id,
-        );
-    }
+
+    this.recipeCardSelectionChange.emit(this.recipe);
   }
 }

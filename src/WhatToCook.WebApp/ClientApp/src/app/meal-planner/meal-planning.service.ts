@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Recipe } from 'src/app/recipes/Recipe';
 import { Observable } from 'rxjs';
 import {
+  CreatePlanOfMeals,
   PlanOfMeals,
   UpdatePlanOfMeals,
 } from './meal-plan-creator/plan-of-meals';
@@ -12,39 +13,36 @@ import {
 })
 export class MealPlanningService {
   mealPlanUrl = '';
-  selectedRecipes: Recipe[] = [];
 
   constructor(
     private httpClient: HttpClient,
-    @Inject('BASE_URL') private baseUrl: string,
+    @Inject('BASE_URL') private baseUrl: string
   ) {
     this.mealPlanUrl = this.baseUrl + 'api/v1/MealPlanning';
   }
 
-  createMealPlan(planOfMeals: PlanOfMeals) {
+  createMealPlan(planOfMeals: CreatePlanOfMeals) {
     return this.httpClient.post<PlanOfMeals>(
       this.baseUrl + 'api/v1/MealPlanning',
-      planOfMeals,
+      planOfMeals
     );
   }
 
   getMealPlans(): Observable<PlanOfMeals[]> {
     return this.httpClient.get<PlanOfMeals[]>(
-      `${this.baseUrl}api/v1/MealPlanning`,
+      `${this.baseUrl}api/v1/MealPlanning`
     );
   }
   update(planOfMeals: UpdatePlanOfMeals) {
     return this.httpClient.put<UpdatePlanOfMeals>(
       this.baseUrl + 'api/v1/MealPlanning',
-      planOfMeals,
+      planOfMeals
     );
   }
-  selectRecipe(recipe: Recipe) {
-    this.selectedRecipes.push(recipe);
-  }
+
   getMealPlanById(id: number): Observable<PlanOfMeals> {
     return this.httpClient.get<PlanOfMeals>(
-      `${this.baseUrl}api/v1/MealPlanning/${id}`,
+      `${this.baseUrl}api/v1/MealPlanning/${id}`
     );
   }
 }

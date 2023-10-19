@@ -1,25 +1,58 @@
-<div class="recipe-card-wrapper">
-  <div>
-    <input
-      [(ngModel)]="selected"
-      type="checkbox"
-      id="{{ recipe?.id }}"
-      (change)="onSelect()"
-    />
-    <div>
-      <div class="recipe-card" (click)="viewRecipeDetails(recipe?.name)">
-        <a class="card-description">
-          <div class="recipe-card-title-container">
-            <img
-              class="recipe-card-image"
-              src="{{ getImagePath() }}"
-              alt="{{ recipe?.name }}"
-              (error)="setDefaultImage()"
-            />
-            <span class="recipe-card-title">{{ recipe?.name }}</span>
-          </div>
-        </a>
-      </div>
+<div *ngIf="recipe" class="max-w-sm rounded overflow-hidden shadow-lg">
+  <img
+    (click)="viewRecipeDetails(recipe.name)"
+    class="w-full hover:opacity-50 cursor-pointer"
+    src="{{ getImagePath() }}"
+    alt="{{ recipe.name }}"
+    (error)="setDefaultImage()" />
+  <div class="px-6 py-4">
+    <div class="font-bold text-xl mb-2 flex items-center gap-2">
+      <span class="cursor-pointer" (click)="viewRecipeDetails(recipe.name)">{{
+        recipe.name
+      }}</span>
+      <app-badge [badge]="getTimeToPrepareBadge(recipe)"></app-badge>
+    </div>
+    <p class="text-gray-700 text-base">
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Voluptatibus
+      quia, nulla! Maiores et perferendis eaque, exercitationem praesentium
+      nihil.
+    </p>
+  </div>
+  <div class="flex items-center justify-between">
+    <div class="px-6 pt-4 pb-2">
+      <span
+        *ngFor="let tag of getTags(recipe)"
+        class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2"
+        >{{ tag }}</span
+      >
+    </div>
+  </div>
+  <div class="flex border-t-2 p-2 justify-between">
+    <div class="">
+      <img
+        class="cursor-pointer hover:opacity-75"
+        ngSrc="assets/icons/bookmark-heart-selected.svg"
+        alt="bookmark icon"
+        width="32"
+        height="32" />
+    </div>
+    <div *ngIf="showSelectButton">
+      <img
+        *ngIf="selected"
+        (click)="selectClickHandler()"
+        class="cursor-pointer hover:opacity-75"
+        ngSrc="assets/icons/plus-square-selected.svg"
+        alt="plus icon"
+        width="32"
+        height="32" />
+      <img
+        *ngIf="!selected"
+        (click)="selectClickHandler()"
+        class="cursor-pointer hover:opacity-75"
+        ngSrc="assets/icons/plus-square.svg"
+        alt="plus icon"
+        width="32"
+        height="32" />
     </div>
   </div>
 </div>

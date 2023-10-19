@@ -10,6 +10,7 @@ public class RecipeService
 {
     private readonly IRecipesRepository _recipesRepository;
     private readonly ILogger _logger;
+
     public RecipeService(IRecipesRepository recipesRepository, ILogger<RecipeService> logger)
     {
         _recipesRepository = recipesRepository;
@@ -22,7 +23,7 @@ public class RecipeService
         var imagePath = await _recipesRepository.SaveImage(imageInfo);
         var ingredients = request.Ingredients.Select(ingredient => new Ingredient(ingredient)).ToList();
         var recipe = new Recipe
-            (
+        (
             name: request.Name,
             description: request.PreparationDescription,
             timeToPrepare: request.TimeToPrepare,

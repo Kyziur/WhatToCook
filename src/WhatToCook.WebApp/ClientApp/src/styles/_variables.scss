@@ -7,16 +7,16 @@ $white: white;
 $grey: rgb(243, 244, 246);
 
 $breakpoints: (
-  "extra-small": (
+  'extra-small': (
     min-width: 567px,
   ),
-  "small": (
+  'small': (
     min-width: 767px,
   ),
-  "medium": (
+  'medium': (
     min-width: 992px,
   ),
-  "large": (
+  'large': (
     min-width: 1200px,
   ),
 ) !default;
