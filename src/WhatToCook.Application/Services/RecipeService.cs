@@ -30,7 +30,7 @@ public class RecipeService
             ingredients: ingredients,
             statistics : new Statistics(),
             image: imagePath,
-            plansOfMeals: new List<PlanOfMeals>()
+            plansOfMeals: new List<RecipePlanOfMeals>()
             );
 
         await _recipesRepository.Create(recipe);

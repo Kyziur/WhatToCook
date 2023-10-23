@@ -8,7 +8,7 @@ namespace WhatToCook.Application.Infrastructure.Repositories;
 public interface IRecipesRepository
 {
     Task<Recipe?> GetRecipeByName(string name);
-    List<Recipe> GetRecipesByNameForMealPlan(IEnumerable<string> names);
+    List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids);
     Task Create(Recipe recipe);
     Task Update(Recipe recipe);
     Task<string> SaveImage(ImageInfo imageInfo);
@@ -27,15 +27,15 @@ public class RecipesRepository : IRecipesRepository
         _fileSaver = fileSaver;
     }
 
-    public List<Recipe> GetRecipesByNameForMealPlan(IEnumerable<string> names)
+    public List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids)
     {
-        var recipes = _dbContext.Recipes.Include(recipe => recipe.PlansOfMeals)
-        .Where(recipe => names.Contains(recipe.Name)).ToList();
-        var existingRecipeNames = recipes.Select(r => r.Name).ToList();
-        if (!existingRecipeNames.OrderBy(n => n).SequenceEqual(names.OrderBy(n => n)))
+        var uniqueIds = ids.Distinct().ToList();
+        var recipes = _dbContext.Recipes.Where(recipe => uniqueIds.Contains(recipe.Id)).ToList();
+        var existingRecipeIds = recipes.Select(r => r.Id).ToList();
+        if (existingRecipeIds.Count != uniqueIds.Count)
         {
-            var missingRecipeNames = existingRecipeNames.Except(names);
-            var errorMessage = $"Recipes do not exist in the database: {string.Join(", ", missingRecipeNames)}";
+            var missingRecipeIds = uniqueIds.Except(existingRecipeIds);
+            var errorMessage = $"Not all recipes exist in the database: {string.Join(", ", missingRecipeIds)}";
 
             _logger.LogError(errorMessage); 
             throw new Exception(errorMessage);

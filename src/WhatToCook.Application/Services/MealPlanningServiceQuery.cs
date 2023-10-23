@@ -15,38 +15,33 @@ namespace WhatToCook.Application.Services
 
         public async Task<List<PlanOfMealResponse>> GetPlanOfMeals()
         {
-            var query = await _dbcontext.PlanOfMeals.Select(planOfMeal => new PlanOfMealResponse()
+            var query = await _dbcontext.PlanOfMeals.Include(p => p.RecipePlanOfMeals).ThenInclude(x => x.Recipe).Select(planOfMeal => new PlanOfMealResponse()
             {
                 Name = planOfMeal.Name,
                 Id = planOfMeal.Id,
                 FromDate = planOfMeal.FromDate,
                 ToDate = planOfMeal.ToDate,
-                Recipes = planOfMeal.Recipes.Select(recipe => new RecipeInMealPlanResponse(recipe.Name))
+                Recipes = planOfMeal.RecipePlanOfMeals.Select(recipe => new RecipeInMealPlanResponse(recipe.Recipe.Name))
             }).ToListAsync();
             return query;
         }
-        public async Task<ShoppingListResponse?> GetIngredientsForMealPlanById(int mealPlanId)
+        public async Task<List<DayWiseIngredientsResponse>> GetIngredientsForMealPlanById(int mealPlanId)
         {
             var mealPlan = await _dbcontext.PlanOfMeals
-                .Include(mp => mp.Recipes)
-                .ThenInclude(r => r.Ingredients)
+                .Include(mp => mp.RecipePlanOfMeals)
+                .ThenInclude(r => r.Recipe)
+                .ThenInclude(x => x.Ingredients)
                 .FirstOrDefaultAsync(mp => mp.Id == mealPlanId);
 
-            if (mealPlan == null) return null;
+            if (mealPlan == null) return new List<DayWiseIngredientsResponse>();
 
-            // Assuming each recipe corresponds to a day, this logic should be modified if this isn't the case
-            var dayWiseIngredientsList = mealPlan.Recipes.Select(r => new DayWiseIngredients
+            var dayWiseIngredientsList = mealPlan.RecipePlanOfMeals.Select(r => new DayWiseIngredientsResponse
             {
-                Ingredients = r.Ingredients.Select(i => i.Name).ToList()
+                Day = r.Day,
+                Ingredients = r.Recipe.Ingredients.Select(i => i.Name).ToList()
             }).ToList();
 
-            return new ShoppingListResponse
-            {
-                ToDate = mealPlan.ToDate,
-                FromDate = mealPlan.FromDate,
-                Ingredients = mealPlan.Recipes.SelectMany(x => x.Ingredients).Select(i => i.Name).Distinct().ToList(),
-                DayWiseIngredientsList = dayWiseIngredientsList
-            };
+            return dayWiseIngredientsList;
         }
     }
 }

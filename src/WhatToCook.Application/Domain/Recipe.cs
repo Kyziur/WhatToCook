@@ -9,8 +9,8 @@ public class Recipe
     public List<Ingredient> Ingredients { get; set; } = new();
     public Statistics Statistics { get; set; }
     public string Image { get; private set; }
-    public List<PlanOfMeals> PlansOfMeals { get; set; }
-    public Recipe(string name, string description, string timeToPrepare, List<Ingredient> ingredients, Statistics statistics, string image, List<PlanOfMeals> plansOfMeals)
+    public List<RecipePlanOfMeals> RecipePlanOfMeals { get; set; } = new List<RecipePlanOfMeals> { };
+    public Recipe(string name, string description, string timeToPrepare, List<Ingredient> ingredients, Statistics statistics, string image, List<RecipePlanOfMeals> plansOfMeals)
     {
         SetName(name);
         SetDescription(description);
@@ -18,7 +18,7 @@ public class Recipe
         Ingredients = ingredients;
         Statistics = statistics;
         SetImage(image);
-        PlansOfMeals = plansOfMeals;
+        RecipePlanOfMeals = plansOfMeals;
     }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.

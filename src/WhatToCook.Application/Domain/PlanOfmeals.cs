@@ -2,6 +2,7 @@
 
 namespace WhatToCook.Application.Domain;
 
+public record RecipePerDay(DateTime Day, Recipe Recipe);
 public class PlanOfMeals
 {
     public string Name { get; set; }
@@ -9,13 +10,19 @@ public class PlanOfMeals
     public DateTime FromDate { get; private set; }
     public DateTime ToDate { get; private set; }
     public User User { get; set; } = new User() { Email = "mail123@gmail.com" };
-    public IEnumerable<Recipe> Recipes { get; set; }
+ 
+    public List<RecipePlanOfMeals> RecipePlanOfMeals { get; set; } = new List<RecipePlanOfMeals> { };
 
-    public PlanOfMeals(string name, DateTime fromDate, DateTime toDate, IEnumerable<Recipe> recipes)
+    public PlanOfMeals(string name, DateTime fromDate, DateTime toDate, List<RecipePerDay> recipes)
     {
         Name = name;
-        SetDates(fromDate, toDate); 
-        Recipes = recipes;
+        SetDates(fromDate, toDate);
+        foreach(var recipe in recipes)
+        {
+            var recipePerDay = new RecipePlanOfMeals(recipe.Recipe, this, recipe.Day);
+            RecipePlanOfMeals.Add(recipePerDay);
+        }
+
     }
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     private PlanOfMeals() { }

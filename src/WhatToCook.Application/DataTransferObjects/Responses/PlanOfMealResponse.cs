@@ -18,7 +18,7 @@ namespace WhatToCook.Application.DataTransferObjects.Responses
             {
                 Id = planOfMeals.Id,
                 Name = planOfMeals.Name,
-                Recipes = planOfMeals.Recipes.Select(recipe => new RecipeInMealPlanResponse(recipe.Name)),
+                Recipes = planOfMeals.RecipePlanOfMeals.Select(r => new RecipeInMealPlanResponse(r.Recipe.Name)),
                 FromDate = DateTime.SpecifyKind(planOfMeals.FromDate, DateTimeKind.Utc),
                 ToDate = DateTime.SpecifyKind(planOfMeals.ToDate, DateTimeKind.Utc)
             };
