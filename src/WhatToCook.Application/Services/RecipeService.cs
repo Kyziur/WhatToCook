@@ -19,8 +19,17 @@ public class RecipeService
 
     public async Task<Recipe> Create(RecipeRequest request, string imagesDirectory)
     {
-        var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
-        var imagePath = await _recipesRepository.SaveImage(imageInfo);
+        string imagePath = "";
+        if (request.Image.Length > 0)
+        {
+            var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
+            imagePath = await _recipesRepository.SaveImage(imageInfo);
+        }
+        else
+        {
+            imagePath = $"Images/default_image.png";
+        }
+
         var ingredients = request.Ingredients.Select(ingredient => new Ingredient(ingredient)).ToList();
         var recipe = new Recipe
         (

@@ -12,7 +12,8 @@ public class MealPlanningController : ControllerBase
     private readonly MealPlanningServiceQuery _mealPlanningServiceQuery;
     private readonly MealPlanningService _mealPlanningService;
 
-    public MealPlanningController(MealPlanningServiceQuery mealPlanningServiceQuery, MealPlanningService mealPlanningService)
+    public MealPlanningController(MealPlanningServiceQuery mealPlanningServiceQuery,
+        MealPlanningService mealPlanningService)
     {
         _mealPlanningServiceQuery = mealPlanningServiceQuery;
         _mealPlanningService = mealPlanningService;
@@ -31,21 +32,18 @@ public class MealPlanningController : ControllerBase
         await _mealPlanningService.Create(planOfMealRequest);
         return Ok();
     }
+
     [HttpPut]
     public async Task<ActionResult> Put(UpdatePlanOfMealRequest planOfMealRequest)
     {
         await _mealPlanningService.Update(planOfMealRequest);
         return Ok();
     }
+
     [HttpGet("GetShoppingList/{mealPlanId}")]
     public async Task<ActionResult> GetIngredientsForShoppingList(int mealPlanId)
     {
         var response = await _mealPlanningServiceQuery.GetIngredientsForMealPlanById(mealPlanId);
-
-        if (response == null || response.Ingredients == null || !response.Ingredients.Any())
-        {
-            return NotFound();
-        }
         return Ok(response);
     }
 }

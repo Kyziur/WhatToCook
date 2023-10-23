@@ -15,6 +15,7 @@ import {
 import { notWhitespaceValidator } from 'src/app/not-white-space-validator.component';
 import { Badge } from '../../shared/badge/badge.component';
 import { MealPlanForDay } from './meal-plan-for.day';
+import { MealPlanningService } from '../meal-planning.service';
 
 export interface MealPlanFormDates {
   from: FormControl<string | null>;
@@ -75,7 +76,8 @@ export class MealPlanCreatorComponent {
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private service: MealPlanningService
   ) {
     this.mealPlanForm.controls.dates.valueChanges.subscribe(_ => {
       this.changedDateRangeHandler();
@@ -114,7 +116,9 @@ export class MealPlanCreatorComponent {
       }),
     };
 
-    // this.mealPlanService.createMealPlan(request).subscribe(_ => this.handleSuccessfulSave());
+    this.service
+      .createMealPlan(request)
+      .subscribe(_ => this.handleSuccessfulSave());
   }
 
   getDaysFromSelectedDates() {

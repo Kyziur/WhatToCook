@@ -31,10 +31,9 @@ public class RecipesRepository : IRecipesRepository
     {
         var uniqueIds = ids.Distinct().ToList();
         var recipes = _dbContext.Recipes.Where(recipe => uniqueIds.Contains(recipe.Id)).ToList();
-        var existingRecipeIds = recipes.Select(r => r.Id).ToList();
-        if (existingRecipeIds.Count != uniqueIds.Count)
+        if (recipes.Count != uniqueIds.Count)
         {
-            var missingRecipeIds = uniqueIds.Except(existingRecipeIds);
+            var missingRecipeIds = uniqueIds.Except(recipes.Select(x => x.Id));
             var errorMessage = $"Not all recipes exist in the database: {string.Join(", ", missingRecipeIds)}";
 
             _logger.LogError(errorMessage); 
