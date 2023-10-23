@@ -9,7 +9,6 @@ import { RecipesModule } from '../recipes/recipes.module';
 import { SharedModule } from '../shared/shared.module';
 import { ShoppingListComponent } from './shopping-list/shopping-list.component';
 
-
 const routes: Routes = [
   {
     path: 'meal-plan/new',
@@ -22,7 +21,7 @@ const routes: Routes = [
   {
     path: 'shopping-list',
     component: ShoppingListComponent,
-  }
+  },
 ];
 
 @NgModule({

@@ -26,7 +26,7 @@ public class MealPlanningRepository : IMealPlanningRepository
     }
     public async Task<PlanOfMeals?> GetMealPlanByName(string name)
     {
-        return await _dbcontext.PlanOfMeals.AsNoTracking().Include(r => r.RecipePlanOfMeals).ThenInclude(p => p. Recipe).FirstOrDefaultAsync(x => x.Name == name);
+        return await _dbcontext.PlanOfMeals.Include(r => r.RecipePlanOfMeals).ThenInclude(p => p. Recipe).FirstOrDefaultAsync(x => x.Name == name);
     }
     public async Task Update(PlanOfMeals planOfMeals)
     {

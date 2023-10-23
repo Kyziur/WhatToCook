@@ -31,12 +31,12 @@ public class PlanOfMeals
 
     public void SetDates(DateTime fromDate, DateTime toDate)
     {
-        if (fromDate.Day < DateTime.UtcNow.Day || toDate.Day < DateTime.UtcNow.Day)
+        if (fromDate.Date < DateTime.UtcNow.Date || toDate.Date < DateTime.UtcNow.Date)
         {
             throw new IncorrectDateException("Dates cannot be in the past.");
         }
 
-        if (toDate.Day < fromDate.Day)
+        if (toDate.Date < fromDate.Date)
         {
             throw new IncorrectDateException("ToDate cannot be lower than FromDate.");
         }

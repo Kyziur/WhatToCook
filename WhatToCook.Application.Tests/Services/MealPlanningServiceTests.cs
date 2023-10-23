@@ -67,7 +67,7 @@ public class MealPlanningServiceTests
              new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(),  new Statistics(), "path/to/image1", new List<PlanOfMeals>()),
              new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(),  new Statistics(), "path/to/image2", new List<PlanOfMeals>())
         };
-        //setup GetRecipesByNameForMealPlan method to return new recipes
+        //setup GetRecipesByIdForMealPlan method to return new recipes
         _recipesRepositoryMock.Setup(x => x.GetRecipesByNameForMealPlan(It.IsAny<IEnumerable<string>>())).Returns(recipes);
         var loggerMock = new Mock<ILogger<MealPlanningService>>();
         //arrange instances of interfaces
@@ -214,7 +214,7 @@ public class MealPlanningServiceTests
              new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<PlanOfMeals>())
         };
 
-        //setup GetRecipesByNameForMealPlan method to return new recipes
+        //setup GetRecipesByIdForMealPlan method to return new recipes
         _recipesRepositoryMock.Setup(x => x.GetRecipesByNameForMealPlan(It.IsAny<IEnumerable<string>>())).Returns(recipes);
         var loggerMock = new Mock<ILogger<MealPlanningService>>();
 
@@ -257,7 +257,7 @@ public class MealPlanningServiceTests
              new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(),  new Statistics(), "path/to/image2", new List<PlanOfMeals>())
         };
 
-        //setup GetRecipesByNameForMealPlan method to return new recipes
+        //setup GetRecipesByIdForMealPlan method to return new recipes
         _recipesRepositoryMock.Setup(x => x.GetRecipesByNameForMealPlan(It.IsAny<IEnumerable<string>>())).Returns(recipes);
         var loggerMock = new Mock<ILogger<MealPlanningService>>();
 

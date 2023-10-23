@@ -19,6 +19,4 @@ import { HttpClientModule } from '@angular/common/http';
   ],
   exports: [LayoutComponent, ReactiveFormsModule, RouterModule],
 })
-export class LayoutModule {
-}
-
+export class LayoutModule {}

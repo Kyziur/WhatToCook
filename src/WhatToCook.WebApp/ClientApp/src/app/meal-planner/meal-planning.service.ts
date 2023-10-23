@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Recipe } from 'src/app/recipes/Recipe';
 import { Observable } from 'rxjs';
 import {
   CreatePlanOfMeals,
@@ -46,8 +45,9 @@ export class MealPlanningService {
       `${this.baseUrl}api/v1/MealPlanning/${id}`
     );
   }
-  getIngredientsForShoppingList(id: number): Observable<shoppingListResponse>{
-    return this.httpClient.get<shoppingListResponse>
-    (`${this.baseUrl}api/v1/MealPlanning/GetShoppingList/${id}`)
+  getIngredientsForShoppingList(id: number): Observable<shoppingListResponse> {
+    return this.httpClient.get<shoppingListResponse>(
+      `${this.baseUrl}api/v1/MealPlanning/GetShoppingList/${id}`
+    );
   }
 }

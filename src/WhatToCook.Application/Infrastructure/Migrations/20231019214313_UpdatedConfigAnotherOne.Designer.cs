@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WhatToCook.Application.Infrastructure;
@@ -11,9 +12,11 @@ using WhatToCook.Application.Infrastructure;
 namespace WhatToCook.Application.Infrastructure.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20231019214313_UpdatedConfigAnotherOne")]
+    partial class UpdatedConfigAnotherOne
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +24,21 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("PlanOfMealsRecipe", b =>
+                {
+                    b.Property<int>("PlansOfMealsId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RecipesId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("PlansOfMealsId", "RecipesId");
+
+                    b.HasIndex("RecipesId");
+
+                    b.ToTable("PlanOfMealsRecipe");
+                });
 
             modelBuilder.Entity("WhatToCook.Application.Domain.Favourite", b =>
                 {
@@ -206,6 +224,21 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("User");
+                });
+
+            modelBuilder.Entity("PlanOfMealsRecipe", b =>
+                {
+                    b.HasOne("WhatToCook.Application.Domain.PlanOfMeals", null)
+                        .WithMany()
+                        .HasForeignKey("PlansOfMealsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WhatToCook.Application.Domain.Recipe", null)
+                        .WithMany()
+                        .HasForeignKey("RecipesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("WhatToCook.Application.Domain.Favourite", b =>

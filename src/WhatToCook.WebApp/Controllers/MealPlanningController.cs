@@ -41,11 +41,6 @@ public class MealPlanningController : ControllerBase
     public async Task<ActionResult> GetIngredientsForShoppingList(int mealPlanId)
     {
         var response = await _mealPlanningServiceQuery.GetIngredientsForMealPlanById(mealPlanId);
-
-        if (response == null || response.Ingredients == null || !response.Ingredients.Any())
-        {
-            return NotFound();
-        }
         return Ok(response);
     }
 }

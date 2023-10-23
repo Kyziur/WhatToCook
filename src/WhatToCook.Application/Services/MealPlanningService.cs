@@ -34,28 +34,17 @@ public class MealPlanningService
 
         var requestedRecipeIds = planOfMealRequest.Recipes.SelectMany(x => x.RecipeIds).ToList();
         var recipes = _recipesRepository.GetRecipesByIdForMealPlan(requestedRecipeIds);
-
-        //Day and RecipeId pairs
         var dayRecipePairs = planOfMealRequest.Recipes
             .SelectMany(dayRecipe => dayRecipe.RecipeIds,
                         (dayRecipe, recipeId) =>
                         new RecipePerDay(dayRecipe.Day, recipes.First(r => r.Id == recipeId) )).ToList();
 
-        
-        ////Match the pairs with actual recipes from the database
-        //var recipePlans = dayRecipePairs
-        //    .Where(pair => recipes.Any(r => r.Id == pair.RecipeId))
-        //    .Select(pair => new RecipePlanOfMeals
-        //    {
-        //        RecipeId = pair.RecipeId,
-        //        Day = pair.Day,
-        //    }).ToList();
         var planOfMeals = new PlanOfMeals
     (
         planOfMealRequest.Name,
         DateTime.SpecifyKind(planOfMealRequest.FromDate, DateTimeKind.Utc),
         DateTime.SpecifyKind(planOfMealRequest.ToDate, DateTimeKind.Utc),
-        dayRecipePairs
+        dayRecipePairs  
         
     );
         _logger.LogInformation($"Creating a meal plan with {dayRecipePairs.Count} recipes.");
