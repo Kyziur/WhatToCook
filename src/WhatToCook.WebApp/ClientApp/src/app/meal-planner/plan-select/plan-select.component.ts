@@ -8,7 +8,7 @@ import {
 const EMPTY_MEAL_PLAN: PlanOfMeals = {
   name: 'Zaznacz',
   id: -1,
-  recipes: [],
+  plannedMealsForDay: [],
   toDate: new Date(),
   fromDate: new Date(),
 };

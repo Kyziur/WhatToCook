@@ -64,16 +64,29 @@
           </span>
           <section *ngIf="mealPlanForm.controls.dates.valid">
             <div class="grid divide-y divide-neutral-200 max-w-xl mx-auto">
-              <div *ngFor="let mealPlan of mealPlans">
+              <div
+                *ngFor="
+                  let mealPlan of mealPlanForm.controls.plannedMealsForDay
+                    .controls
+                ">
                 <div>
                   <div
-                    (click)="selectDayClickHandler($event, mealPlan)"
+                    (click)="
+                      selectDayClickHandler($event, mealPlan.controls.day.value)
+                    "
                     class="flex justify-between w-full px-4 py-2 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700"
                     [ngClass]="
-                      mealPlan === selectedMealPlanForDay ? 'bg-blue-400' : ''
+                      mealPlan.controls.day.value === selectedMealPlanForDay
+                        ? 'bg-blue-400'
+                        : ''
                     ">
-                    <span>{{ mealPlan.day | date: 'fullDate' }}</span>
-                    <app-badge [badge]="getBadge(mealPlan)"></app-badge>
+                    <span>{{
+                      mealPlan.controls.day.value | date: 'fullDate'
+                    }}</span>
+                    <app-badge
+                      [badge]="
+                        getBadge(mealPlan.value.recipesIds?.length)
+                      "></app-badge>
                   </div>
                 </div>
               </div>

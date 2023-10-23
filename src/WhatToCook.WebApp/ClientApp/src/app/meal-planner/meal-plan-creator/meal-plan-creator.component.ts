@@ -1,13 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormArray,
   FormBuilder,
   FormControl,
   FormGroup,
   Validators,
+  ɵValue,
 } from '@angular/forms';
-import { CreatePlanOfMeals } from './plan-of-meals';
-import { Router } from '@angular/router';
+import { CreatePlanOfMeals, PlanOfMealForDay } from './plan-of-meals';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   dateRangeValidator,
   notPastDateValidator,
@@ -15,16 +16,57 @@ import {
 import { notWhitespaceValidator } from 'src/app/not-white-space-validator.component';
 import { Badge } from '../../shared/badge/badge.component';
 import { MealPlanForDay } from './meal-plan-for.day';
+import { MealPlanningService } from '../meal-planning.service';
+import { of, switchMap } from 'rxjs';
 
-export interface MealPlanFormDates {
+export interface MealPlanDatesForm {
   from: FormControl<string | null>;
   to: FormControl<string | null>;
 }
 
+export interface MealPlanForDayForm {
+  day: FormControl<Date>;
+  recipesIds: FormControl<number[]>;
+}
+
 export interface MealPlanForm {
+  id: FormControl<number | null>;
   name: FormControl<string>;
-  dates: FormGroup<MealPlanFormDates>;
-  recipes: FormArray<FormControl<string>>;
+  dates: FormGroup<MealPlanDatesForm>;
+  plannedMealsForDay: FormArray<FormGroup<MealPlanForDayForm>>;
+}
+
+function createMealPlanForDayForm(day: Date, recipesIds: number[]) {
+  return new FormGroup<MealPlanForDayForm>({
+    day: new FormControl<Date>(day, { nonNullable: true }),
+    recipesIds: new FormControl(recipesIds, { nonNullable: true }),
+  });
+}
+
+function createMalPlanForm(fb: FormBuilder) {
+  return new FormGroup({
+    id: fb.control<number | null>(null),
+    name: fb.nonNullable.control('', {
+      validators: [Validators.required, notWhitespaceValidator],
+      updateOn: 'blur',
+    }),
+    dates: fb.nonNullable.group(
+      {
+        from: fb.control<string | null>(null, {
+          validators: [Validators.required, notPastDateValidator],
+          updateOn: 'blur',
+        }),
+        to: fb.control<string | null>(null, [
+          Validators.required,
+          notPastDateValidator,
+        ]),
+      },
+      { validators: dateRangeValidator, updateOn: 'blur' }
+    ),
+    plannedMealsForDay: fb.nonNullable.array(
+      [] as FormGroup<MealPlanForDayForm>[]
+    ),
+  });
 }
 
 @Component({
@@ -32,30 +74,49 @@ export interface MealPlanForm {
   templateUrl: './meal-plan-creator.component.html',
   styleUrls: ['./meal-plan-creator.component.scss'],
 })
-export class MealPlanCreatorComponent {
-  public mealPlans: MealPlanForDay[] = [];
+export class MealPlanCreatorComponent implements OnInit {
+  // public mealPlans: MealPlanForDay[] = [];
   public selectedMealPlanForDay?: MealPlanForDay;
+  public mealPlanForm: FormGroup<MealPlanForm> = createMalPlanForm(this.fb);
 
-  mealPlanForm: FormGroup<MealPlanForm> = new FormGroup({
-    name: this.fb.nonNullable.control('', [
-      Validators.required,
-      notWhitespaceValidator,
-    ]),
-    dates: this.fb.nonNullable.group(
-      {
-        from: this.fb.control<string | null>(null, [
-          Validators.required,
-          notPastDateValidator,
-        ]),
-        to: this.fb.control<string | null>(null, [
-          Validators.required,
-          notPastDateValidator,
-        ]),
-      },
-      { validators: dateRangeValidator }
-    ),
-    recipes: this.fb.nonNullable.array([] as FormControl<string>[]),
-  });
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private service: MealPlanningService,
+    private route: ActivatedRoute
+  ) {
+    this.mealPlanForm.controls.dates.valueChanges.subscribe(_ => {
+      this.changedDateRangeHandler();
+
+      const plannedMeals = this.getDaysFromSelectedDates().map(day => {
+        const previouslySelectedRecipesIds =
+          this.mealPlanForm.controls.plannedMealsForDay.value.find(
+            x => x.day?.getDate() === day.getDate()
+          )?.recipesIds ?? [];
+
+        return createMealPlanForDayForm(day, previouslySelectedRecipesIds);
+      });
+
+      this.mealPlanForm.controls.plannedMealsForDay = new FormArray<
+        FormGroup<MealPlanForDayForm>
+      >(plannedMeals);
+      // plannedMeals.forEach(plannedMeal =>
+      //   this.mealPlanForm.controls.plannedMealsForDay.push(plannedMeal)
+      // );
+
+      // this.mealPlans = this.getDaysFromSelectedDates().map(day => {
+      //   const previouslySelectedRecipes = this.mealPlans.find(
+      //     x => x.day.getDate() === day.getDate()
+      //   )?.recipes;
+      //
+      //   return {
+      //     day: day,
+      //     recipes: previouslySelectedRecipes ?? [],
+      //     show: false,
+      //   };
+      // });
+    });
+  }
 
   get fromDate() {
     return this.mealPlanForm.controls.dates.controls.from;
@@ -73,24 +134,32 @@ export class MealPlanCreatorComponent {
     this.router.navigate(['recipes']);
   }
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router
-  ) {
-    this.mealPlanForm.controls.dates.valueChanges.subscribe(_ => {
-      this.changedDateRangeHandler();
-      this.mealPlans = this.getDaysFromSelectedDates().map(day => {
-        const previouslySelectedRecipes = this.mealPlans.find(
-          x => x.day.getDate() === day.getDate()
-        )?.recipes;
+  ngOnInit(): void {
+    this.route.params
+      .pipe(
+        switchMap(params => {
+          const id = params['id'];
+          if (!id) {
+            return of(undefined);
+          }
+          return this.service.getMealPlanById(id);
+        })
+      )
+      .subscribe(mealPlan => {
+        if (!mealPlan) {
+          return;
+        }
 
-        return {
-          day: day,
-          recipes: previouslySelectedRecipes ?? [],
-          show: false,
-        };
+        this.mealPlanForm.patchValue({
+          id: mealPlan.id,
+          dates: {
+            from: mealPlan.fromDate.toDateString(),
+            to: mealPlan.toDate.toDateString(),
+          },
+          name: mealPlan.name,
+          plannedMealsForDay: mealPlan.plannedMealsForDay,
+        });
       });
-    });
   }
 
   submit() {
@@ -106,12 +175,9 @@ export class MealPlanCreatorComponent {
       name: this.name.value,
       fromDate: new Date(this.fromDate.value),
       toDate: new Date(this.toDate.value),
-      recipes: this.mealPlans.map(m => {
-        return {
-          day: m.day,
-          recipeIds: m.recipes.map(r => r.id),
-        };
-      }),
+      recipes: this.mealPlanForm.controls.plannedMealsForDay.value.filter(
+        x => x.day !== undefined
+      ) as PlanOfMealForDay[],
     };
 
     // this.mealPlanService.createMealPlan(request).subscribe(_ => this.handleSuccessfulSave());
@@ -133,9 +199,9 @@ export class MealPlanCreatorComponent {
     return this.generateRangeOfDates(new Date(fromDate), new Date(toDate));
   }
 
-  selectDayClickHandler($event: MouseEvent, mealPlanForDay: MealPlanForDay) {
+  selectDayClickHandler($event: MouseEvent, day: Date) {
     $event.preventDefault();
-    this.selectedMealPlanForDay = mealPlanForDay;
+    this.selectedMealPlanForDay = day;
   }
 
   changedDateRangeHandler() {
@@ -152,9 +218,9 @@ export class MealPlanCreatorComponent {
     return rangeDates;
   }
 
-  getBadge(mealPlan: MealPlanForDay): Badge {
+  getBadge(numberOfRecipes: number | undefined): Badge {
     return {
-      text: mealPlan.recipes.length.toString(),
+      text: (numberOfRecipes ?? 0).toString(),
       level: 'info',
     };
   }

@@ -5,12 +5,12 @@ export interface PlanOfMeals {
   name: string;
   fromDate: Date;
   toDate: Date;
-  recipes: Recipe[];
+  plannedMealsForDay: PlanOfMealForDay[];
 }
 
 export interface PlanOfMealForDay {
   day: Date;
-  recipeIds: number[];
+  recipesIds: number[];
 }
 export interface CreatePlanOfMeals {
   name: string;
