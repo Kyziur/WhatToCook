@@ -9,10 +9,11 @@ namespace WhatToCook.WebApp.Controllers;
 [Route("api/v1/[controller]")]
 public class MealPlanningController : ControllerBase
 {
-    private readonly MealPlanningServiceQuery _mealPlanningServiceQuery;
     private readonly MealPlanningService _mealPlanningService;
+    private readonly MealPlanningServiceQuery _mealPlanningServiceQuery;
 
-    public MealPlanningController(MealPlanningServiceQuery mealPlanningServiceQuery, MealPlanningService mealPlanningService)
+    public MealPlanningController(MealPlanningServiceQuery mealPlanningServiceQuery,
+        MealPlanningService mealPlanningService)
     {
         _mealPlanningServiceQuery = mealPlanningServiceQuery;
         _mealPlanningService = mealPlanningService;
@@ -25,22 +26,24 @@ public class MealPlanningController : ControllerBase
         return Ok(getPlanOfMeals);
     }
 
+    [HttpGet("GetShoppingList/{mealPlanId}")]
+    public async Task<ActionResult> GetIngredientsForShoppingList(int mealPlanId)
+    {
+        var response = await _mealPlanningServiceQuery.GetIngredientsForMealPlanById(mealPlanId);
+        return Ok(response);
+    }
+
     [HttpPost]
     public async Task<ActionResult> Post(PlanOfMealRequest planOfMealRequest)
     {
         await _mealPlanningService.Create(planOfMealRequest);
         return Ok();
     }
+
     [HttpPut]
     public async Task<ActionResult> Put(UpdatePlanOfMealRequest planOfMealRequest)
     {
         await _mealPlanningService.Update(planOfMealRequest);
         return Ok();
-    }
-    [HttpGet("GetShoppingList/{mealPlanId}")]
-    public async Task<ActionResult> GetIngredientsForShoppingList(int mealPlanId)
-    {
-        var response = await _mealPlanningServiceQuery.GetIngredientsForMealPlanById(mealPlanId);
-        return Ok(response);
     }
 }

@@ -10,8 +10,8 @@ namespace WhatToCook.WebApp.Controllers;
 public class RecipeController : ControllerBase
 {
     private readonly IWebHostEnvironment _environment;
-    private readonly RecipeServiceQuery _recipeServiceQuery;
     private readonly RecipeService _recipeService;
+    private readonly RecipeServiceQuery _recipeServiceQuery;
 
     public RecipeController(IWebHostEnvironment environment, RecipeServiceQuery recipeServiceQuery, RecipeService recipeService)
     {
@@ -20,10 +20,11 @@ public class RecipeController : ControllerBase
         _recipeService = recipeService;
     }
 
-    private string GetBaseUrl()
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> Delete(int id)
     {
-        var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
-        return baseUrl;
+        await _recipeService.Delete(id);
+        return NoContent();
     }
 
     [HttpGet]
@@ -32,6 +33,7 @@ public class RecipeController : ControllerBase
         var getRecipes = await _recipeServiceQuery.GetRecipes();
         return Ok(getRecipes);
     }
+
     [HttpGet("{name}")]
     public async Task<ActionResult<RecipeResponse>> GetByName(string name)
     {
@@ -61,10 +63,9 @@ public class RecipeController : ControllerBase
         return Ok();
     }
 
-    [HttpDelete("{id}")]
-    public async Task<ActionResult> Delete(int id)
+    private string GetBaseUrl()
     {
-        await _recipeService.Delete(id);
-        return NoContent();
+        var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+        return baseUrl;
     }
 }

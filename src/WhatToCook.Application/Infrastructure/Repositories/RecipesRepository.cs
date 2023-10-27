@@ -7,19 +7,25 @@ namespace WhatToCook.Application.Infrastructure.Repositories;
 
 public interface IRecipesRepository
 {
-    Task<Recipe?> GetRecipeByName(string name);
-    List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids);
     Task Create(Recipe recipe);
-    Task Update(Recipe recipe);
-    Task<string> SaveImage(ImageInfo imageInfo);
+
     Task Delete(int id);
+
+    Task<Recipe?> GetRecipeByName(string name);
+
+    List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids);
+
+    Task<string> SaveImage(ImageInfo imageInfo);
+
+    Task Update(Recipe recipe);
 }
 
 public class RecipesRepository : IRecipesRepository
 {
     private readonly DatabaseContext _dbContext;
-    private readonly ILogger _logger;
     private readonly IFileSaver _fileSaver;
+    private readonly ILogger _logger;
+
     public RecipesRepository(DatabaseContext dbContext, ILogger<RecipesRepository> logger, IFileSaver fileSaver)
     {
         _dbContext = dbContext;
@@ -27,63 +33,12 @@ public class RecipesRepository : IRecipesRepository
         _fileSaver = fileSaver;
     }
 
-    public List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids)
-    {
-        var uniqueIds = ids.Distinct().ToList();
-        var recipes = _dbContext.Recipes.Where(recipe => uniqueIds.Contains(recipe.Id)).ToList();
-        var existingRecipeIds = recipes.Select(r => r.Id).ToList();
-        if (existingRecipeIds.Count != uniqueIds.Count)
-        {
-            var missingRecipeIds = uniqueIds.Except(existingRecipeIds);
-            var errorMessage = $"Not all recipes exist in the database: {string.Join(", ", missingRecipeIds)}";
-
-            _logger.LogError(errorMessage); 
-            throw new Exception(errorMessage);
-        }
-        return recipes;
-    }
-    public async Task<Recipe?> GetRecipeByName(string name)
-    {
-        return await _dbContext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(r => r.Name == name);
-    }
-    public async Task<string> SaveImage(ImageInfo imageInfo)
-    {
-        string imageFullPath;
-        if (string.IsNullOrEmpty(imageInfo.Base64Image))
-        {
-            return "";
-        }
-
-        try
-        {
-
-            string finalFileName = $"{imageInfo.FileNameWithoutExtension}{imageInfo.FileExtension}";
-
-            string filePath = Path.Combine(imageInfo.ImagesDirectory, "Images", finalFileName);
-            byte[] imageBytes = imageInfo.GetImageBytes();
-
-           await  _fileSaver.SaveAsync(filePath, imageBytes);
-
-            imageFullPath = $"Images/{finalFileName}";
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError($"An error occurred while saving the image. Error: {exception.Message}");
-            throw;
-        }
-        return imageFullPath;
-    }
     public async Task Create(Recipe recipe)
     {
         await _dbContext.Recipes.AddAsync(recipe);
         await _dbContext.SaveChangesAsync();
+    }
 
-    }
-    public async Task Update(Recipe recipe)
-    {
-        _dbContext.Recipes.Update(recipe);
-        await _dbContext.SaveChangesAsync();
-    }
     public async Task Delete(int id)
     {
         var recipe = await _dbContext.Recipes.FindAsync(id);
@@ -96,5 +51,58 @@ public class RecipesRepository : IRecipesRepository
         {
             throw new NotFoundException($"Recipe with ID '{id}' not found.");
         }
+    }
+
+    public async Task<Recipe?> GetRecipeByName(string name)
+    {
+        return await _dbContext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(r => r.Name == name);
+    }
+
+    public List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids)
+    {
+        var uniqueIds = ids.Distinct().ToList();
+        var recipes = _dbContext.Recipes.Where(recipe => uniqueIds.Contains(recipe.Id)).ToList();
+        if (recipes.Count != uniqueIds.Count)
+        {
+            var missingRecipeIds = uniqueIds.Except(recipes.Select(x => x.Id));
+            var errorMessage = $"Not all recipes exist in the database: {string.Join(", ", missingRecipeIds)}";
+
+            _logger.LogError(errorMessage);
+            throw new Exception(errorMessage);
+        }
+        return recipes;
+    }
+
+    public async Task<string> SaveImage(ImageInfo imageInfo)
+    {
+        string imageFullPath;
+        if (string.IsNullOrEmpty(imageInfo.Base64Image))
+        {
+            return "";
+        }
+
+        try
+        {
+            string finalFileName = $"{imageInfo.FileNameWithoutExtension}{imageInfo.FileExtension}";
+
+            string filePath = Path.Combine(imageInfo.ImagesDirectory, "Images", finalFileName);
+            byte[] imageBytes = imageInfo.GetImageBytes();
+
+            await _fileSaver.SaveAsync(filePath, imageBytes);
+
+            imageFullPath = $"Images/{finalFileName}";
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError($"An error occurred while saving the image. Error: {exception.Message}");
+            throw;
+        }
+        return imageFullPath;
+    }
+
+    public async Task Update(Recipe recipe)
+    {
+        _dbContext.Recipes.Update(recipe);
+        await _dbContext.SaveChangesAsync();
     }
 }

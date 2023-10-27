@@ -1,10 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WhatToCook.Application.Domain;
 
 namespace WhatToCook.Application.Infrastructure.Configurations
@@ -13,7 +8,7 @@ namespace WhatToCook.Application.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<RecipePlanOfMeals> builder)
         {
-            builder.HasKey(rp => new { rp.RecipeId, rp.PlanOfMealsId });
+            builder.HasKey(rp => new { rp.RecipeId, rp.PlanOfMealsId, rp.Day });
             builder.HasOne(rp => rp.Recipe)
                .WithMany(r => r.RecipePlanOfMeals)
                .HasForeignKey(rp => rp.RecipeId);
@@ -22,7 +17,7 @@ namespace WhatToCook.Application.Infrastructure.Configurations
                 .WithMany(p => p.RecipePlanOfMeals)
                 .HasForeignKey(rp => rp.PlanOfMealsId);
 
-            builder.Property(x => x.Day);
+            builder.Property(x => x.Day).IsRequired();
         }
     }
 }

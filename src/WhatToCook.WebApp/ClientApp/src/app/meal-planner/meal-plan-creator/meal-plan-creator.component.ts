@@ -77,7 +77,7 @@ export class MealPlanCreatorComponent {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private mealPlanService: MealPlanningService
+    private service: MealPlanningService
   ) {
     this.mealPlanForm.controls.dates.valueChanges.subscribe(_ => {
       this.changedDateRangeHandler();
@@ -116,7 +116,7 @@ export class MealPlanCreatorComponent {
       }),
     };
 
-    this.mealPlanService
+    this.service
       .createMealPlan(request)
       .subscribe(_ => this.handleSuccessfulSave());
   }

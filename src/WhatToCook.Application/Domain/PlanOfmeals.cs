@@ -10,14 +10,14 @@ public class PlanOfMeals
     public DateTime FromDate { get; private set; }
     public DateTime ToDate { get; private set; }
     public User User { get; set; } = new User() { Email = "mail123@gmail.com" };
- 
+
     public List<RecipePlanOfMeals> RecipePlanOfMeals { get; set; } = new List<RecipePlanOfMeals> { };
 
     public PlanOfMeals(string name, DateTime fromDate, DateTime toDate, List<RecipePerDay> recipes)
     {
         Name = name;
         SetDates(fromDate, toDate);
-        foreach(var recipe in recipes)
+        foreach (var recipe in recipes)
         {
             var recipePerDay = new RecipePlanOfMeals(recipe.Recipe, this, recipe.Day);
             RecipePlanOfMeals.Add(recipePerDay);

@@ -13,6 +13,25 @@ namespace WhatToCook.Application.Services
             _dbcontext = dbcontext;
         }
 
+        public async Task<ShoppingListResponse> GetIngredientsForMealPlanById(int mealPlanId)
+        {
+            var mealPlan = await _dbcontext.PlanOfMeals
+                .Include(mp => mp.RecipePlanOfMeals)
+                .ThenInclude(r => r.Recipe)
+                .ThenInclude(x => x.Ingredients)
+                .FirstAsync(mp => mp.Id == mealPlanId);
+
+            if (mealPlan == null) return new ShoppingListResponse();
+
+            var dayWiseIngredientsList = mealPlan.RecipePlanOfMeals.Select(r => new DayWiseIngredientsResponse
+            {
+                Day = r.Day,
+                Ingredients = r.Recipe.Ingredients.Select(i => i.Name).ToList()
+            }).ToList();
+            var shoppingList = new ShoppingListResponse { FromDate = mealPlan.FromDate, ToDate = mealPlan.ToDate, IngredientsPerDay = dayWiseIngredientsList };
+            return shoppingList;
+        }
+
         public async Task<List<PlanOfMealResponse>> GetPlanOfMeals()
         {
             var query = await _dbcontext.PlanOfMeals.Include(p => p.RecipePlanOfMeals).ThenInclude(x => x.Recipe).Select(planOfMeal => new PlanOfMealResponse()
@@ -24,24 +43,6 @@ namespace WhatToCook.Application.Services
                 Recipes = planOfMeal.RecipePlanOfMeals.Select(recipe => new RecipeInMealPlanResponse(recipe.Recipe.Name))
             }).ToListAsync();
             return query;
-        }
-        public async Task<List<DayWiseIngredientsResponse>> GetIngredientsForMealPlanById(int mealPlanId)
-        {
-            var mealPlan = await _dbcontext.PlanOfMeals
-                .Include(mp => mp.RecipePlanOfMeals)
-                .ThenInclude(r => r.Recipe)
-                .ThenInclude(x => x.Ingredients)
-                .FirstOrDefaultAsync(mp => mp.Id == mealPlanId);
-
-            if (mealPlan == null) return new List<DayWiseIngredientsResponse>();
-
-            var dayWiseIngredientsList = mealPlan.RecipePlanOfMeals.Select(r => new DayWiseIngredientsResponse
-            {
-                Day = r.Day,
-                Ingredients = r.Recipe.Ingredients.Select(i => i.Name).ToList()
-            }).ToList();
-
-            return dayWiseIngredientsList;
         }
     }
 }

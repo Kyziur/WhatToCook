@@ -13,20 +13,6 @@ public class RecipeServiceQuery
         _dbcontext = dbcontext;
     }
 
-    public async Task<List<RecipeResponse>> GetRecipes()
-    {
-        var query = await _dbcontext.Recipes.Select(recipe => new RecipeResponse()
-        {
-            Id = recipe.Id,
-            Name = recipe.Name,
-            Ingredients = recipe.Ingredients.Select(x => x.Name),
-            PreparationDescription = recipe.Description,
-            TimeToPrepare = recipe.TimeToPrepare,
-            ImagePath = recipe.Image
-        }).ToListAsync();
-        return query;
-    }
-
     public async Task<RecipeResponse?> GetByName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -44,5 +30,19 @@ public class RecipeServiceQuery
         var recipeResponse = RecipeResponse.MapFrom(recipe);
 
         return recipeResponse;
+    }
+
+    public async Task<List<RecipeResponse>> GetRecipes()
+    {
+        var query = await _dbcontext.Recipes.Select(recipe => new RecipeResponse()
+        {
+            Id = recipe.Id,
+            Name = recipe.Name,
+            Ingredients = recipe.Ingredients.Select(x => x.Name),
+            PreparationDescription = recipe.Description,
+            TimeToPrepare = recipe.TimeToPrepare,
+            ImagePath = recipe.Image
+        }).ToListAsync();
+        return query;
     }
 }
