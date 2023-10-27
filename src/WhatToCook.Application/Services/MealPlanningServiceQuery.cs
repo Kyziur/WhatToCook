@@ -23,11 +23,11 @@ namespace WhatToCook.Application.Services
 
             if (mealPlan == null) return new ShoppingListResponse();
 
-            var dayWiseIngredientsList = mealPlan.RecipePlanOfMeals.Select(r => new DayWiseIngredientsResponse
-            {
-                Day = r.Day,
-                Ingredients = r.Recipe.Ingredients.Select(i => i.Name).ToList()
-            }).ToList();
+            var dayWiseIngredientsList = mealPlan.RecipePlanOfMeals
+                .Select(r => new DayWiseIngredientsResponse(r.Day, r.Recipe.Ingredients
+                .Select(i => i.Name)))
+                .ToList();
+
             var shoppingList = new ShoppingListResponse { FromDate = mealPlan.FromDate, ToDate = mealPlan.ToDate, IngredientsPerDay = dayWiseIngredientsList };
             return shoppingList;
         }
