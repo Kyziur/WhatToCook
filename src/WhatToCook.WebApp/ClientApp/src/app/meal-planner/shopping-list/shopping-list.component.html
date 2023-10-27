@@ -5,11 +5,26 @@
       {{ plan.name }}
     </option>
   </select>
+
+  <label>
+    <input type="checkbox" [(ngModel)]="viewEntireList" /> View Entire List
+  </label>
 </div>
 
-<div *ngFor="let day of shoppingList.ingredientsPerDay">
-  <h3>{{ day.day }}</h3>
+<!-- View by Day -->
+<div *ngIf="!viewEntireList">
+  <div *ngFor="let day of shoppingList.ingredientsPerDay">
+    <h3>{{ day.day }}</h3>
+    <ul>
+      <li *ngFor="let ingredient of day.ingredients">{{ ingredient }}</li>
+    </ul>
+  </div>
+</div>
+
+<!-- View Entire List -->
+<div *ngIf="viewEntireList">
+  <h3>Entire Shopping List</h3>
   <ul>
-    <li *ngFor="let ingredient of day.ingredients">{{ ingredient }}</li>
+    <li *ngFor="let ingredient of entireShoppingList">{{ ingredient }}</li>
   </ul>
 </div>

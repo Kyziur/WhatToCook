@@ -8,6 +8,8 @@ import { PlanOfMeals } from '../meal-plan-creator/plan-of-meals';
   styleUrls: ['./shopping-list.component.scss'],
 })
 export class ShoppingListComponent implements OnInit {
+  viewEntireList = false;
+  entireShoppingList: string[] = [];
   mealPlans: PlanOfMeals[] = [];
   selectedMealPlanId: number | null = null;
   shoppingList: shoppingListResponse = {
@@ -34,6 +36,13 @@ export class ShoppingListComponent implements OnInit {
         .subscribe(response => {
           console.log(response);
           this.shoppingList = response;
+
+          if (this.viewEntireList) {
+            this.entireShoppingList = [];
+            for (const dayIngredients of response.ingredientsPerDay) {
+              this.entireShoppingList.push(...dayIngredients.ingredients);
+            }
+          }
         });
     }
   }
