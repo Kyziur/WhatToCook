@@ -11,10 +11,9 @@ export class ShoppingListComponent implements OnInit {
   mealPlans: PlanOfMeals[] = [];
   selectedMealPlanId: number | null = null;
   shoppingList: shoppingListResponse = {
-    ingredients: [],
     fromDate: new Date(),
     toDate: new Date(),
-    dayWiseIngredientsList: [],
+    ingredientsPerDay: [],
   };
   constructor(private mealPlanService: MealPlanningService) {}
 
@@ -29,10 +28,11 @@ export class ShoppingListComponent implements OnInit {
   }
 
   onPlanSelected(): void {
-    if (this.selectedMealPlanId) {
+    if (this.selectedMealPlanId !== null) {
       this.mealPlanService
         .getIngredientsForShoppingList(this.selectedMealPlanId)
         .subscribe(response => {
+          console.log(response);
           this.shoppingList = response;
         });
     }

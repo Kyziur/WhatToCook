@@ -1,10 +1,9 @@
 export interface shoppingListResponse {
-  ingredients: string[];
   fromDate: Date;
   toDate: Date;
-  dayWiseIngredientsList?: DayWiseIngredients[];
+  ingredientsPerDay: dayWiseIngredientsResponse[];
 }
-export interface DayWiseIngredients {
-  date: Date;
+export interface dayWiseIngredientsResponse {
+  day: Date;
   ingredients: string[];
 }

@@ -6,14 +6,14 @@ namespace WhatToCook.Application.DataTransferObjects.Responses
 
     public class PlanOfMealResponse
     {
+        public DateTime FromDate { get; set; }
         public int Id { get; set; }
         public string Name { get; set; }
-        public DateTime FromDate { get; set; }
-        public DateTime ToDate { get; set; }
         public IEnumerable<RecipeInMealPlanResponse> Recipes { get; set; }
+        public DateTime ToDate { get; set; }
+
         public static PlanOfMealResponse MapFrom(PlanOfMeals planOfMeals)
         {
-
             return new PlanOfMealResponse
             {
                 Id = planOfMeals.Id,
@@ -25,4 +25,3 @@ namespace WhatToCook.Application.DataTransferObjects.Responses
         }
     }
 }
-

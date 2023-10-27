@@ -1,26 +1,15 @@
 <div *ngIf="mealPlans.length">
-  <label for="mealPlanSelect">Select a Meal Plan:</label>
-  <select
-    id="mealPlanSelect"
-    [(ngModel)]="selectedMealPlanId"
-    (change)="onPlanSelected()">
+  <label>Select a Meal Plan:</label>
+  <select [(ngModel)]="selectedMealPlanId" (change)="onPlanSelected()">
     <option *ngFor="let plan of mealPlans" [value]="plan.id">
       {{ plan.name }}
     </option>
   </select>
 </div>
 
-<div *ngIf="shoppingList">
-  <h2>Shopping List</h2>
-  <p>
-    From: {{ shoppingList.fromDate | date }} To:
-    {{ shoppingList.toDate | date }}
-  </p>
-
-  <div *ngFor="let day of shoppingList.dayWiseIngredientsList">
-    <h3>{{ day.date | date }}</h3>
-    <ul>
-      <li *ngFor="let ingredient of day.ingredients">{{ ingredient }}</li>
-    </ul>
-  </div>
+<div *ngFor="let day of shoppingList.ingredientsPerDay">
+  <h3>{{ day.day }}</h3>
+  <ul>
+    <li *ngFor="let ingredient of day.ingredients">{{ ingredient }}</li>
+  </ul>
 </div>

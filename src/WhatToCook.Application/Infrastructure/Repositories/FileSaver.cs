@@ -8,7 +8,7 @@
     {
         public async Task SaveAsync(string path, byte[] data)
         {
-           await System.IO.File.WriteAllBytesAsync(path, data);
+            await System.IO.File.WriteAllBytesAsync(path, data);
         }
     }
 }
