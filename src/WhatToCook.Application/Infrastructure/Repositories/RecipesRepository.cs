@@ -41,16 +41,7 @@ public class RecipesRepository : IRecipesRepository
 
     public async Task Delete(int id)
     {
-        var recipe = await _dbContext.Recipes.FindAsync(id);
-        if (recipe != null)
-        {
-            _dbContext.Recipes.Remove(recipe);
-            await _dbContext.SaveChangesAsync();
-        }
-        else
-        {
-            throw new NotFoundException($"Recipe with ID '{id}' not found.");
-        }
+        var recipe = await _dbContext.Recipes.FindAsync(id) ?? throw new NotFoundException($"Recipe with ID '{id}' not found.");
     }
 
     public async Task<Recipe?> GetRecipeByName(string name)
@@ -65,9 +56,8 @@ public class RecipesRepository : IRecipesRepository
         if (recipes.Count != uniqueIds.Count)
         {
             var missingRecipeIds = uniqueIds.Except(recipes.Select(x => x.Id));
-            var errorMessage = $"Not all recipes exist in the database: {string.Join(", ", missingRecipeIds)}";
-
-            _logger.LogError(errorMessage);
+            var errorMessage = "Not all recipes exist in the database: {MissingIds}";
+            _logger.LogError(errorMessage, string.Join(", ", missingRecipeIds));
             throw new Exception(errorMessage);
         }
         return recipes;
@@ -94,7 +84,7 @@ public class RecipesRepository : IRecipesRepository
         }
         catch (Exception exception)
         {
-            _logger.LogError($"An error occurred while saving the image. Error: {exception.Message}");
+            _logger.LogError("An error occurred while saving the image. Error:{message}", exception.Message);
             throw;
         }
         return imageFullPath;

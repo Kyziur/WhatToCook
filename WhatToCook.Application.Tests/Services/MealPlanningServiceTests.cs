@@ -30,8 +30,8 @@ public class MealPlanningServiceTests
         var oldRecipesPerDay = new List<RecipePerDay>
 
         {
-        new RecipePerDay(recipeDate1, new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<RecipePlanOfMeals>())),
-        new RecipePerDay(recipeDate2, new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<RecipePlanOfMeals>()))
+        new RecipePerDay(recipeDate1, new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1")),
+        new RecipePerDay(recipeDate2, new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2"))
         };
 
         var existingPlanOfMeals = new PlanOfMeals("OldTest", oldStartDate, oldEndDate, oldRecipesPerDay);
@@ -45,8 +45,8 @@ public class MealPlanningServiceTests
         var newRecipes = new List<Recipe>
 
         {
-        new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<RecipePlanOfMeals>()),
-        new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<RecipePlanOfMeals>())
+        new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1"),
+        new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2")
         };
 
         var planOfMealsForDayList = daysInRange.Select(day => new PlanOfMealForDay
@@ -90,8 +90,8 @@ public class MealPlanningServiceTests
 
         var oldRecipesPerDay = new List<RecipePerDay>
         {
-        new RecipePerDay(recipeDate1, new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<RecipePlanOfMeals>())),
-        new RecipePerDay(recipeDate2, new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<RecipePlanOfMeals>()))
+        new RecipePerDay(recipeDate1, new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1")),
+        new RecipePerDay(recipeDate2, new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2"))
         };
 
         var existingPlanOfMeals = new PlanOfMeals("OldTest", oldStartDate, oldEndDate, oldRecipesPerDay);
@@ -104,8 +104,8 @@ public class MealPlanningServiceTests
 
         var newRecipes = new List<Recipe>
         {
-            new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<RecipePlanOfMeals>()),
-            new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<RecipePlanOfMeals>())
+            new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1"),
+            new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2")
         };
 
         var planOfMealsForDayList = daysInRange.Select(day => new PlanOfMealForDay
@@ -150,8 +150,8 @@ public class MealPlanningServiceTests
         var oldRecipesPerDay = new List<RecipePerDay>
 
         {
-        new RecipePerDay(recipeDate1, new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<RecipePlanOfMeals>())),
-        new RecipePerDay(recipeDate2, new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<RecipePlanOfMeals>()))
+        new RecipePerDay(recipeDate1, new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1")),
+        new RecipePerDay(recipeDate2, new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2"))
         };
 
         var existingPlanOfMeals = new PlanOfMeals("OldTest", oldStartDate, oldEndDate, oldRecipesPerDay);
@@ -165,8 +165,8 @@ public class MealPlanningServiceTests
         var newRecipes = new List<Recipe>
 
         {
-        new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<RecipePlanOfMeals>()),
-        new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<RecipePlanOfMeals>())
+        new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1"),
+        new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2")
         };
 
         var nonExistentRecipeId = 9999;
@@ -220,9 +220,9 @@ public class MealPlanningServiceTests
 
         var recipes = new List<Recipe>()
         {
-            new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<RecipePlanOfMeals>()),
-            new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<RecipePlanOfMeals>()),
-            new Recipe("Recipe3", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<RecipePlanOfMeals>())
+            new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1"),
+            new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2"),
+            new Recipe("Recipe3", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2")
         };
         var planOfMealsForDayList = daysInRange.Select(day => new PlanOfMealForDay
         {
@@ -306,8 +306,8 @@ public class MealPlanningServiceTests
 
         var oldRecipesPerDay = new List<RecipePerDay>
         {
-        new RecipePerDay(recipeDate1, new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<RecipePlanOfMeals>())),
-        new RecipePerDay(recipeDate2, new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<RecipePlanOfMeals>()))
+        new RecipePerDay(recipeDate1, new Recipe("OldRecipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1")),
+        new RecipePerDay(recipeDate2, new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2"))
         };
 
         var existingPlanOfMeals = new PlanOfMeals("OldTest", oldStartDate, oldEndDate, oldRecipesPerDay);
@@ -321,8 +321,8 @@ public class MealPlanningServiceTests
         var newRecipes = new List<Recipe>
 
         {
-        new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1", new List<RecipePlanOfMeals>()),
-        new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2", new List<RecipePlanOfMeals>())
+        new Recipe("Recipe1", "Description1", "short", new List<Ingredient>(), new Statistics(), "path/to/image1"),
+        new Recipe("Recipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2")
         };
 
         var planOfMealsForDayList = daysInRange.Select(day => new PlanOfMealForDay

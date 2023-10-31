@@ -38,8 +38,7 @@ public class RecipeService
             timeToPrepare: request.TimeToPrepare,
             ingredients: ingredients,
             statistics: new Statistics(),
-            image: imagePath,
-            plansOfMeals: new List<RecipePlanOfMeals>()
+            image: imagePath
             );
 
         await _recipesRepository.Create(recipe);

@@ -28,7 +28,7 @@ public class RecipeServiceTests
 
         var mockRecipePlanOfMealsList = new List<RecipePlanOfMeals>();
         var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>());
-        var mockExistingRecipe = new Recipe(recipeName, "desc", "long", new List<Ingredient>(), new Statistics(), "imagePath", mockRecipePlanOfMealsList);
+        var mockExistingRecipe = new Recipe(recipeName, "desc", "long", new List<Ingredient>(), new Statistics(), "imagePath");
 
         mockRecipePlanOfMealsList.Add(new RecipePlanOfMeals(mockExistingRecipe, mockPlanOfMeals, DateTime.UtcNow));
 
@@ -83,7 +83,7 @@ public class RecipeServiceTests
 
         var mockRecipePlanOfMealsList = new List<RecipePlanOfMeals>();
         var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>());
-        var mockExistingRecipe = new Recipe(recipeName, "desc", "long", new List<Ingredient>(), new Statistics(), "imagePath", mockRecipePlanOfMealsList);
+        var mockExistingRecipe = new Recipe(recipeName, "desc", "long", new List<Ingredient>(), new Statistics(), "imagePath");
 
         mockRecipePlanOfMealsList.Add(new RecipePlanOfMeals(mockExistingRecipe, mockPlanOfMeals, DateTime.UtcNow));
 
@@ -171,8 +171,7 @@ public class RecipeServiceTests
                     new Ingredient("old ingredient4"),
             },
             new Statistics(),
-            "oldimage.png",
-            new List<RecipePlanOfMeals>()
+            "oldimage.png"
             );
 
         var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>());
@@ -201,7 +200,7 @@ public class RecipeServiceTests
 
         var mockRecipePlanOfMealsList = new List<RecipePlanOfMeals>();
         var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>());
-        var mockExistingRecipe = new Recipe(oldRecipeName, "desc", "long", new List<Ingredient>(), new Statistics(), "imagePath", mockRecipePlanOfMealsList);
+        var mockExistingRecipe = new Recipe(oldRecipeName, "desc", "long", new List<Ingredient>(), new Statistics(), "imagePath");
 
         mockRecipePlanOfMealsList.Add(new RecipePlanOfMeals(mockExistingRecipe, mockPlanOfMeals, DateTime.UtcNow));
 

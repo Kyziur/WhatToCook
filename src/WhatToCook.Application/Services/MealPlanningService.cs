@@ -11,6 +11,7 @@ public class MealPlanningService
     private readonly IRecipesRepository _recipesRepository;
     private readonly IMealPlanningRepository _mealPlanningRepository;
     private readonly ILogger _logger;
+
     public MealPlanningService(IRecipesRepository recipesRepository, IMealPlanningRepository mealPlanningRepository, ILogger<MealPlanningService> logger)
     {
         _recipesRepository = recipesRepository;
@@ -35,7 +36,7 @@ public class MealPlanningService
         dayRecipePairs
 
     );
-        _logger.LogInformation($"Creating a meal plan with {dayRecipePairs.Count} recipes.");
+        _logger.LogInformation("Creating a meal plan with {numberOfRecipes} recipes", dayRecipePairs.Count);
         await _mealPlanningRepository.Create(planOfMeals);
 
         return planOfMeals;
@@ -47,21 +48,23 @@ public class MealPlanningService
 
         if (mealPlanToUpdate == null)
         {
-            _logger.LogError($"Attempted to update a non-existent meal plan: {planOfMealRequest.Name}");
+            _logger.LogError("Attempted to update a non-existent meal plan{planOfMealName}", planOfMealRequest.Name);
             throw new NotFoundException(nameof(mealPlanToUpdate));
         }
 
         var RecipeForMealPlanUpdate = planOfMealRequest.Recipes.SelectMany(x => x.RecipeIds);
         var recipes = _recipesRepository.GetRecipesByIdForMealPlan(RecipeForMealPlanUpdate);
 
-
         var existingRecipes = recipes.Select(r => r.Id).ToList();
 
         var missingRecipes = RecipeForMealPlanUpdate.Except(existingRecipes).ToList();
         if (missingRecipes.Any())
         {
-            _logger.LogError($"Some recipes do not exist in the database. Missing IDs: {string.Join(", ", missingRecipes)}");
-            throw new NotFoundException($"Some recipes do not exist in the database. Missing IDs: {string.Join(", ", missingRecipes)}");
+            var missingIdsMessage = "Some recipes do not exist in the database. Missing IDs: " + string.Join(", ", missingRecipes);
+
+            _logger.LogError("Some recipes do not exist in the database. Missing IDs: {MissingRecipeIds}", missingIdsMessage);
+
+            throw new NotFoundException(missingIdsMessage);
         }
 
         mealPlanToUpdate.Name = planOfMealRequest.Name;
@@ -71,11 +74,10 @@ public class MealPlanningService
         .SelectMany(dayRecipe => dayRecipe.RecipeIds, (dayRecipe, recipeId) =>
         new RecipePlanOfMeals(recipes.First(r => r.Id == recipeId), mealPlanToUpdate, dayRecipe.Day)).ToList();
 
-        mealPlanToUpdate.RecipePlanOfMeals = updatedRecipePlans;
+        mealPlanToUpdate.SetRecipePlanOfMeals(updatedRecipePlans);
 
         await _mealPlanningRepository.Update(mealPlanToUpdate);
 
         return mealPlanToUpdate;
     }
-
 }

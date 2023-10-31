@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33103.201
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatToCook.WebApp", "src\WhatToCook.WebApp\WhatToCook.WebApp.csproj", "{1895EF32-53DF-411C-9082-754B21479096}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatToCook.Application.Tests", "WhatToCook.Application.Tests\WhatToCook.Application.Tests.csproj", "{0F34A72B-D97C-4F6F-8ADD-0A0574602230}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhatToCook.Application", "src\WhatToCook.Application\WhatToCook.Application.csproj", "{7B81C5C5-68DB-431E-86E5-2A57C0F7C7C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatToCook.Application", "src\WhatToCook.Application\WhatToCook.Application.csproj", "{219A51F1-0285-4E75-A323-BE2433516907}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhatToCook.Application.Tests", "WhatToCook.Application.Tests\WhatToCook.Application.Tests.csproj", "{0F34A72B-D97C-4F6F-8ADD-0A0574602230}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatToCook.WebApp", "src\WhatToCook.WebApp\WhatToCook.WebApp.csproj", "{E6C966BF-574D-4D70-B0E0-95B61DF42F4E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,18 +15,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1895EF32-53DF-411C-9082-754B21479096}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1895EF32-53DF-411C-9082-754B21479096}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1895EF32-53DF-411C-9082-754B21479096}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1895EF32-53DF-411C-9082-754B21479096}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7B81C5C5-68DB-431E-86E5-2A57C0F7C7C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7B81C5C5-68DB-431E-86E5-2A57C0F7C7C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7B81C5C5-68DB-431E-86E5-2A57C0F7C7C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7B81C5C5-68DB-431E-86E5-2A57C0F7C7C4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0F34A72B-D97C-4F6F-8ADD-0A0574602230}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0F34A72B-D97C-4F6F-8ADD-0A0574602230}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0F34A72B-D97C-4F6F-8ADD-0A0574602230}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0F34A72B-D97C-4F6F-8ADD-0A0574602230}.Release|Any CPU.Build.0 = Release|Any CPU
+		{219A51F1-0285-4E75-A323-BE2433516907}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{219A51F1-0285-4E75-A323-BE2433516907}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{219A51F1-0285-4E75-A323-BE2433516907}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{219A51F1-0285-4E75-A323-BE2433516907}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6C966BF-574D-4D70-B0E0-95B61DF42F4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6C966BF-574D-4D70-B0E0-95B61DF42F4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6C966BF-574D-4D70-B0E0-95B61DF42F4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6C966BF-574D-4D70-B0E0-95B61DF42F4E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

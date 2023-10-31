@@ -34,7 +34,6 @@ export class ShoppingListComponent implements OnInit {
       this.mealPlanService
         .getIngredientsForShoppingList(this.selectedMealPlanId)
         .subscribe(response => {
-          console.log(response);
           this.shoppingList = response;
 
           if (this.viewEntireList) {

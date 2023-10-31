@@ -3,6 +3,7 @@
 namespace WhatToCook.Application.Domain;
 
 public record RecipePerDay(DateTime Day, Recipe Recipe);
+
 public class PlanOfMeals
 {
     public string Name { get; set; }
@@ -11,7 +12,7 @@ public class PlanOfMeals
     public DateTime ToDate { get; private set; }
     public User User { get; set; } = new User() { Email = "mail123@gmail.com" };
 
-    public List<RecipePlanOfMeals> RecipePlanOfMeals { get; set; } = new List<RecipePlanOfMeals> { };
+    public List<RecipePlanOfMeals> RecipePlanOfMeals { get; private set; } = new();
 
     public PlanOfMeals(string name, DateTime fromDate, DateTime toDate, List<RecipePerDay> recipes)
     {
@@ -22,12 +23,14 @@ public class PlanOfMeals
             var recipePerDay = new RecipePlanOfMeals(recipe.Recipe, this, recipe.Day);
             RecipePlanOfMeals.Add(recipePerDay);
         }
-
     }
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    private PlanOfMeals() { }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+
+    private PlanOfMeals()
+    { }
+
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     public void SetDates(DateTime fromDate, DateTime toDate)
     {
@@ -44,5 +47,19 @@ public class PlanOfMeals
         FromDate = fromDate;
         ToDate = toDate;
     }
-}
 
+    public void SetRecipePlanOfMeals(List<RecipePlanOfMeals> recipePlans)
+    {
+        if (recipePlans == null)
+        {
+            throw new ArgumentNullException(nameof(recipePlans));
+        }
+
+        RecipePlanOfMeals.Clear();
+
+        foreach (var recipePlan in recipePlans)
+        {
+            RecipePlanOfMeals.Add(recipePlan);
+        }
+    }
+}
