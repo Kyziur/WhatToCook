@@ -14,20 +14,10 @@ public class PlanOfMeals
 
     public List<RecipePlanOfMeals> RecipePlanOfMeals { get; private set; } = new();
 
-    public PlanOfMeals(string name, DateTime fromDate, DateTime toDate, List<RecipePerDay> recipes, List<RecipePlanOfMeals> recipePlans)
+    public PlanOfMeals(string name, DateTime fromDate, DateTime toDate, List<RecipePerDay> recipes)
     {
         Name = name;
         SetDates(fromDate, toDate);
-        foreach (var recipe in recipes)
-        {
-            var recipePerDay = new RecipePlanOfMeals(recipe.Recipe, this, recipe.Day);
-            RecipePlanOfMeals.Add(recipePerDay);
-        }
-
-        foreach (var recipePlan in recipePlans)
-        {
-            RecipePlanOfMeals.Add(recipePlan);
-        }
     }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
@@ -51,5 +41,15 @@ public class PlanOfMeals
 
         FromDate = fromDate;
         ToDate = toDate;
+    }
+
+    public void SetRecipes(List<RecipePerDay> recipes)
+    {
+        RecipePlanOfMeals.Clear();
+        foreach (var recipe in recipes)
+        {
+            var recipePerDay = new RecipePlanOfMeals(recipe.Recipe, this, recipe.Day);
+            RecipePlanOfMeals.Add(recipePerDay);
+        }
     }
 }

@@ -33,9 +33,9 @@ public class MealPlanningService
         planOfMealRequest.Name,
         DateTime.SpecifyKind(planOfMealRequest.FromDate, DateTimeKind.Utc),
         DateTime.SpecifyKind(planOfMealRequest.ToDate, DateTimeKind.Utc),
-        dayRecipePairs,
-        new List<RecipePlanOfMeals>()
+        new List<RecipePerDay>()
     );
+        planOfMeals.SetRecipes(dayRecipePairs);
         _logger.LogInformation("Creating a meal plan with {numberOfRecipes} recipes", dayRecipePairs.Count);
         await _mealPlanningRepository.Create(planOfMeals);
 
@@ -72,14 +72,9 @@ public class MealPlanningService
 
         var updatedRecipePlans = planOfMealRequest.Recipes
         .SelectMany(dayRecipe => dayRecipe.RecipeIds, (dayRecipe, recipeId) =>
-        new RecipePlanOfMeals(recipes.First(r => r.Id == recipeId), mealPlanToUpdate, dayRecipe.Day)).ToList();
+        new RecipePerDay(dayRecipe.Day, recipes.First(r => r.Id == recipeId))).ToList();
 
-        mealPlanToUpdate = new PlanOfMeals(
-            planOfMealRequest.Name,
-            planOfMealRequest.FromDate,
-            planOfMealRequest.ToDate,
-            updatedRecipePlans.Select(x => new RecipePerDay(x.Day, x.Recipe)).ToList(),
-            updatedRecipePlans);
+        mealPlanToUpdate.SetRecipes(updatedRecipePlans);
 
         await _mealPlanningRepository.Update(mealPlanToUpdate);
 
