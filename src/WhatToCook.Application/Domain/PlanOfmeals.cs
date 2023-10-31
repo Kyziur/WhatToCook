@@ -14,7 +14,7 @@ public class PlanOfMeals
 
     public List<RecipePlanOfMeals> RecipePlanOfMeals { get; private set; } = new();
 
-    public PlanOfMeals(string name, DateTime fromDate, DateTime toDate, List<RecipePerDay> recipes)
+    public PlanOfMeals(string name, DateTime fromDate, DateTime toDate, List<RecipePerDay> recipes, List<RecipePlanOfMeals> recipePlans)
     {
         Name = name;
         SetDates(fromDate, toDate);
@@ -22,6 +22,11 @@ public class PlanOfMeals
         {
             var recipePerDay = new RecipePlanOfMeals(recipe.Recipe, this, recipe.Day);
             RecipePlanOfMeals.Add(recipePerDay);
+        }
+
+        foreach (var recipePlan in recipePlans)
+        {
+            RecipePlanOfMeals.Add(recipePlan);
         }
     }
 
@@ -46,20 +51,5 @@ public class PlanOfMeals
 
         FromDate = fromDate;
         ToDate = toDate;
-    }
-
-    public void SetRecipePlanOfMeals(List<RecipePlanOfMeals> recipePlans)
-    {
-        if (recipePlans == null)
-        {
-            throw new ArgumentNullException(nameof(recipePlans));
-        }
-
-        RecipePlanOfMeals.Clear();
-
-        foreach (var recipePlan in recipePlans)
-        {
-            RecipePlanOfMeals.Add(recipePlan);
-        }
     }
 }

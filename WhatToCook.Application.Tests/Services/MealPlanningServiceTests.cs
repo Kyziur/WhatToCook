@@ -34,7 +34,7 @@ public class MealPlanningServiceTests
         new RecipePerDay(recipeDate2, new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2"))
         };
 
-        var existingPlanOfMeals = new PlanOfMeals("OldTest", oldStartDate, oldEndDate, oldRecipesPerDay);
+        var existingPlanOfMeals = new PlanOfMeals("OldTest", oldStartDate, oldEndDate, oldRecipesPerDay, new List<RecipePlanOfMeals>());
 
         _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
 
@@ -94,7 +94,7 @@ public class MealPlanningServiceTests
         new RecipePerDay(recipeDate2, new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2"))
         };
 
-        var existingPlanOfMeals = new PlanOfMeals("OldTest", oldStartDate, oldEndDate, oldRecipesPerDay);
+        var existingPlanOfMeals = new PlanOfMeals("OldTest", oldStartDate, oldEndDate, oldRecipesPerDay, new List<RecipePlanOfMeals>());
 
         _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
 
@@ -154,7 +154,7 @@ public class MealPlanningServiceTests
         new RecipePerDay(recipeDate2, new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2"))
         };
 
-        var existingPlanOfMeals = new PlanOfMeals("OldTest", oldStartDate, oldEndDate, oldRecipesPerDay);
+        var existingPlanOfMeals = new PlanOfMeals("OldTest", oldStartDate, oldEndDate, oldRecipesPerDay, new List<RecipePlanOfMeals>());
 
         _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
 
@@ -310,7 +310,7 @@ public class MealPlanningServiceTests
         new RecipePerDay(recipeDate2, new Recipe("OldRecipe2", "Description2", "medium", new List<Ingredient>(), new Statistics(), "path/to/image2"))
         };
 
-        var existingPlanOfMeals = new PlanOfMeals("OldTest", oldStartDate, oldEndDate, oldRecipesPerDay);
+        var existingPlanOfMeals = new PlanOfMeals("OldTest", oldStartDate, oldEndDate, oldRecipesPerDay, new List<RecipePlanOfMeals>());
 
         _mealPlanningRepositoryMock.Setup(x => x.GetMealPlanByName(It.IsAny<string>())).ReturnsAsync(existingPlanOfMeals);
 

@@ -33,8 +33,8 @@ public class MealPlanningService
         planOfMealRequest.Name,
         DateTime.SpecifyKind(planOfMealRequest.FromDate, DateTimeKind.Utc),
         DateTime.SpecifyKind(planOfMealRequest.ToDate, DateTimeKind.Utc),
-        dayRecipePairs
-
+        dayRecipePairs,
+        new List<RecipePlanOfMeals>()
     );
         _logger.LogInformation("Creating a meal plan with {numberOfRecipes} recipes", dayRecipePairs.Count);
         await _mealPlanningRepository.Create(planOfMeals);
@@ -48,7 +48,7 @@ public class MealPlanningService
 
         if (mealPlanToUpdate == null)
         {
-            _logger.LogError("Attempted to update a non-existent meal plan{planOfMealName}", planOfMealRequest.Name);
+            _logger.LogError("Attempted to update a non-existent meal plan {planOfMealName}", planOfMealRequest.Name);
             throw new NotFoundException(nameof(mealPlanToUpdate));
         }
 
@@ -74,7 +74,12 @@ public class MealPlanningService
         .SelectMany(dayRecipe => dayRecipe.RecipeIds, (dayRecipe, recipeId) =>
         new RecipePlanOfMeals(recipes.First(r => r.Id == recipeId), mealPlanToUpdate, dayRecipe.Day)).ToList();
 
-        mealPlanToUpdate.SetRecipePlanOfMeals(updatedRecipePlans);
+        mealPlanToUpdate = new PlanOfMeals(
+            planOfMealRequest.Name,
+            planOfMealRequest.FromDate,
+            planOfMealRequest.ToDate,
+            updatedRecipePlans.Select(x => new RecipePerDay(x.Day, x.Recipe)).ToList(),
+            updatedRecipePlans);
 
         await _mealPlanningRepository.Update(mealPlanToUpdate);
 

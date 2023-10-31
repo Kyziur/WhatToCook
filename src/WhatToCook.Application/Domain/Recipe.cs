@@ -7,7 +7,7 @@ public class Recipe
     public string Description { get; private set; }
     public string TimeToPrepare { get; private set; }
     public List<Ingredient> Ingredients { get; private set; } = new();
-    public Statistics Statistics { get; set; }
+    public Statistics Statistics { get; private set; }
     public string Image { get; private set; }
     public List<RecipePlanOfMeals> RecipePlanOfMeals { get; private set; } = new();
 
@@ -17,7 +17,7 @@ public class Recipe
         SetDescription(description);
         SetTimeToPrepare(timeToPrepare);
         Ingredients = ingredients;
-        Statistics = statistics;
+        Statistics = new Statistics();
         SetImage(image);
     }
 

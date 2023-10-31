@@ -27,7 +27,7 @@ public class RecipeServiceTests
         var recipeName = "Test123";
 
         var mockRecipePlanOfMealsList = new List<RecipePlanOfMeals>();
-        var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>());
+        var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>(), new List<RecipePlanOfMeals>());
         var mockExistingRecipe = new Recipe(recipeName, "desc", "long", new List<Ingredient>(), new Statistics(), "imagePath");
 
         mockRecipePlanOfMealsList.Add(new RecipePlanOfMeals(mockExistingRecipe, mockPlanOfMeals, DateTime.UtcNow));
@@ -42,7 +42,7 @@ public class RecipeServiceTests
             TimeToPrepare = "medium"
         };
 
-        _recipesRepositoryMock.Setup(x => x.GetRecipeByName(recipeName)).ReturnsAsync(mockExistingRecipe);
+        _recipesRepositoryMock.Setup(x => x.GetByName(recipeName)).ReturnsAsync(mockExistingRecipe);
 
         await Assert.ThrowsAsync<FormatException>(() => sut.Update(recipeUpdateRequest, ""));
     }
@@ -82,12 +82,12 @@ public class RecipeServiceTests
         var imagesDirectory = "some directory";
 
         var mockRecipePlanOfMealsList = new List<RecipePlanOfMeals>();
-        var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>());
+        var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>(), new List<RecipePlanOfMeals>());
         var mockExistingRecipe = new Recipe(recipeName, "desc", "long", new List<Ingredient>(), new Statistics(), "imagePath");
 
         mockRecipePlanOfMealsList.Add(new RecipePlanOfMeals(mockExistingRecipe, mockPlanOfMeals, DateTime.UtcNow));
 
-        _recipesRepositoryMock.Setup(x => x.GetRecipeByName(recipeName)).ReturnsAsync(mockExistingRecipe);
+        _recipesRepositoryMock.Setup(x => x.GetByName(recipeName)).ReturnsAsync(mockExistingRecipe);
 
         await Assert.ThrowsAsync<NotFoundException>(() => sut.Update(updateRequest, imagesDirectory));
 
@@ -114,7 +114,7 @@ public class RecipeServiceTests
 
         var imagesDirectory = "some directory";
 
-        _recipesRepositoryMock.Setup<Task<Recipe?>>(x => x.GetRecipeByName(nonexistentRecipeName)).ReturnsAsync((Recipe?)null);
+        _recipesRepositoryMock.Setup<Task<Recipe?>>(x => x.GetByName(nonexistentRecipeName)).ReturnsAsync((Recipe?)null);
         await Assert.ThrowsAsync<NotFoundException>(() => sut.Update(updateRequest, imagesDirectory));
 
         _recipesRepositoryMock.Verify(x => x.Update(It.IsAny<Recipe>()), Times.Never);
@@ -174,11 +174,11 @@ public class RecipeServiceTests
             "oldimage.png"
             );
 
-        var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>());
+        var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>(), new List<RecipePlanOfMeals>());
         var mockRecipePlanOfMeals = new RecipePlanOfMeals(existingRecipe, mockPlanOfMeals, DateTime.UtcNow);
         existingRecipe.RecipePlanOfMeals.Add(mockRecipePlanOfMeals);
 
-        _recipesRepositoryMock.Setup(x => x.GetRecipeByName(It.IsAny<string>())).ReturnsAsync(existingRecipe);
+        _recipesRepositoryMock.Setup(x => x.GetByName(It.IsAny<string>())).ReturnsAsync(existingRecipe);
         var loggerMock = new Mock<ILogger<RecipeService>>();
         var sut = new RecipeService(_recipesRepositoryMock.Object, loggerMock.Object);
 
@@ -199,7 +199,7 @@ public class RecipeServiceTests
         var newRecipeName = "UpdatedTest123";
 
         var mockRecipePlanOfMealsList = new List<RecipePlanOfMeals>();
-        var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>());
+        var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>(), new List<RecipePlanOfMeals>());
         var mockExistingRecipe = new Recipe(oldRecipeName, "desc", "long", new List<Ingredient>(), new Statistics(), "imagePath");
 
         mockRecipePlanOfMealsList.Add(new RecipePlanOfMeals(mockExistingRecipe, mockPlanOfMeals, DateTime.UtcNow));
@@ -216,7 +216,7 @@ public class RecipeServiceTests
 
         var imagesDirectory = "some updated directory";
 
-        _recipesRepositoryMock.Setup(x => x.GetRecipeByName(newRecipeName)).ReturnsAsync(mockExistingRecipe);
+        _recipesRepositoryMock.Setup(x => x.GetByName(newRecipeName)).ReturnsAsync(mockExistingRecipe);
         _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>())).ReturnsAsync("some updated path").Verifiable();
         _recipesRepositoryMock.Setup(x => x.Update(It.IsAny<Recipe>())).Returns(Task.CompletedTask).Verifiable();
 

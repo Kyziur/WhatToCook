@@ -11,7 +11,7 @@ public interface IRecipesRepository
 
     Task Delete(int id);
 
-    Task<Recipe?> GetRecipeByName(string name);
+    Task<Recipe?> GetByName(string name);
 
     List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids);
 
@@ -44,7 +44,7 @@ public class RecipesRepository : IRecipesRepository
         var recipe = await _dbContext.Recipes.FindAsync(id) ?? throw new NotFoundException($"Recipe with ID '{id}' not found.");
     }
 
-    public async Task<Recipe?> GetRecipeByName(string name)
+    public async Task<Recipe?> GetByName(string name)
     {
         return await _dbContext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(r => r.Name == name);
     }
@@ -56,8 +56,8 @@ public class RecipesRepository : IRecipesRepository
         if (recipes.Count != uniqueIds.Count)
         {
             var missingRecipeIds = uniqueIds.Except(recipes.Select(x => x.Id));
-            var errorMessage = "Not all recipes exist in the database: {MissingIds}";
-            _logger.LogError(errorMessage, string.Join(", ", missingRecipeIds));
+            var errorMessage = "Not all recipes exist in the database.";
+            _logger.LogError(errorMessage + " Missing IDs: {MissingIDs}", missingRecipeIds);
             throw new Exception(errorMessage);
         }
         return recipes;
@@ -84,7 +84,7 @@ public class RecipesRepository : IRecipesRepository
         }
         catch (Exception exception)
         {
-            _logger.LogError("An error occurred while saving the image. Error:{message}", exception.Message);
+            _logger.LogError("An error occurred while saving the image. Error: {message}", exception.Message);
             throw;
         }
         return imageFullPath;

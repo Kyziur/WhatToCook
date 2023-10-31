@@ -52,7 +52,7 @@ public class RecipeService
 
     public async Task<Recipe> Update(UpdateRecipeRequest request, string imagesDirectory)
     {
-        var recipe = await _recipesRepository.GetRecipeByName(request.Name);
+        var recipe = await _recipesRepository.GetByName(request.Name);
 
         if (recipe == null)
         {
