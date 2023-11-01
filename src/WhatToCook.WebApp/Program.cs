@@ -1,6 +1,4 @@
 using WhatToCook.Application.Infrastructure;
-using Microsoft.Extensions.FileProviders;
-using System.IO;
 using WhatToCook.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);

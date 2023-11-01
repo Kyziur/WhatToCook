@@ -18,6 +18,6 @@ internal class PlanOfMealsEntityConfiguration : IEntityTypeConfiguration<PlanOfM
 
         builder.HasOne(x => x.User);
 
-        builder.HasMany(x => x.Recipes).WithMany(x => x.PlansOfMeals);
+        builder.HasMany(x => x.RecipePlanOfMeals).WithOne(rp => rp.PlanOfMeals).HasForeignKey(rp => rp.PlanOfMealsId);
     }
 }

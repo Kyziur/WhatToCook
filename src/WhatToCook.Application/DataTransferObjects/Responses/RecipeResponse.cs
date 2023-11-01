@@ -5,11 +5,11 @@ namespace WhatToCook.Application.DataTransferObjects.Responses
     public class RecipeResponse
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string ImagePath { get; set; }
         public IEnumerable<string> Ingredients { get; set; }
+        public string Name { get; set; }
         public string PreparationDescription { get; set; }
         public string TimeToPrepare { get; set; }
-        public string ImagePath { get; set; }
 
         public static RecipeResponse MapFrom(Recipe recipe)
         {

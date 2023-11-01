@@ -7,6 +7,7 @@ import { MealPlanCreatorComponent } from './meal-plan-creator/meal-plan-creator.
 import { MealPlanningComponent } from './meal-planning/meal-planning.component';
 import { RecipesModule } from '../recipes/recipes.module';
 import { SharedModule } from '../shared/shared.module';
+import { ShoppingListComponent } from './shopping-list/shopping-list.component';
 
 const routes: Routes = [
   {
@@ -17,6 +18,10 @@ const routes: Routes = [
     path: 'meal-plan/:name',
     component: MealPlanCreatorComponent,
   },
+  {
+    path: 'shopping-list',
+    component: ShoppingListComponent,
+  },
 ];
 
 @NgModule({
@@ -24,6 +29,7 @@ const routes: Routes = [
     MealPlanCreatorComponent,
     PlanSelectComponent,
     MealPlanningComponent,
+    ShoppingListComponent,
   ],
   exports: [PlanSelectComponent],
   imports: [

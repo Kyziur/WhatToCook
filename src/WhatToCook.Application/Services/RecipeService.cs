@@ -8,8 +8,8 @@ namespace WhatToCook.Application.Services;
 
 public class RecipeService
 {
-    private readonly IRecipesRepository _recipesRepository;
     private readonly ILogger _logger;
+    private readonly IRecipesRepository _recipesRepository;
 
     public RecipeService(IRecipesRepository recipesRepository, ILogger<RecipeService> logger)
     {
@@ -19,8 +19,17 @@ public class RecipeService
 
     public async Task<Recipe> Create(RecipeRequest request, string imagesDirectory)
     {
-        var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
-        var imagePath = await _recipesRepository.SaveImage(imageInfo);
+        string imagePath = "";
+        if (request.Image.Length > 0)
+        {
+            var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
+            imagePath = await _recipesRepository.SaveImage(imageInfo);
+        }
+        else
+        {
+            imagePath = $"Images/default_image.png";
+        }
+
         var ingredients = request.Ingredients.Select(ingredient => new Ingredient(ingredient)).ToList();
         var recipe = new Recipe
         (
@@ -28,18 +37,22 @@ public class RecipeService
             description: request.PreparationDescription,
             timeToPrepare: request.TimeToPrepare,
             ingredients: ingredients,
-            statistics : new Statistics(),
-            image: imagePath,
-            plansOfMeals: new List<PlanOfMeals>()
+            statistics: new Statistics(),
+            image: imagePath
             );
 
         await _recipesRepository.Create(recipe);
         return recipe;
     }
 
+    public async Task Delete(int id)
+    {
+        await _recipesRepository.Delete(id);
+    }
+
     public async Task<Recipe> Update(UpdateRecipeRequest request, string imagesDirectory)
     {
-        var recipe = await _recipesRepository.GetRecipeByName(request.Name);
+        var recipe = await _recipesRepository.GetByName(request.Name);
 
         if (recipe == null)
         {
@@ -47,7 +60,7 @@ public class RecipeService
             throw new NotFoundException($"Cannot update {request.Id}");
         }
 
-         recipe.RemoveImage(imagesDirectory);
+        recipe.RemoveImage(imagesDirectory);
         var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
         var imagePath = await _recipesRepository.SaveImage(imageInfo);
 
@@ -58,10 +71,5 @@ public class RecipeService
         recipe.UpdateIngredients(request.Ingredients);
         await _recipesRepository.Update(recipe);
         return recipe;
-    }
-
-    public async Task Delete(int id)
-    {
-        await _recipesRepository.Delete(id);
     }
 }
