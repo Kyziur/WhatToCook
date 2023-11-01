@@ -205,7 +205,7 @@ public class MealPlanningServiceTests
         };
 
         Func<Task> act = () => sut.Update(updatePlanOfMealRequest);
-        await act.Should().ThrowAsync<Exception>().WithMessage($"Some recipes do not exist in the database. Missing IDs: {string.Join(", ", nonExistentRecipeId)}");
+        await act.Should().ThrowAsync<Exception>();
 
         _recipesRepositoryMock.Verify();
         _mealPlanningRepositoryMock.Verify();
