@@ -33,9 +33,8 @@ public class MealPlanningService
         planOfMealRequest.Name,
         DateTime.SpecifyKind(planOfMealRequest.FromDate, DateTimeKind.Utc),
         DateTime.SpecifyKind(planOfMealRequest.ToDate, DateTimeKind.Utc),
-        new List<RecipePerDay>()
+        dayRecipePairs
     );
-        planOfMeals.SetRecipes(dayRecipePairs);
         _logger.LogInformation("Creating a meal plan with {numberOfRecipes} recipes", dayRecipePairs.Count);
         await _mealPlanningRepository.Create(planOfMeals);
 
@@ -60,11 +59,9 @@ public class MealPlanningService
         var missingRecipes = RecipeForMealPlanUpdate.Except(existingRecipes).ToList();
         if (missingRecipes.Any())
         {
-            var missingIdsMessage = "Some recipes do not exist in the database. Missing IDs: " + string.Join(", ", missingRecipes);
+            _logger.LogError("Some recipes do not exist in the database. Missing IDs: {MissingRecipeIds}", missingRecipes);
 
-            _logger.LogError("Some recipes do not exist in the database. Missing IDs: {MissingRecipeIds}", missingIdsMessage);
-
-            throw new NotFoundException(missingIdsMessage);
+            throw new NotFoundException("Not all recipes were found in the database");
         }
 
         mealPlanToUpdate.Name = planOfMealRequest.Name;
