@@ -1,5 +1,5 @@
 import { AbstractControl, FormGroup, ValidationErrors } from '@angular/forms';
-import { MealPlanDatesForm } from './meal-plan-creator.component';
+import { MealPlanDatesForm } from './meal-plan-form.types';
 
 export function dateRangeValidator(
   group: AbstractControl

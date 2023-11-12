@@ -3,5 +3,4 @@
 export interface MealPlanForDay {
   day: Date;
   recipes: RecipeCard[];
-  show: boolean;
 }

@@ -5,7 +5,6 @@ import {
   FormControl,
   FormGroup,
   Validators,
-  ɵValue,
 } from '@angular/forms';
 import { CreatePlanOfMeals, PlanOfMealForDay } from './plan-of-meals';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -18,57 +17,12 @@ import { Badge } from '../../shared/badge/badge.component';
 import { MealPlanForDay } from './meal-plan-for.day';
 import { MealPlanningService } from '../meal-planning.service';
 import { of, switchMap } from 'rxjs';
-
-export interface MealPlanDatesForm {
-  from: FormControl<string | null>;
-  to: FormControl<string | null>;
-}
-
-export interface MealPlanForDayForm {
-  day: FormControl<Date>;
-  recipesIds: FormControl<number[]>;
-}
-
-export interface MealPlanForm {
-  id: FormControl<number | null>;
-  name: FormControl<string>;
-  dates: FormGroup<MealPlanDatesForm>;
-  plannedMealsForDay: FormArray<FormGroup<MealPlanForDayForm>>;
-}
-
-function createMealPlanForDayForm(day: Date, recipesIds: number[]) {
-  return new FormGroup<MealPlanForDayForm>({
-    day: new FormControl<Date>(day, { nonNullable: true }),
-    recipesIds: new FormControl(recipesIds, { nonNullable: true }),
-  });
-}
-
-function createMalPlanForm(fb: FormBuilder) {
-  return new FormGroup({
-    id: fb.control<number | null>(null),
-    name: fb.nonNullable.control('', {
-      validators: [Validators.required, notWhitespaceValidator],
-      updateOn: 'blur',
-    }),
-    dates: fb.nonNullable.group(
-      {
-        from: fb.control<string | null>(null, {
-          validators: [Validators.required, notPastDateValidator],
-          updateOn: 'blur',
-        }),
-        to: fb.control<string | null>(null, [
-          Validators.required,
-          notPastDateValidator,
-        ]),
-      },
-      { validators: dateRangeValidator, updateOn: 'blur' }
-    ),
-    plannedMealsForDay: fb.nonNullable.array(
-      [] as FormGroup<MealPlanForDayForm>[]
-    ),
-  });
-}
-
+import {
+  createMalPlanForm,
+  createMealPlanForDayForm,
+  MealPlanForDayForm,
+  MealPlanForm,
+} from './meal-plan-form.types';
 @Component({
   selector: 'app-meal-creator',
   templateUrl: './meal-plan-creator.component.html',
@@ -201,7 +155,10 @@ export class MealPlanCreatorComponent implements OnInit {
 
   selectDayClickHandler($event: MouseEvent, day: Date) {
     $event.preventDefault();
-    this.selectedMealPlanForDay = day;
+    this.selectedMealPlanForDay =
+      this.mealPlanForm.controls.plannedMealsForDay.value.find(
+        x => x.day === day
+      ) as MealPlanForDay;
   }
 
   changedDateRangeHandler() {
