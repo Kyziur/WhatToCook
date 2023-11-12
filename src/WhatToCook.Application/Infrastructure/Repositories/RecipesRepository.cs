@@ -7,19 +7,25 @@ namespace WhatToCook.Application.Infrastructure.Repositories;
 
 public interface IRecipesRepository
 {
-    Task<Recipe?> GetRecipeByName(string name);
-    List<Recipe> GetByNames(IEnumerable<string> names);
     Task Create(Recipe recipe);
-    Task Update(Recipe recipe);
-    Task<string> SaveImage(ImageInfo imageInfo);
+
     Task Delete(int id);
+
+    Task<Recipe?> GetByName(string name);
+
+    List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids);
+
+    Task<string> SaveImage(ImageInfo imageInfo);
+
+    Task Update(Recipe recipe);
 }
 
 public class RecipesRepository : IRecipesRepository
 {
     private readonly DatabaseContext _dbContext;
-    private readonly ILogger _logger;
     private readonly IFileSaver _fileSaver;
+    private readonly ILogger _logger;
+
     public RecipesRepository(DatabaseContext dbContext, ILogger<RecipesRepository> logger, IFileSaver fileSaver)
     {
         _dbContext = dbContext;
@@ -27,25 +33,36 @@ public class RecipesRepository : IRecipesRepository
         _fileSaver = fileSaver;
     }
 
-    public List<Recipe> GetByNames(IEnumerable<string> names)
+    public async Task Create(Recipe recipe)
     {
-        var recipes = _dbContext.Recipes.Include(recipe => recipe.PlansOfMeals)
-        .Where(recipe => names.Contains(recipe.Name)).ToList();
-        var existingRecipeNames = recipes.Select(r => r.Name).ToList();
-        if (!existingRecipeNames.OrderBy(n => n).SequenceEqual(names.OrderBy(n => n)))
-        {
-            var missingRecipeNames = existingRecipeNames.Except(names);
-            var errorMessage = $"Recipes do not exist in the database: {string.Join(", ", missingRecipeNames)}";
+        await _dbContext.Recipes.AddAsync(recipe);
+        await _dbContext.SaveChangesAsync();
+    }
 
-            _logger.LogError(errorMessage); 
+    public async Task Delete(int id)
+    {
+        var recipe = await _dbContext.Recipes.FindAsync(id) ?? throw new NotFoundException($"Recipe with ID '{id}' not found.");
+    }
+
+    public async Task<Recipe?> GetByName(string name)
+    {
+        return await _dbContext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(r => r.Name == name);
+    }
+
+    public List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids)
+    {
+        var uniqueIds = ids.Distinct().ToList();
+        var recipes = _dbContext.Recipes.Where(recipe => uniqueIds.Contains(recipe.Id)).ToList();
+        if (recipes.Count != uniqueIds.Count)
+        {
+            var missingRecipeIds = uniqueIds.Except(recipes.Select(x => x.Id));
+            var errorMessage = "Not all recipes exist in the database.";
+            _logger.LogError(errorMessage + " Missing IDs: {MissingIDs}", missingRecipeIds);
             throw new Exception(errorMessage);
         }
         return recipes;
     }
-    public async Task<Recipe?> GetRecipeByName(string name)
-    {
-        return await _dbContext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(r => r.Name == name);
-    }
+
     public async Task<string> SaveImage(ImageInfo imageInfo)
     {
         string imageFullPath;
@@ -56,45 +73,26 @@ public class RecipesRepository : IRecipesRepository
 
         try
         {
-
             string finalFileName = $"{imageInfo.FileNameWithoutExtension}{imageInfo.FileExtension}";
 
             string filePath = Path.Combine(imageInfo.ImagesDirectory, "Images", finalFileName);
             byte[] imageBytes = imageInfo.GetImageBytes();
 
-           await  _fileSaver.SaveAsync(filePath, imageBytes);
+            await _fileSaver.SaveAsync(filePath, imageBytes);
 
             imageFullPath = $"Images/{finalFileName}";
         }
         catch (Exception exception)
         {
-            _logger.LogError($"An error occurred while saving the image. Error: {exception.Message}");
+            _logger.LogError("An error occurred while saving the image. Error: {message}", exception.Message);
             throw;
         }
         return imageFullPath;
     }
-    public async Task Create(Recipe recipe)
-    {
-        await _dbContext.Recipes.AddAsync(recipe);
-        await _dbContext.SaveChangesAsync();
 
-    }
     public async Task Update(Recipe recipe)
     {
         _dbContext.Recipes.Update(recipe);
         await _dbContext.SaveChangesAsync();
-    }
-    public async Task Delete(int id)
-    {
-        var recipe = await _dbContext.Recipes.FindAsync(id);
-        if (recipe != null)
-        {
-            _dbContext.Recipes.Remove(recipe);
-            await _dbContext.SaveChangesAsync();
-        }
-        else
-        {
-            throw new NotFoundException($"Recipe with ID '{id}' not found.");
-        }
     }
 }

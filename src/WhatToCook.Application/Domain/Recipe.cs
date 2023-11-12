@@ -6,23 +6,26 @@ public class Recipe
     public string Name { get; private set; }
     public string Description { get; private set; }
     public string TimeToPrepare { get; private set; }
-    public List<Ingredient> Ingredients { get; set; } = new();
-    public Statistics Statistics { get; set; }
+    public List<Ingredient> Ingredients { get; private set; } = new();
+    public Statistics Statistics { get; private set; }
     public string Image { get; private set; }
-    public List<PlanOfMeals> PlansOfMeals { get; set; }
-    public Recipe(string name, string description, string timeToPrepare, List<Ingredient> ingredients, Statistics statistics, string image, List<PlanOfMeals> plansOfMeals)
+    public List<RecipePlanOfMeals> RecipePlanOfMeals { get; private set; } = new();
+
+    public Recipe(string name, string description, string timeToPrepare, List<Ingredient> ingredients, Statistics statistics, string image)
     {
         SetName(name);
         SetDescription(description);
         SetTimeToPrepare(timeToPrepare);
         Ingredients = ingredients;
-        Statistics = statistics;
+        Statistics = new Statistics();
         SetImage(image);
-        PlansOfMeals = plansOfMeals;
     }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    private Recipe() { }
+
+    private Recipe()
+    { }
+
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     public void SetName(string name)
@@ -33,6 +36,7 @@ public class Recipe
         }
         Name = name;
     }
+
     public void SetDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
@@ -41,6 +45,7 @@ public class Recipe
         }
         Description = description;
     }
+
     public void SetTimeToPrepare(string timeToPrepare)
     {
         if (string.IsNullOrWhiteSpace(timeToPrepare))
@@ -49,6 +54,7 @@ public class Recipe
         }
         TimeToPrepare = timeToPrepare;
     }
+
     public void SetImage(string imagePath)
     {
         if (string.IsNullOrWhiteSpace(imagePath))
@@ -78,6 +84,7 @@ public class Recipe
             throw new Exception($"Failed to delete the existing image: {exception.Message}", exception);
         }
     }
+
     public void UpdateIngredients(List<string> newIngredients)
     {
         if (newIngredients == null)

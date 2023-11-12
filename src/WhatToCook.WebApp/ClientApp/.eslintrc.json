@@ -1,13 +1,9 @@
 {
   "root": true,
-  "ignorePatterns": [
-    "projects/**/*"
-  ],
+  "ignorePatterns": ["projects/**/*"],
   "overrides": [
     {
-      "files": [
-        "*.ts"
-      ],
+      "files": ["*.ts"],
       "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
@@ -18,9 +14,9 @@
       ],
       "rules": {
         /**
-        * Any TypeScript source code (NOT TEMPLATE) related rules you wish to use/reconfigure over and above the
-        * recommended set provided by the @angular-eslint project would go here.
-        */
+         * Any TypeScript source code (NOT TEMPLATE) related rules you wish to use/reconfigure over and above the
+         * recommended set provided by the @angular-eslint project would go here.
+         */
         "@angular-eslint/directive-selector": [
           "error",
           {
@@ -40,9 +36,7 @@
       }
     },
     {
-      "files": [
-        "*.html"
-      ],
+      "files": ["*.html"],
       "extends": [
         "plugin:@angular-eslint/template/recommended",
         "plugin:prettier/recommended"

@@ -15,7 +15,7 @@ internal class RecipeEntityConfiguration : IEntityTypeConfiguration<Recipe>
         builder.Property(x => x.Description);
         builder.Property(x => x.TimeToPrepare);
 
-        builder.HasMany(x => x.PlansOfMeals).WithMany(x => x.Recipes);
+        builder.HasMany(x => x.RecipePlanOfMeals).WithOne(rp => rp.Recipe).HasForeignKey(rp => rp.RecipeId);
         builder.HasMany(x => x.Ingredients).WithOne(x => x.Recipe);
 
         builder.OwnsOne(x => x.Statistics);

@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import {CommonModule, NgOptimizedImage} from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { SharedComponent } from './shared.component';
 import { FavouritesButtonComponent } from './favourites-button/favourites-button.component';
 import { SearchComponent } from './search/search.component';

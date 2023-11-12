@@ -7,20 +7,21 @@ import { MealPlanCreatorComponent } from './meal-plan-creator/meal-plan-creator.
 import { MealPlanningComponent } from './meal-planning/meal-planning.component';
 import { RecipesModule } from '../recipes/recipes.module';
 import { SharedModule } from '../shared/shared.module';
+import { ShoppingListComponent } from './shopping-list/shopping-list.component';
 import { MealPlanListComponent } from './meal-plan-list/meal-plan-list.component';
 
 const routes: Routes = [
   {
     path: 'meal-plans/new',
+    component: MealPlanningComponent,
+  },
+  {
+    path: 'meal-plans/:name',
     component: MealPlanCreatorComponent,
   },
   {
-    path: 'meal-plans/:id',
-    component: MealPlanCreatorComponent,
-  },
-  {
-    path: 'meal-plans',
-    component: MealPlanListComponent,
+    path: 'shopping-list',
+    component: ShoppingListComponent,
   },
 ];
 
@@ -30,6 +31,7 @@ const routes: Routes = [
     PlanSelectComponent,
     MealPlanningComponent,
     MealPlanListComponent,
+    ShoppingListComponent,
   ],
   exports: [PlanSelectComponent],
   imports: [
