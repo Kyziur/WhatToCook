@@ -52,7 +52,7 @@ public class MealPlanningServiceTests
         var planOfMealsForDayList = daysInRange.Select(day => new PlanOfMealForDay
         {
             Day = day,
-            RecipeIds = newRecipes.Select(r => r.Id).ToList(),
+            RecipesIds = newRecipes.Select(r => r.Id).ToList(),
         }).ToList();
 
         _recipesRepositoryMock.Setup(x => x.GetRecipesByIdForMealPlan(It.IsAny<IEnumerable<int>>()))
@@ -111,7 +111,7 @@ public class MealPlanningServiceTests
         var planOfMealsForDayList = daysInRange.Select(day => new PlanOfMealForDay
         {
             Day = day,
-            RecipeIds = newRecipes.Select(r => r.Id).ToList(),
+            RecipesIds = newRecipes.Select(r => r.Id).ToList(),
         }).ToList();
 
         _recipesRepositoryMock.Setup(x => x.GetRecipesByIdForMealPlan(It.IsAny<IEnumerable<int>>()))
@@ -177,12 +177,12 @@ public class MealPlanningServiceTests
 
         {
             Day = newStartDate,
-            RecipeIds = new List<int> { nonExistentRecipeId }
+            RecipesIds = new List<int> { nonExistentRecipeId }
         },
         new PlanOfMealForDay
         {
             Day = newStartDate,
-            RecipeIds = new List<int> { recipeId }
+            RecipesIds = new List<int> { recipeId }
         }
     };
 
@@ -227,7 +227,7 @@ public class MealPlanningServiceTests
         var planOfMealsForDayList = daysInRange.Select(day => new PlanOfMealForDay
         {
             Day = day,
-            RecipeIds = recipes.Select(r => r.Id).ToList(),
+            RecipesIds = recipes.Select(r => r.Id).ToList(),
         }).ToList();
 
         var loggerMock = new Mock<ILogger<MealPlanningService>>();
@@ -250,7 +250,7 @@ public class MealPlanningServiceTests
         Assert.Equal(planOfMealRequest.Name, capturedPlan.Name);
         Assert.Equal(planOfMealRequest.FromDate, capturedPlan.FromDate);
         Assert.Equal(planOfMealRequest.ToDate, capturedPlan.ToDate);
-        Assert.All(planOfMealsForDayList, p => Assert.NotNull(p.RecipeIds));
+        Assert.All(planOfMealsForDayList, p => Assert.NotNull(p.RecipesIds));
 
         foreach (var dayPlan in planOfMealsForDayList)
         {
@@ -269,7 +269,7 @@ public class MealPlanningServiceTests
                 .ToList();
 
             var expectedRecipeNames = recipes
-                .Where(r => dayPlan.RecipeIds.Contains(r.Id))
+                .Where(r => dayPlan.RecipesIds.Contains(r.Id))
                 .Select(r => r.Name)
                 .OrderBy(name => name)
                 .ToList();
@@ -280,7 +280,7 @@ public class MealPlanningServiceTests
         foreach (var dayPlan in planOfMealsForDayList)
         {
             var duplicateRecipes = recipes
-                .Where(r => dayPlan.RecipeIds.Contains(r.Id))
+                .Where(r => dayPlan.RecipesIds.Contains(r.Id))
                 .GroupBy(r => r.Name)
                 .Where(g => g.Count() > 1)
                 .Select(g => g.Key)
@@ -328,7 +328,7 @@ public class MealPlanningServiceTests
         var planOfMealsForDayList = daysInRange.Select(day => new PlanOfMealForDay
         {
             Day = day,
-            RecipeIds = newRecipes.Select(r => r.Id).ToList(),
+            RecipesIds = newRecipes.Select(r => r.Id).ToList(),
         }).ToList();
 
         _recipesRepositoryMock.Setup(x => x.GetRecipesByIdForMealPlan(It.IsAny<IEnumerable<int>>()))
@@ -355,7 +355,7 @@ public class MealPlanningServiceTests
         Assert.Equal(updatePlanOfMealRequest.Name, capturedPlan.Name);
         Assert.Equal(updatePlanOfMealRequest.FromDate, capturedPlan.FromDate);
         Assert.Equal(updatePlanOfMealRequest.ToDate, capturedPlan.ToDate);
-        Assert.All(planOfMealsForDayList, p => Assert.NotNull(p.RecipeIds));
+        Assert.All(planOfMealsForDayList, p => Assert.NotNull(p.RecipesIds));
 
         foreach (var dayPlan in planOfMealsForDayList)
         {
@@ -373,7 +373,7 @@ public class MealPlanningServiceTests
                 .ToList();
 
             var expectedRecipeNames = newRecipes
-                .Where(r => dayPlan.RecipeIds.Contains(r.Id))
+                .Where(r => dayPlan.RecipesIds.Contains(r.Id))
                 .Select(r => r.Name)
                 .OrderBy(name => name)
                 .ToList();
@@ -384,7 +384,7 @@ public class MealPlanningServiceTests
         foreach (var dayPlan in planOfMealsForDayList)
         {
             var duplicateRecipes = newRecipes
-                .Where(r => dayPlan.RecipeIds.Contains(r.Id))
+                .Where(r => dayPlan.RecipesIds.Contains(r.Id))
                 .GroupBy(r => r.Name)
                 .Where(g => g.Count() > 1)
                 .Select(g => g.Key)

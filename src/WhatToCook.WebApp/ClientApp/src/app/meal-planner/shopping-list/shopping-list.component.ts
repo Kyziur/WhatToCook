@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MealPlanningService } from '../meal-planning.service';
 import { shoppingListResponse } from './shopping-list-response.component';
-import { PlanOfMeals } from '../meal-plan-creator/plan-of-meals';
+import { GetPlanOfMealApi } from '../api-models/plan-of-meal.model';
 @Component({
   selector: 'app-shopping-list',
   templateUrl: './shopping-list.component.html',
@@ -10,7 +10,7 @@ import { PlanOfMeals } from '../meal-plan-creator/plan-of-meals';
 export class ShoppingListComponent implements OnInit {
   viewEntireList = false;
   entireShoppingList: string[] = [];
-  mealPlans: PlanOfMeals[] = [];
+  mealPlans: GetPlanOfMealApi[] = [];
   selectedMealPlanId: number | null = null;
   shoppingList: shoppingListResponse = {
     fromDate: new Date(),
@@ -24,8 +24,8 @@ export class ShoppingListComponent implements OnInit {
   }
 
   fetchMealPlans(): void {
-    this.mealPlanService.getMealPlans().subscribe(plans => {
-      this.mealPlans = plans;
+    this.mealPlanService.getAll().subscribe(plans => {
+      this.mealPlans = plans.mealPlans;
     });
   }
 

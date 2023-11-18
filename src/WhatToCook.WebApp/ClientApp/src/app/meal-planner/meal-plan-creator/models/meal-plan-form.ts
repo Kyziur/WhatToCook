@@ -5,11 +5,11 @@
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { notWhitespaceValidator } from '../../not-white-space-validator.component';
 import {
   dateRangeValidator,
   notPastDateValidator,
-} from './date-validators.component';
+} from './meal-plan-dates.validators';
+import { notWhitespaceValidator } from '../../../common/validators/not-white-space-validator.component';
 
 export interface MealPlanForm {
   id: FormControl<number | null>;
@@ -19,8 +19,8 @@ export interface MealPlanForm {
 }
 
 export interface MealPlanDatesForm {
-  from: FormControl<string | null>;
-  to: FormControl<string | null>;
+  from: FormControl<Date | null>;
+  to: FormControl<Date | null>;
 }
 
 export interface MealPlanForDayForm {
@@ -35,25 +35,21 @@ export function createMealPlanForDayForm(day: Date, recipesIds: number[]) {
   });
 }
 
-export function createMalPlanForm(fb: FormBuilder) {
-  return new FormGroup({
+export function createMalPlanForm(fb: FormBuilder): FormGroup<MealPlanForm> {
+  return new FormGroup<MealPlanForm>({
     id: fb.control<number | null>(null),
     name: fb.nonNullable.control('', {
       validators: [Validators.required, notWhitespaceValidator],
       updateOn: 'blur',
     }),
-    dates: fb.nonNullable.group(
+    dates: fb.group(
       {
-        from: fb.control<string | null>(null, {
-          validators: [Validators.required, notPastDateValidator],
-          updateOn: 'blur',
+        from: fb.nonNullable.control<Date | null>(null, {
+          validators: [Validators.required],
         }),
-        to: fb.control<string | null>(null, [
-          Validators.required,
-          notPastDateValidator,
-        ]),
+        to: fb.nonNullable.control<Date | null>(null, [Validators.required]),
       },
-      { validators: dateRangeValidator, updateOn: 'blur' }
+      { validators: dateRangeValidator }
     ),
     plannedMealsForDay: fb.nonNullable.array(
       [] as FormGroup<MealPlanForDayForm>[]

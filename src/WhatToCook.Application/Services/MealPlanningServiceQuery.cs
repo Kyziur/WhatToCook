@@ -2,53 +2,110 @@
 using WhatToCook.Application.DataTransferObjects.Responses;
 using WhatToCook.Application.Infrastructure;
 
-namespace WhatToCook.Application.Services
+namespace WhatToCook.Application.Services;
+
+public class MealPlanningServiceQuery
 {
-    public class MealPlanningServiceQuery
+    private readonly DatabaseContext _dbContext;
+
+    public MealPlanningServiceQuery(DatabaseContext dbContext)
     {
-        private readonly DatabaseContext _dbcontext;
+        _dbContext = dbContext;
+    }
 
-        public MealPlanningServiceQuery(DatabaseContext dbcontext)
-        {
-            _dbcontext = dbcontext;
-        }
+    public async Task<ShoppingListResponse> GetIngredientsForMealPlanById(int mealPlanId)
+    {
+        var mealPlan = await _dbContext.PlanOfMeals
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(mp => mp.RecipePlanOfMeals)
+            .ThenInclude(r => r.Recipe)
+            .ThenInclude(x => x.Ingredients)
+            .FirstAsync(mp => mp.Id == mealPlanId);
 
-        public async Task<ShoppingListResponse> GetIngredientsForMealPlanById(int mealPlanId)
-        {
-            var mealPlan = await _dbcontext.PlanOfMeals
-                .AsNoTracking()
-                .AsSplitQuery()
-                .Include(mp => mp.RecipePlanOfMeals)
-                .ThenInclude(r => r.Recipe)
-                .ThenInclude(x => x.Ingredients)
-                .FirstAsync(mp => mp.Id == mealPlanId);
-
-            if (mealPlan == null) return new ShoppingListResponse();
-
-            var dayWiseIngredientsList = mealPlan.RecipePlanOfMeals
-                .Select(r => new DayWiseIngredientsResponse(r.Day, r.Recipe.Ingredients
+        var dayWiseIngredientsList = mealPlan.RecipePlanOfMeals
+            .Select(r => new DayWiseIngredientsResponse(r.Day, r.Recipe.Ingredients
                 .Select(i => i.Name)))
-                .ToList();
+            .ToList();
 
-            var shoppingList = new ShoppingListResponse { FromDate = mealPlan.FromDate, ToDate = mealPlan.ToDate, IngredientsPerDay = dayWiseIngredientsList };
-            return shoppingList;
-        }
+        var shoppingList = new ShoppingListResponse
+            { FromDate = mealPlan.FromDate, ToDate = mealPlan.ToDate, IngredientsPerDay = dayWiseIngredientsList };
+        return shoppingList;
+    }
 
-        public async Task<List<PlanOfMealResponse>> GetPlanOfMeals()
+    public async Task<PlanOfMealResponses> GetAll(CancellationToken token = default)
+    {
+        var query = await _dbContext.PlanOfMeals
+            .AsNoTracking()
+            .Include(p => p.RecipePlanOfMeals)
+            .ThenInclude(x => x.Recipe)
+            .Select(planOfMeal => new
+            {
+                planOfMeal.Name,
+                planOfMeal.Id,
+                planOfMeal.FromDate,
+                planOfMeal.ToDate,
+                Recipes = planOfMeal.RecipePlanOfMeals.Select(recipe =>
+                    new
+                    {
+                        recipe.Day, 
+                        recipe.RecipeId
+                    })
+            }).ToListAsync(token);
+
+        var mealPlans = query.Select(x => new PlanOfMealResponse
         {
-            var query = await _dbcontext.PlanOfMeals
-                .AsNoTracking()
-                .Include(p => p.RecipePlanOfMeals)
-                .ThenInclude(x => x.Recipe)
-                .Select(planOfMeal => new PlanOfMealResponse()
-                {
-                    Name = planOfMeal.Name,
-                    Id = planOfMeal.Id,
-                    FromDate = planOfMeal.FromDate,
-                    ToDate = planOfMeal.ToDate,
-                    Recipes = planOfMeal.RecipePlanOfMeals.Select(recipe => new RecipeInMealPlanResponse(recipe.Recipe.Name))
-                }).ToListAsync();
-            return query;
+            Name = x.Name,
+            Id = x.Id,
+            FromDate = x.FromDate,
+            ToDate = x.ToDate,
+            Recipes = x.Recipes.GroupBy(mp => mp.Day).Select(grouped => new MealPlanForDayResponse()
+            {
+                Day = grouped.Key,
+                RecipesIds = grouped.Select(r => r.RecipeId)
+            })
+        }).ToList();
+
+        return new PlanOfMealResponses(mealPlans);
+    }
+
+    public async Task<PlanOfMealResponse?> GetByName(string name, CancellationToken token = default)
+    {
+        var query = await _dbContext.PlanOfMeals
+            .AsNoTracking()
+            .Include(p => p.RecipePlanOfMeals)
+            .ThenInclude(x => x.Recipe)
+            .Where(x => x.Name.ToLower() == name.ToLower())
+            .Select(planOfMeal => new
+            {
+                planOfMeal.Name,
+                planOfMeal.Id,
+                planOfMeal.FromDate,
+                planOfMeal.ToDate,
+                Recipes = planOfMeal.RecipePlanOfMeals.Select(recipe =>
+                    new
+                    {
+                        recipe.Day, 
+                        recipe.RecipeId
+                    })
+            }).FirstOrDefaultAsync(token);
+
+        if (query is null)
+        {
+            return null;
         }
+
+        return new PlanOfMealResponse
+        {
+            Name = query.Name,
+            Id = query.Id,
+            FromDate = query.FromDate,
+            ToDate = query.ToDate,
+            Recipes = query.Recipes.GroupBy(x => x.Day).Select(x => new MealPlanForDayResponse
+            {
+                Day = x.Key,
+                RecipesIds = x.Select(r => r.RecipeId)
+            })
+        };
     }
 }

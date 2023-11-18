@@ -1,11 +1,12 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
 import {
-  CreatePlanOfMeals,
-  PlanOfMeals,
-  UpdatePlanOfMeals,
-} from './meal-plan-creator/plan-of-meals';
+  CreatePlanOfMealApi,
+  GetPlanOfMealApi,
+  GetPlansOfMealsApi,
+  UpdatePlanOfMealApi,
+} from './api-models/plan-of-meal.model';
+import { Observable } from 'rxjs';
 import { shoppingListResponse } from './shopping-list/shopping-list-response.component';
 
 @Injectable({
@@ -21,30 +22,32 @@ export class MealPlanningService {
     this.mealPlanUrl = this.baseUrl + 'api/v1/MealPlanning';
   }
 
-  createMealPlan(planOfMeals: CreatePlanOfMeals) {
-    return this.httpClient.post<PlanOfMeals>(
+  create(planOfMeal: CreatePlanOfMealApi) {
+    return this.httpClient.post<CreatePlanOfMealApi>(
       this.baseUrl + 'api/v1/MealPlanning',
-      planOfMeals
+      planOfMeal
     );
   }
 
-  getMealPlans(): Observable<PlanOfMeals[]> {
-    return this.httpClient.get<PlanOfMeals[]>(
+  update(planOfMeal: UpdatePlanOfMealApi) {
+    return this.httpClient.put<UpdatePlanOfMealApi>(
+      this.baseUrl + 'api/v1/MealPlanning',
+      planOfMeal
+    );
+  }
+
+  getByName(name: string): Observable<GetPlanOfMealApi> {
+    return this.httpClient.get<GetPlanOfMealApi>(
+      `${this.baseUrl}api/v1/MealPlanning/${name}`
+    );
+  }
+
+  getAll(): Observable<GetPlansOfMealsApi> {
+    return this.httpClient.get<GetPlansOfMealsApi>(
       `${this.baseUrl}api/v1/MealPlanning`
     );
   }
-  update(planOfMeals: UpdatePlanOfMeals) {
-    return this.httpClient.put<UpdatePlanOfMeals>(
-      this.baseUrl + 'api/v1/MealPlanning',
-      planOfMeals
-    );
-  }
 
-  getMealPlanById(id: number): Observable<PlanOfMeals> {
-    return this.httpClient.get<PlanOfMeals>(
-      `${this.baseUrl}api/v1/MealPlanning/${id}`
-    );
-  }
   getIngredientsForShoppingList(id: number): Observable<shoppingListResponse> {
     return this.httpClient.get<shoppingListResponse>(
       `${this.baseUrl}api/v1/MealPlanning/GetShoppingList/${id}`

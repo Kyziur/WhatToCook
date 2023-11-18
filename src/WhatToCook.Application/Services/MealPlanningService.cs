@@ -21,10 +21,10 @@ public class MealPlanningService
 
     public async Task<PlanOfMeals> Create(PlanOfMealRequest planOfMealRequest)
     {
-        var requestedRecipeIds = planOfMealRequest.Recipes.SelectMany(x => x.RecipeIds).ToList();
+        var requestedRecipeIds = planOfMealRequest.Recipes.SelectMany(x => x.RecipesIds).ToList();
         var recipes = _recipesRepository.GetRecipesByIdForMealPlan(requestedRecipeIds);
         var dayRecipePairs = planOfMealRequest.Recipes
-            .SelectMany(dayRecipe => dayRecipe.RecipeIds,
+            .SelectMany(dayRecipe => dayRecipe.RecipesIds,
                         (dayRecipe, recipeId) =>
                         new RecipePerDay(dayRecipe.Day, recipes.First(r => r.Id == recipeId))).ToList();
 
@@ -51,12 +51,12 @@ public class MealPlanningService
             throw new NotFoundException(nameof(mealPlanToUpdate));
         }
 
-        var RecipeForMealPlanUpdate = planOfMealRequest.Recipes.SelectMany(x => x.RecipeIds);
-        var recipes = _recipesRepository.GetRecipesByIdForMealPlan(RecipeForMealPlanUpdate);
+        var recipeForMealPlanUpdate = planOfMealRequest.Recipes.SelectMany(x => x.RecipesIds);
+        var recipes = _recipesRepository.GetRecipesByIdForMealPlan(recipeForMealPlanUpdate);
 
         var existingRecipes = recipes.Select(r => r.Id).ToList();
 
-        var missingRecipes = RecipeForMealPlanUpdate.Except(existingRecipes).ToList();
+        var missingRecipes = recipeForMealPlanUpdate.Except(existingRecipes).ToList();
         if (missingRecipes.Any())
         {
             _logger.LogError("Some recipes do not exist in the database. Missing IDs: {MissingRecipeIds}", missingRecipes);
@@ -68,7 +68,7 @@ public class MealPlanningService
         mealPlanToUpdate.SetDates(planOfMealRequest.FromDate, planOfMealRequest.ToDate);
 
         var updatedRecipePlans = planOfMealRequest.Recipes
-        .SelectMany(dayRecipe => dayRecipe.RecipeIds, (dayRecipe, recipeId) =>
+        .SelectMany(dayRecipe => dayRecipe.RecipesIds, (dayRecipe, recipeId) =>
         new RecipePerDay(dayRecipe.Day, recipes.First(r => r.Id == recipeId))).ToList();
 
         mealPlanToUpdate.SetRecipes(updatedRecipePlans);

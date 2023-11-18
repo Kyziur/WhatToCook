@@ -1,75 +1,75 @@
-import { Component, OnInit } from '@angular/core';
-import {
-  FormArray,
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  Validators,
-} from '@angular/forms';
-import { CreatePlanOfMeals, PlanOfMealForDay } from './plan-of-meals';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import {
-  dateRangeValidator,
-  notPastDateValidator,
-} from './date-validators.component';
-import { notWhitespaceValidator } from 'src/app/not-white-space-validator.component';
 import { Badge } from '../../shared/badge/badge.component';
-import { MealPlanForDay } from './meal-plan-for.day';
 import { MealPlanningService } from '../meal-planning.service';
-import { of, switchMap } from 'rxjs';
+import { of, Subject, switchMap, takeUntil } from 'rxjs';
+import { MealPlanForDay } from './models/meal-plan-for.day';
 import {
   createMalPlanForm,
   createMealPlanForDayForm,
   MealPlanForDayForm,
   MealPlanForm,
-} from './meal-plan-form.types';
+} from './models/meal-plan-form';
+import {
+  CreatePlanOfMealApi,
+  PlanOfMealForDayApi,
+  UpdatePlanOfMealApi,
+} from '../api-models/plan-of-meal.model';
+import { generateRangeOfDates } from '../../common/functions/date';
+import { RecipeListService } from '../../recipes/recipe-list/recipe-list.service';
+
 @Component({
   selector: 'app-meal-creator',
   templateUrl: './meal-plan-creator.component.html',
   styleUrls: ['./meal-plan-creator.component.scss'],
 })
-export class MealPlanCreatorComponent implements OnInit {
-  // public mealPlans: MealPlanForDay[] = [];
+export class MealPlanCreatorComponent implements OnInit, OnDestroy {
   public selectedMealPlanForDay?: MealPlanForDay;
   public mealPlanForm: FormGroup<MealPlanForm> = createMalPlanForm(this.fb);
+  private destroy$ = new Subject<boolean>();
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private service: MealPlanningService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private recipeListService: RecipeListService
   ) {
-    this.mealPlanForm.controls.dates.valueChanges.subscribe(_ => {
-      this.changedDateRangeHandler();
+    this.setUpOnDatesUpdateHandler();
+    this.setUpOnSelectedRecipesHandler();
+  }
 
-      const plannedMeals = this.getDaysFromSelectedDates().map(day => {
-        const previouslySelectedRecipesIds =
-          this.mealPlanForm.controls.plannedMealsForDay.value.find(
-            x => x.day?.getDate() === day.getDate()
-          )?.recipesIds ?? [];
+  ngOnInit(): void {
+    this.route.params
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(params => {
+          const name = params['name'] as string;
+          return name ? this.service.getByName(name) : of(undefined);
+        })
+      )
+      .subscribe(mealPlan => {
+        if (!mealPlan) {
+          return;
+        }
 
-        return createMealPlanForDayForm(day, previouslySelectedRecipesIds);
+        this.mealPlanForm.patchValue({
+          id: mealPlan.id,
+          dates: {
+            from: mealPlan.fromDate,
+            to: mealPlan.toDate,
+          },
+          name: mealPlan.name,
+          plannedMealsForDay: mealPlan.recipes,
+        });
+        this.updateDaysToPlanBasedOnSelectedDates();
+        console.error('meal plan updated', this.mealPlanForm.value);
       });
-
-      this.mealPlanForm.controls.plannedMealsForDay = new FormArray<
-        FormGroup<MealPlanForDayForm>
-      >(plannedMeals);
-      // plannedMeals.forEach(plannedMeal =>
-      //   this.mealPlanForm.controls.plannedMealsForDay.push(plannedMeal)
-      // );
-
-      // this.mealPlans = this.getDaysFromSelectedDates().map(day => {
-      //   const previouslySelectedRecipes = this.mealPlans.find(
-      //     x => x.day.getDate() === day.getDate()
-      //   )?.recipes;
-      //
-      //   return {
-      //     day: day,
-      //     recipes: previouslySelectedRecipes ?? [],
-      //     show: false,
-      //   };
-      // });
-    });
+  }
+  ngOnDestroy(): void {
+    this.destroy$.next(true);
+    this.destroy$.unsubscribe();
   }
 
   get fromDate() {
@@ -84,40 +84,48 @@ export class MealPlanCreatorComponent implements OnInit {
     return this.mealPlanForm.controls.name;
   }
 
+  updateDaysToPlanBasedOnSelectedDates() {
+    const plannedMeals = this.getDaysFromSelectedDates().map(day => {
+      const previouslySelectedRecipesIds =
+        this.mealPlanForm.controls.plannedMealsForDay.value.find(
+          x => x.day?.getDate() === day.getDate()
+        )?.recipesIds ?? [];
+
+      return createMealPlanForDayForm(day, previouslySelectedRecipesIds);
+    });
+
+    this.mealPlanForm.controls.plannedMealsForDay =
+      this.fb.nonNullable.array<FormGroup<MealPlanForDayForm>>(plannedMeals);
+  }
+  setUpOnDatesUpdateHandler() {
+    this.mealPlanForm.controls.dates.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.selectedMealPlanForDay = undefined;
+        this.updateDaysToPlanBasedOnSelectedDates();
+      });
+  }
+
+  setUpOnSelectedRecipesHandler() {
+    this.recipeListService
+      .getSelected$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(cards => {
+        if (!this.selectedMealPlanForDay) {
+          return;
+        }
+        this.selectedMealPlanForDay.recipesIds = cards.map(x => x.id);
+      });
+  }
+
   handleSuccessfulSave() {
     this.router.navigate(['recipes']);
   }
 
-  ngOnInit(): void {
-    this.route.params
-      .pipe(
-        switchMap(params => {
-          const id = params['id'];
-          if (!id) {
-            return of(undefined);
-          }
-          return this.service.getMealPlanById(id);
-        })
-      )
-      .subscribe(mealPlan => {
-        if (!mealPlan) {
-          return;
-        }
-
-        this.mealPlanForm.patchValue({
-          id: mealPlan.id,
-          dates: {
-            from: mealPlan.fromDate.toDateString(),
-            to: mealPlan.toDate.toDateString(),
-          },
-          name: mealPlan.name,
-          plannedMealsForDay: mealPlan.plannedMealsForDay,
-        });
-      });
-  }
-
   submit() {
-    if (!this.mealPlanForm || this.mealPlanForm.invalid) {
+    const isFormInvalid = !this.mealPlanForm || this.mealPlanForm.invalid;
+
+    if (isFormInvalid) {
       return;
     }
 
@@ -125,54 +133,59 @@ export class MealPlanCreatorComponent implements OnInit {
       return;
     }
 
-    const request: CreatePlanOfMeals = {
+    if (this.mealPlanForm.value.id) {
+      const updateRequest: UpdatePlanOfMealApi = {
+        id: this.mealPlanForm.value.id,
+        name: this.name.value,
+        fromDate: new Date(this.fromDate.value),
+        toDate: new Date(this.toDate.value),
+        recipes: this.mealPlanForm.controls.plannedMealsForDay.value.filter(
+          x => x.day !== undefined
+        ) as PlanOfMealForDayApi[],
+      };
+
+      this.service
+        .update(updateRequest)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.handleSuccessfulSave());
+      return;
+    }
+    const createRequest: CreatePlanOfMealApi = {
       name: this.name.value,
       fromDate: new Date(this.fromDate.value),
       toDate: new Date(this.toDate.value),
       recipes: this.mealPlanForm.controls.plannedMealsForDay.value.filter(
         x => x.day !== undefined
-      ) as PlanOfMealForDay[],
+      ) as PlanOfMealForDayApi[],
     };
 
-    // this.mealPlanService.createMealPlan(request).subscribe(_ => this.handleSuccessfulSave());
+    this.service
+      .create(createRequest)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.handleSuccessfulSave());
   }
 
   getDaysFromSelectedDates() {
     const fromDate = this.fromDate.value;
     const toDate = this.toDate.value;
-
     const isValidAndHasValues =
-      this.mealPlanForm.controls.dates.valid &&
-      fromDate !== null &&
-      toDate !== null;
+      this.mealPlanForm.controls.dates.valid && fromDate && toDate;
 
     if (!isValidAndHasValues) {
       return [];
     }
-
-    return this.generateRangeOfDates(new Date(fromDate), new Date(toDate));
+    return generateRangeOfDates(new Date(fromDate), new Date(toDate));
   }
 
-  selectDayClickHandler($event: MouseEvent, day: Date) {
+  selectedDayChangedHandler($event: MouseEvent, day: Date) {
     $event.preventDefault();
+
     this.selectedMealPlanForDay =
       this.mealPlanForm.controls.plannedMealsForDay.value.find(
         x => x.day === day
       ) as MealPlanForDay;
-  }
 
-  changedDateRangeHandler() {
-    this.selectedMealPlanForDay = undefined;
-  }
-
-  generateRangeOfDates(from: Date, to: Date) {
-    const currentDate = from;
-    const rangeDates: Date[] = [];
-    while (currentDate <= to) {
-      rangeDates.push(new Date(currentDate));
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-    return rangeDates;
+    this.recipeListService.select(this.selectedMealPlanForDay.recipesIds);
   }
 
   getBadge(numberOfRecipes: number | undefined): Badge {

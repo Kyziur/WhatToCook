@@ -38,7 +38,7 @@
     </div>
     <div *ngIf="showSelectButton">
       <img
-        *ngIf="selected"
+        *ngIf="recipe.isSelected"
         (click)="selectClickHandler()"
         class="cursor-pointer hover:opacity-75"
         ngSrc="assets/icons/plus-square-selected.svg"
@@ -46,7 +46,7 @@
         width="32"
         height="32" />
       <img
-        *ngIf="!selected"
+        *ngIf="!recipe.isSelected"
         (click)="selectClickHandler()"
         class="cursor-pointer hover:opacity-75"
         ngSrc="assets/icons/plus-square.svg"

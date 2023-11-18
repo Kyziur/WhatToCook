@@ -22,8 +22,15 @@ public class MealPlanningController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<PlanOfMealResponse>>> Get()
     {
-        var getPlanOfMeals = await _mealPlanningServiceQuery.GetPlanOfMeals();
+        var getPlanOfMeals = await _mealPlanningServiceQuery.GetAll();
         return Ok(getPlanOfMeals);
+    }
+    
+    [HttpGet("{name}")]
+    public async Task<ActionResult<List<PlanOfMealResponse>>> GetByName(string name, CancellationToken token)
+    {
+        var result = await _mealPlanningServiceQuery.GetByName(name, token);
+        return result is null ? NotFound() : Ok(result);
     }
 
     [HttpGet("GetShoppingList/{mealPlanId}")]

@@ -18,10 +18,11 @@
       </div>
       <div class="mb-4">
         <label [for]="fromDate" class="block text-gray-700">From</label>
-        <input
-          type="date"
-          [formControl]="fromDate"
-          class="w-full form-input input" />
+        <app-input-date [formControl]="fromDate"></app-input-date>
+        <!--        <input-->
+        <!--          type="date"-->
+        <!--          [formControl]="fromDate"-->
+        <!--          class="w-full form-input input" />-->
         <div *ngIf="fromDate.dirty && fromDate?.hasError('pastDate')">
           Date should not be in the past.
         </div>
@@ -29,10 +30,7 @@
 
       <div class="mb-4">
         <label [for]="toDate" class="block text-gray-700">To</label>
-        <input
-          type="date"
-          [formControl]="toDate"
-          class="w-full form-input input" />
+        <app-input-date [formControl]="toDate"></app-input-date>
         <div
           *ngIf="
             toDate.dirty && mealPlanForm.controls.dates.errors?.dateMismatch
@@ -72,7 +70,10 @@
                 <div>
                   <div
                     (click)="
-                      selectDayClickHandler($event, mealPlan.controls.day.value)
+                      selectedDayChangedHandler(
+                        $event,
+                        mealPlan.controls.day.value
+                      )
                     "
                     class="flex justify-between w-full px-4 py-2 cursor-pointer hover:bg-gray-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:text-blue-700"
                     [ngClass]="
@@ -108,9 +109,6 @@
 
     <app-recipe-list
       *ngIf="selectedMealPlanForDay"
-      [allowSelection]="true"
-      [(selectedRecipeCards)]="
-        selectedMealPlanForDay.recipes
-      "></app-recipe-list>
+      [allowSelection]="true"></app-recipe-list>
   </div>
 </div>

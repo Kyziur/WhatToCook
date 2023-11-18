@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { shorten } from '../../common/shorten';
 import { MealPlanningService } from '../meal-planning.service';
 import { map } from 'rxjs';
+import { shorten } from '../../common/functions/shorten';
 
 export interface MealPlanItem {
   id: number;
@@ -23,13 +23,13 @@ export class MealPlanListComponent {
     private service: MealPlanningService
   ) {}
 
-  getPlans$ = this.service.getMealPlans().pipe(
-    map(plans =>
-      plans.map(
+  getPlans$ = this.service.getAll().pipe(
+    map(response =>
+      response.mealPlans.map(
         plan =>
           ({
             ...plan,
-            numberOfRecipes: plan.plannedMealsForDay.length,
+            numberOfRecipes: plan.recipes.length,
           }) as MealPlanItem
       )
     )
@@ -42,6 +42,6 @@ export class MealPlanListComponent {
   showShoppingList(mealPlan: MealPlanItem) {}
 
   navigateToMealPlan(mealPlan: MealPlanItem) {
-    this.router.navigate([`/meal-plans/${mealPlan.id}`]);
+    this.router.navigate([`/meal-plans/${mealPlan.name}`]);
   }
 }

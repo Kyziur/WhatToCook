@@ -7,6 +7,7 @@ import { SharedModule } from '../shared/shared.module';
 import { Routes, RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { RecipeListService } from './recipe-list/recipe-list.service';
 
 const routes: Routes = [
   {
@@ -41,5 +42,6 @@ const routes: Routes = [
     RouterModule,
     ReactiveFormsModule,
   ],
+  providers: [RecipeListService],
 })
 export class RecipesModule {}
