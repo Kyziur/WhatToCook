@@ -70,12 +70,12 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "WhatToCook:build:production"
+              "buildTarget": "WhatToCook:build:production"
             },
             "development": {
-              "browserTarget": "WhatToCook:build:development",
               "proxyConfig": "proxy.conf.js",
-              "host": "127.0.0.1"
+              "host": "127.0.0.1",
+              "buildTarget": "WhatToCook:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -83,7 +83,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "WhatToCook:build"
+            "buildTarget": "WhatToCook:build"
           }
         },
         "test": {
