@@ -1,30 +1,39 @@
-<div *ngIf="mealPlans.length">
-  <label>Select a Meal Plan:</label>
-  <select [(ngModel)]="selectedMealPlanId" (change)="onPlanSelected()">
-    <option *ngFor="let plan of mealPlans" [value]="plan.id">
-      {{ plan.name }}
-    </option>
-  </select>
+<div class="flex justify-center flex-col">
+  <div class="form-control flex-row justify-center">
+    <label class="cursor-pointer label gap-2">
+      <input
+        type="checkbox"
+        class="checkbox checkbox-accent"
+        [(ngModel)]="shouldDisplayEntireList" />
+      <span class="label-text">Pokaż całą listę</span>
+    </label>
+  </div>
 
-  <label>
-    <input type="checkbox" [(ngModel)]="viewEntireList" /> View Entire List
-  </label>
-</div>
+  <!-- View by Day -->
+  <div
+    class="flex justify-center flex-col items-center"
+    *ngIf="!shouldDisplayEntireList">
+    <div *ngFor="let day of shoppingList.ingredientsPerDay">
+      <h2 class="text-md md:text-xl text-secondary-content mb-2">
+        {{ day.day | date: 'fullDate' }}
+      </h2>
+      <ul>
+        <li class="list-disc" *ngFor="let ingredient of day.ingredients">
+          <span class="text-sm md:text-lg">{{ ingredient }}</span>
+        </li>
+      </ul>
+      <div class="divider"></div>
+    </div>
+  </div>
 
-<!-- View by Day -->
-<div *ngIf="!viewEntireList">
-  <div *ngFor="let day of shoppingList.ingredientsPerDay">
-    <h3>{{ day.day }}</h3>
+  <!-- View Entire List -->
+  <div
+    class="flex justify-center flex-col items-center"
+    *ngIf="shouldDisplayEntireList">
     <ul>
-      <li *ngFor="let ingredient of day.ingredients">{{ ingredient }}</li>
+      <li class="list-disc" *ngFor="let ingredient of entireShoppingList">
+        <span class="text-sm md:text-lg">{{ ingredient }}</span>
+      </li>
     </ul>
   </div>
-</div>
-
-<!-- View Entire List -->
-<div *ngIf="viewEntireList">
-  <h3>Entire Shopping List</h3>
-  <ul>
-    <li *ngFor="let ingredient of entireShoppingList">{{ ingredient }}</li>
-  </ul>
 </div>

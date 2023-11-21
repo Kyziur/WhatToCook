@@ -1,9 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   forwardRef,
   OnDestroy,
   OnInit,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -17,12 +19,12 @@ import { Subject } from 'rxjs';
 type OptionalDate = Date | null;
 type OnChangeFn<T> = (value: T) => void;
 type OnTouchFn = () => void;
+
 @Component({
   selector: 'app-input-date',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './input-date.component.html',
-  styleUrls: ['./input-date.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
@@ -44,6 +46,7 @@ export class InputDateComponent
   private onChange: OnChangeFn<OptionalDate> = (date: OptionalDate) => {};
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private onTouched: OnTouchFn = () => {};
+  @ViewChild('datePicker') datePicker?: ElementRef;
 
   constructor(private datePipe: DatePipe) {}
 
@@ -57,6 +60,7 @@ export class InputDateComponent
       this.onChange(new Date(value))
     );
   }
+
   setDate(date: OptionalDate) {
     this.date = date;
     this.dateControl.patchValue(
@@ -64,6 +68,7 @@ export class InputDateComponent
     );
     this.onChange(this.date);
   }
+
   registerOnChange(onChange: OnChangeFn<OptionalDate>): void {
     this.onChange = onChange;
   }
@@ -83,5 +88,13 @@ export class InputDateComponent
     }
 
     this.setDate(date);
+  }
+
+  showDatePickerOnClick() {
+    const input = this.datePicker?.nativeElement as
+      | HTMLInputElement
+      | undefined;
+
+    input?.showPicker();
   }
 }

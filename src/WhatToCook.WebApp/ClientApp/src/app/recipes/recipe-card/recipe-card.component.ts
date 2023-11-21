@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { Recipe } from '../Recipe';
 import { mapTimeToPrepareToBadge } from '../TimeToPrepare';
 import { RecipeListService } from '../recipe-list/recipe-list.service';
+import { BadgeComponent } from '../../shared/badge/badge.component';
+import { NgIf, NgFor, NgOptimizedImage } from '@angular/common';
 
 export interface RecipeCard extends Recipe {
   isSelected: boolean;
@@ -11,7 +13,8 @@ export interface RecipeCard extends Recipe {
 @Component({
   selector: 'app-recipe-card',
   templateUrl: './recipe-card.component.html',
-  styleUrls: ['./recipe-card.component.scss'],
+  standalone: true,
+  imports: [NgIf, BadgeComponent, NgFor, NgOptimizedImage],
 })
 export class RecipeCardComponent {
   @Input() recipe?: RecipeCard;

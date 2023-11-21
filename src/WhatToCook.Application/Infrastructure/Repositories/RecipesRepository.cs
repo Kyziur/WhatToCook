@@ -12,6 +12,7 @@ public interface IRecipesRepository
     Task Delete(int id);
 
     Task<Recipe?> GetByName(string name);
+    Task<Recipe?> GetById(int id);
 
     List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids);
 
@@ -41,12 +42,22 @@ public class RecipesRepository : IRecipesRepository
 
     public async Task Delete(int id)
     {
-        var recipe = await _dbContext.Recipes.FindAsync(id) ?? throw new NotFoundException($"Recipe with ID '{id}' not found.");
+        var recipe = await _dbContext.Recipes.FindAsync(id) ??
+                     throw new NotFoundException($"Recipe with ID '{id}' not found.");
     }
 
     public async Task<Recipe?> GetByName(string name)
     {
-        return await _dbContext.Recipes.Include(r => r.Ingredients).FirstOrDefaultAsync(r => r.Name == name);
+        return await _dbContext.Recipes
+            .Include(r => r.Ingredients)
+            .FirstOrDefaultAsync(r => r.Name == name);
+    }
+
+    public async Task<Recipe?> GetById(int id)
+    {
+        return await _dbContext.Recipes
+            .Include(r => r.Ingredients)
+            .FirstOrDefaultAsync(r => r.Id == id);
     }
 
     public List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids)
@@ -60,6 +71,7 @@ public class RecipesRepository : IRecipesRepository
             _logger.LogError(errorMessage + " Missing IDs: {MissingIDs}", missingRecipeIds);
             throw new Exception(errorMessage);
         }
+
         return recipes;
     }
 
@@ -87,6 +99,7 @@ public class RecipesRepository : IRecipesRepository
             _logger.LogError("An error occurred while saving the image. Error: {message}", exception.Message);
             throw;
         }
+
         return imageFullPath;
     }
 

@@ -1,4 +1,6 @@
 <input
+  (click)="showDatePickerOnClick()"
+  #datePicker
   type="date"
   [formControl]="dateControl"
-  class="w-full form-input input" />
+  class="input input-bordered w-full max-w-sm" />

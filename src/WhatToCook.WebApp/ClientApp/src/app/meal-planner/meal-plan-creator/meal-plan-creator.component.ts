@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Badge } from '../../shared/badge/badge.component';
+import { Badge, BadgeComponent } from '../../shared/badge/badge.component';
 import { MealPlanningService } from '../meal-planning.service';
 import { of, Subject, switchMap, takeUntil } from 'rxjs';
 import { MealPlanForDay } from './models/meal-plan-for.day';
@@ -18,11 +18,25 @@ import {
 } from '../api-models/plan-of-meal.model';
 import { generateRangeOfDates } from '../../common/functions/date';
 import { RecipeListService } from '../../recipes/recipe-list/recipe-list.service';
+import { RecipeListComponent } from '../../recipes/recipe-list/recipe-list.component';
+import { InputDateComponent } from '../../shared/input-date/input-date.component';
+import { NgIf, NgClass, NgFor, DatePipe } from '@angular/common';
 
 @Component({
-  selector: 'app-meal-creator',
-  templateUrl: './meal-plan-creator.component.html',
-  styleUrls: ['./meal-plan-creator.component.scss'],
+    selector: 'app-meal-creator',
+    templateUrl: './meal-plan-creator.component.html',
+    styleUrls: ['./meal-plan-creator.component.scss'],
+    standalone: true,
+    imports: [
+        NgIf,
+        ReactiveFormsModule,
+        InputDateComponent,
+        NgClass,
+        NgFor,
+        BadgeComponent,
+        RecipeListComponent,
+        DatePipe,
+    ],
 })
 export class MealPlanCreatorComponent implements OnInit, OnDestroy {
   public selectedMealPlanForDay?: MealPlanForDay;

@@ -4,7 +4,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MealPlanCreatorComponent } from './meal-plan-creator/meal-plan-creator.component';
 import { RecipesModule } from '../recipes/recipes.module';
-import { SharedModule } from '../shared/shared.module';
+
 import { ShoppingListComponent } from './shopping-list/shopping-list.component';
 import { MealPlanListComponent } from './meal-plan-list/meal-plan-list.component';
 import { RecipeListService } from '../recipes/recipe-list/recipe-list.service';
@@ -30,22 +30,19 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [
-    MealPlanCreatorComponent,
-    MealPlanListComponent,
-    ShoppingListComponent,
-  ],
-  exports: [],
-  imports: [
+    exports: [],
+    imports: [
     CommonModule,
     RouterModule.forChild(routes),
     ReactiveFormsModule,
     RecipesModule,
     FormsModule,
-    SharedModule,
     NgOptimizedImage,
     InputDateComponent,
-  ],
-  providers: [RecipeListService],
+    MealPlanCreatorComponent,
+    MealPlanListComponent,
+    ShoppingListComponent,
+],
+    providers: [RecipeListService],
 })
 export class MealPlannerModule {}

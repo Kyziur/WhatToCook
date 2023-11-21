@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { RecipeService } from '../recipe.service';
-import { BehaviorSubject, filter, map, Observable } from 'rxjs';
+import { BehaviorSubject, map, Observable } from 'rxjs';
 import { RecipeCard } from '../recipe-card/recipe-card.component';
 
 @Injectable()

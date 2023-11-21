@@ -3,7 +3,7 @@ import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RecipeListComponent } from './recipe-list/recipe-list.component';
 import { RecipeCardComponent } from './recipe-card/recipe-card.component';
 import { RecipeViewComponent } from './recipe-view/recipe-view.component';
-import { SharedModule } from '../shared/shared.module';
+
 import { Routes, RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
@@ -25,23 +25,22 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [RecipeListComponent, RecipeCardComponent, RecipeViewComponent],
-  imports: [
+    imports: [
     CommonModule,
-    SharedModule,
     RouterModule.forChild(routes),
     ReactiveFormsModule,
     HttpClientModule,
     FormsModule,
     NgOptimizedImage,
-  ],
-  exports: [
-    RecipeCardComponent,
-    RecipeViewComponent,
-    RecipeListComponent,
-    RouterModule,
-    ReactiveFormsModule,
-  ],
-  providers: [RecipeListService],
+    RecipeListComponent, RecipeCardComponent, RecipeViewComponent,
+],
+    exports: [
+        RecipeCardComponent,
+        RecipeViewComponent,
+        RecipeListComponent,
+        RouterModule,
+        ReactiveFormsModule,
+    ],
+    providers: [RecipeListService],
 })
 export class RecipesModule {}

@@ -1,10 +1,10 @@
 <div class="flex flex-col justify-center items-center">
   <app-search></app-search>
-  <div class="recipes-container">
-    <div class="w-1/4" *ngFor="let recipeCard of service.recipeCards$ | async">
+  <div class="flex flex-wrap justify-center mt-10 gap-4">
+    @for (recipeCard of service.recipeCards$ | async; track recipeCard.id) {
       <app-recipe-card
         [recipe]="recipeCard"
         [showSelectButton]="allowSelection"></app-recipe-card>
-    </div>
+    }
   </div>
 </div>

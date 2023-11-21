@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 
 export interface Badge {
   level: 'info' | 'success' | 'warning' | 'error';
@@ -8,7 +9,8 @@ export interface Badge {
 @Component({
   selector: 'app-badge',
   templateUrl: './badge.component.html',
-  styleUrls: ['./badge.component.scss'],
+  standalone: true,
+  imports: [NgIf, NgSwitch, NgSwitchCase],
 })
 export class BadgeComponent {
   @Input() badge?: Badge;
