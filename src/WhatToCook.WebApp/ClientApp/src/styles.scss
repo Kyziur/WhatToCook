@@ -1,29 +1,8 @@
-/* You can add global styles to this file, and also import other style files */
-
-/* Provide sufficient contrast against white background */
 @import 'defaults.scss';
-@import '_variables';
 
 body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-size: 16px;
-}
-
-a {
-  text-decoration: none;
-  color: black;
-
-  &:hover {
-    color: black;
-  }
-}
-
-.d-flex {
-  display: flex;
-}
-
-.flex-center {
-  justify-content: center;
 }

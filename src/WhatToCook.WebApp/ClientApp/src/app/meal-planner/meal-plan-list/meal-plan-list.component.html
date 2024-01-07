@@ -1,0 +1,45 @@
+<app-modal [(visible)]="shoppingList.isVisible" title="Lista zakupów">
+  <app-shopping-list [mealPlanId]="shoppingList.mealPlanId"></app-shopping-list>
+</app-modal>
+<div class="flex flex-col justify-center items-center">
+  <div class="mb-6">
+    <h1 class="text-3xl md:text-4xl font-semibold">Twoje plany</h1>
+  </div>
+
+  <ul role="list" class="mt-4 divide-x divide-gray-100">
+    <li
+      *ngFor="let mealPlan of getPlans$ | async"
+      class="flex items-center justify-between border-b-2 p-4">
+      <div class="col col-span-3">
+        <p
+          class="text-lg md:text-2xl leading-6 text-gray-900"
+          title="{{ mealPlan.name }}">
+          {{ shortenName(mealPlan.name) }}
+        </p>
+        <div class="flex justify-center items-center gap-x-6">
+          <p class="mt-1 text-xs md:text-sm leading-5 text-gray-500">
+            {{ mealPlan.fromDate | date: 'fullDate' }}
+          </p>
+          <p class="mt-1 text-xs md:text-sm leading-5 text-gray-500">
+            {{ mealPlan.toDate | date: 'fullDate' }}
+          </p>
+        </div>
+      </div>
+      <div class="divider divider-horizontal"></div>
+      <div class="flex flex-col gap-1">
+        <button
+          (click)="showShoppingList(mealPlan)"
+          type="button"
+          class="btn btn-outline btn-accent btn-square btn-sm md:btn-md">
+          <ng-icon name="heroListBullet" size="24px"></ng-icon>
+        </button>
+        <button
+          (click)="navigateToMealPlan(mealPlan)"
+          type="button"
+          class="btn btn-outline btn-accent btn-square btn-sm md:btn-md">
+          <ng-icon name="heroArrowRight" size="24px"></ng-icon>
+        </button>
+      </div>
+    </li>
+  </ul>
+</div>

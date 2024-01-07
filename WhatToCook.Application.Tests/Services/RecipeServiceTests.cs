@@ -21,14 +21,13 @@ public class RecipeServiceTests
     [Fact]
     public async Task Given_IncorrectData_When_UpdatingRecipe_ThenThrowsException()
     {
-        var sut = new RecipeService(_recipesRepositoryMock.Object, _loggerMock.Object);
+        var recipeName = "Test123";
+        var mockExistingRecipe = new Recipe(recipeName, "desc", "long", new List<Ingredient>(), new Statistics(), "imagePath");
+        _recipesRepositoryMock.Setup(x => x.GetById(1)).ReturnsAsync(mockExistingRecipe);
 
         var invalidBase64Image = "INVALID_BASE64";
-        var recipeName = "Test123";
-
         var mockRecipePlanOfMealsList = new List<RecipePlanOfMeals>();
         var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), new List<RecipePerDay>());
-        var mockExistingRecipe = new Recipe(recipeName, "desc", "long", new List<Ingredient>(), new Statistics(), "imagePath");
 
         mockRecipePlanOfMealsList.Add(new RecipePlanOfMeals(mockExistingRecipe, mockPlanOfMeals, DateTime.UtcNow));
 
@@ -42,9 +41,10 @@ public class RecipeServiceTests
             TimeToPrepare = "medium"
         };
 
-        _recipesRepositoryMock.Setup(x => x.GetByName(recipeName)).ReturnsAsync(mockExistingRecipe);
+        var sut = new RecipeService(_recipesRepositoryMock.Object, _loggerMock.Object);
+        var action = async () => await sut.Update(recipeUpdateRequest, "");
 
-        await Assert.ThrowsAsync<FormatException>(() => sut.Update(recipeUpdateRequest, ""));
+        await action.Should().ThrowAsync<ArgumentException>();
     }
 
     [Fact]
@@ -216,7 +216,7 @@ public class RecipeServiceTests
 
         var imagesDirectory = "some updated directory";
 
-        _recipesRepositoryMock.Setup(x => x.GetByName(newRecipeName)).ReturnsAsync(mockExistingRecipe);
+        _recipesRepositoryMock.Setup(x => x.GetById(1)).ReturnsAsync(mockExistingRecipe);
         _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>())).ReturnsAsync("some updated path").Verifiable();
         _recipesRepositoryMock.Setup(x => x.Update(It.IsAny<Recipe>())).Returns(Task.CompletedTask).Verifiable();
 

@@ -1,38 +1,33 @@
-import { Component, OnInit } from '@angular/core';
-import {
-  BehaviorSubject,
-  fromEvent,
-  map,
-  Observable,
-  of,
-  startWith,
-  tap,
-} from 'rxjs';
+import { Component } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
 
+interface MenuItem {
+  title: string;
+  link: string;
+}
 @Component({
   selector: 'app-layout',
   templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.scss'],
+  standalone: true,
+  imports: [RouterLink, RouterOutlet],
 })
-export class LayoutComponent implements OnInit {
-  public isNotMobile$: Observable<boolean> = of(false);
-  private isSidebarVisible = new BehaviorSubject<boolean>(false);
-  public isSidebarVisible$ = this.isSidebarVisible.asObservable();
-
-  ngOnInit(): void {
-    const checkScreenSize = () => document.body.offsetWidth > 767;
-    this.isNotMobile$ = fromEvent(window, 'resize').pipe(
-      map(checkScreenSize),
-      startWith(checkScreenSize()),
-      tap(isNotMobile => {
-        if (isNotMobile) {
-          this.isSidebarVisible.next(false);
-        }
-      })
-    );
-  }
-
-  showMenu() {
-    this.isSidebarVisible.next(true);
-  }
+export class LayoutComponent {
+  menuItems: MenuItem[] = [
+    {
+      title: 'Recipes',
+      link: '/recipes',
+    },
+    {
+      title: 'Create recipe',
+      link: '/recipes/new',
+    },
+    {
+      title: 'Meal plans',
+      link: '/meal-plans',
+    },
+    {
+      title: 'Create meal plan',
+      link: '/meal-plans/new',
+    },
+  ];
 }

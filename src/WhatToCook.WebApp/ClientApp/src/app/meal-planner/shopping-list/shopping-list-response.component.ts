@@ -1,4 +1,4 @@
-export interface shoppingListResponse {
+export interface ShoppingListResponse {
   fromDate: Date;
   toDate: Date;
   ingredientsPerDay: dayWiseIngredientsResponse[];

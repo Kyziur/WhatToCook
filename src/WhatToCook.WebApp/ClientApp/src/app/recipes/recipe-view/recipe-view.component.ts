@@ -1,16 +1,30 @@
 import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup, FormBuilder, FormArray } from '@angular/forms';
+import {
+  FormControl,
+  FormGroup,
+  FormBuilder,
+  FormArray,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { CreateRecipe } from './CreateRecipe';
 import { RecipeService } from '../recipe.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Recipe } from '../Recipe';
 import { of, switchMap } from 'rxjs';
 import { TimeToPrepare, TimeToPrepareValues } from '../TimeToPrepare';
+import { ModalComponent } from '../../shared/modal/modal.component';
+import {
+  NgSwitch,
+  NgSwitchCase,
+  NgTemplateOutlet,
+  NgIf,
+  NgFor,
+} from '@angular/common';
 
 export enum DisplayMode {
-  New,
-  Edit,
-  View,
+  New = 'New',
+  Edit = 'Edit',
+  View = 'View',
 }
 
 export interface RecipeForm {
@@ -24,7 +38,16 @@ export interface RecipeForm {
 @Component({
   selector: 'app-recipe-view',
   templateUrl: './recipe-view.component.html',
-  styleUrls: ['./recipe-view.component.scss'],
+  standalone: true,
+  imports: [
+    NgSwitch,
+    NgSwitchCase,
+    NgTemplateOutlet,
+    NgIf,
+    ModalComponent,
+    NgFor,
+    ReactiveFormsModule,
+  ],
 })
 export class RecipeViewComponent implements OnInit {
   protected readonly TimeToPrepareValues = TimeToPrepareValues;
@@ -145,6 +168,14 @@ export class RecipeViewComponent implements OnInit {
 
   addIngredient() {
     this.recipeForm?.controls.ingredients.push(this.fb.nonNullable.control(''));
+  }
+
+  removeIngredient(index: number) {
+    if (!this.recipeForm) {
+      return;
+    }
+
+    this.recipeForm.controls.ingredients.removeAt(index);
   }
 
   loadFormData(recipe?: Recipe) {

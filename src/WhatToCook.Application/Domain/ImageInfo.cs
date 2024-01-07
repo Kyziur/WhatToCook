@@ -11,6 +11,10 @@
         {
             Base64Image = base64Image;
             FileNameWithoutExtension = fileNameWithoutExtension;
+            if (string.IsNullOrWhiteSpace(imagesDirectory))
+            {
+                throw new ArgumentException("Path cannot be empty", nameof(imagesDirectory));
+            }
             ImagesDirectory = imagesDirectory;
 
             FileExtension = DetermineImageExtension();

@@ -1,13 +1,10 @@
-import {
-  Component,
-  EventEmitter,
-  Input,
-  isDevMode,
-  Output,
-} from '@angular/core';
+import { Component, Input, isDevMode } from '@angular/core';
 import { Router } from '@angular/router';
 import { Recipe } from '../Recipe';
 import { mapTimeToPrepareToBadge } from '../TimeToPrepare';
+import { RecipeListService } from '../recipe-list/recipe-list.service';
+import { BadgeComponent } from '../../shared/badge/badge.component';
+import { NgIf, NgFor, NgOptimizedImage } from '@angular/common';
 
 export interface RecipeCard extends Recipe {
   isSelected: boolean;
@@ -16,16 +13,17 @@ export interface RecipeCard extends Recipe {
 @Component({
   selector: 'app-recipe-card',
   templateUrl: './recipe-card.component.html',
-  styleUrls: ['./recipe-card.component.scss'],
+  standalone: true,
+  imports: [NgIf, BadgeComponent, NgFor, NgOptimizedImage],
 })
 export class RecipeCardComponent {
   @Input() recipe?: RecipeCard;
-  @Input() selected = false;
   @Input() showSelectButton = false;
-  @Output() recipeCardSelectionChange: EventEmitter<RecipeCard> =
-    new EventEmitter();
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private recipeListService: RecipeListService
+  ) {}
 
   viewRecipeDetails(name: string | undefined) {
     if (name === undefined) {
@@ -58,9 +56,7 @@ export class RecipeCardComponent {
 
   selectClickHandler() {
     if (this.recipe) {
-      this.recipe.isSelected = !this.recipe.isSelected;
+      this.recipeListService.toggleSelect(this.recipe.id);
     }
-
-    this.recipeCardSelectionChange.emit(this.recipe);
   }
 }

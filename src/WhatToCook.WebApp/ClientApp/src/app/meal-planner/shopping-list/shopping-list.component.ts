@@ -1,48 +1,44 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { MealPlanningService } from '../meal-planning.service';
-import { shoppingListResponse } from './shopping-list-response.component';
-import { PlanOfMeals } from '../meal-plan-creator/plan-of-meals';
+import { ShoppingListResponse } from './shopping-list-response.component';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { NgIf, NgFor, DatePipe } from '@angular/common';
+
 @Component({
   selector: 'app-shopping-list',
   templateUrl: './shopping-list.component.html',
-  styleUrls: ['./shopping-list.component.scss'],
+  standalone: true,
+  imports: [NgIf, ReactiveFormsModule, FormsModule, NgFor, DatePipe],
 })
-export class ShoppingListComponent implements OnInit {
-  viewEntireList = false;
+export class ShoppingListComponent {
+  @Input() set mealPlanId(value: number | undefined) {
+    this._mealPlanId = value;
+    this.fetchIngredients();
+  }
+
+  private _mealPlanId?: number;
+  shouldDisplayEntireList = false;
+
   entireShoppingList: string[] = [];
-  mealPlans: PlanOfMeals[] = [];
-  selectedMealPlanId: number | null = null;
-  shoppingList: shoppingListResponse = {
+  shoppingList: ShoppingListResponse = {
     fromDate: new Date(),
     toDate: new Date(),
     ingredientsPerDay: [],
   };
+
   constructor(private mealPlanService: MealPlanningService) {}
 
-  ngOnInit(): void {
-    this.fetchMealPlans();
-  }
-
-  fetchMealPlans(): void {
-    this.mealPlanService.getMealPlans().subscribe(plans => {
-      this.mealPlans = plans;
-    });
-  }
-
-  onPlanSelected(): void {
-    if (this.selectedMealPlanId !== null) {
-      this.mealPlanService
-        .getIngredientsForShoppingList(this.selectedMealPlanId)
-        .subscribe(response => {
-          this.shoppingList = response;
-
-          if (this.viewEntireList) {
-            this.entireShoppingList = [];
-            for (const dayIngredients of response.ingredientsPerDay) {
-              this.entireShoppingList.push(...dayIngredients.ingredients);
-            }
-          }
-        });
+  fetchIngredients(): void {
+    if (!this._mealPlanId) {
+      return;
     }
+    this.mealPlanService
+      .getIngredientsForShoppingList(this._mealPlanId)
+      .subscribe(response => {
+        this.shoppingList = response;
+        this.entireShoppingList = response.ingredientsPerDay.flatMap(
+          x => x.ingredients
+        );
+      });
   }
 }
