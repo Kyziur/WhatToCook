@@ -13,12 +13,12 @@
   <div
     class="flex justify-center flex-col items-center"
     *ngIf="!shouldDisplayEntireList">
-    <div *ngFor="let day of shoppingList.ingredientsPerDay">
+    <div *ngFor="let item of shoppingList | keyvalue">
       <h2 class="text-md md:text-xl text-secondary-content mb-2">
-        {{ day.day | date: 'fullDate' }}
+        {{ item.key }}
       </h2>
       <ul>
-        <li class="list-disc" *ngFor="let ingredient of day.ingredients">
+        <li class="list-disc" *ngFor="let ingredient of item.value">
           <span class="text-sm md:text-lg">{{ ingredient }}</span>
         </li>
       </ul>

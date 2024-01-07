@@ -29,12 +29,12 @@ public class MealPlanningService
                         new RecipePerDay(dayRecipe.Day, recipes.First(r => r.Id == recipeId))).ToList();
 
         var planOfMeals = new PlanOfMeals
-    (
-        planOfMealRequest.Name,
-        DateTime.SpecifyKind(planOfMealRequest.FromDate, DateTimeKind.Utc),
-        DateTime.SpecifyKind(planOfMealRequest.ToDate, DateTimeKind.Utc),
-        dayRecipePairs
-    );
+        (
+            planOfMealRequest.Name,
+            DateTime.SpecifyKind(planOfMealRequest.FromDate, DateTimeKind.Utc),
+            DateTime.SpecifyKind(planOfMealRequest.ToDate, DateTimeKind.Utc),
+            dayRecipePairs
+        );
         _logger.LogInformation("Creating a meal plan with {numberOfRecipes} recipes", dayRecipePairs.Count);
         await _mealPlanningRepository.Create(planOfMeals);
 

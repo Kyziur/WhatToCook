@@ -20,8 +20,7 @@ public static class RecipesSeeder
                 $"Ciastka z białą czekoladą, żurawiną i płatkami owsianymi {x}",
                 description,
                 "Short",
-                new List<Ingredient>
-                {
+                [
                     new Ingredient("140 g mąki pszennej"),
                     new Ingredient("pół łyżeczki proszku do pieczenia"),
                     new Ingredient("szczypta soli"),
@@ -34,7 +33,7 @@ public static class RecipesSeeder
                     new Ingredient("75 g suszonej żurawiny"),
                     new Ingredient("50 g orzechów pekan, z grubsza posiekanych"),
                     new Ingredient("140 g posiekanej białej czekolady lub białych chocolate chips")
-                },
+                ],
                 new Statistics(),
                 "Images/default_image.png"));
     }
