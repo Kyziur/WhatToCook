@@ -15,7 +15,7 @@ if (app.Environment.IsDevelopment())
 {
 	app.UseSwagger();
 	app.UseSwaggerUI();
-	app.Services.SeedRecipes();
+	app.Services.SeedDatabase();
 }
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

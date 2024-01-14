@@ -3,20 +3,22 @@ using WhatToCook.Application.Domain;
 
 namespace WhatToCook.Application.Infrastructure.Seeds;
 
-public static class RecipesSeeder
+internal static class RecipesSeeder
 {
-	public static void SeedRecipes(this IServiceProvider serviceProvider)
+	internal static IServiceProvider SeedRecipes(this IServiceProvider serviceProvider)
 	{
-		using var scope = serviceProvider.CreateScope();
-		var dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+		using IServiceScope scope = serviceProvider.CreateScope();
+		DatabaseContext dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
 		if (dbContext.Recipes.Any())
 		{
-			return;
+			return serviceProvider;
 		}
 
-		var data = Create();
-		dbContext.AddRange(data);
+		IEnumerable<Recipe> data = Create();
+		dbContext.Recipes.AddRange(data);
 		dbContext.SaveChanges();
+
+		return serviceProvider;
 	}
 
 	private static IEnumerable<Recipe> Create()
