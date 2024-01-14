@@ -24,9 +24,8 @@
     </PackageReference>
   </ItemGroup>
 
-
   <ItemGroup>
-    <ProjectReference Include="..\src\WhatToCook.Application\WhatToCook.Application.csproj" />
+    <ProjectReference Include="..\..\src\WhatToCook.Application\WhatToCook.Application.csproj" />
   </ItemGroup>
 
 </Project>
