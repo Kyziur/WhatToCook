@@ -54,6 +54,18 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
     this.setUpOnSelectedRecipesHandler();
   }
 
+  get fromDate() {
+    return this.mealPlanForm.controls.dates.controls.from;
+  }
+
+  get toDate() {
+    return this.mealPlanForm.controls.dates.controls.to;
+  }
+
+  get name() {
+    return this.mealPlanForm.controls.name;
+  }
+  
   ngOnInit(): void {
     this.route.params
       .pipe(
@@ -78,7 +90,6 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
           plannedMealsForDay: mealPlan.recipes,
         });
         this.updateDaysToPlanBasedOnSelectedDates();
-        console.error('meal plan updated', this.mealPlanForm.value);
       });
   }
   ngOnDestroy(): void {
@@ -86,17 +97,7 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
     this.destroy$.unsubscribe();
   }
 
-  get fromDate() {
-    return this.mealPlanForm.controls.dates.controls.from;
-  }
 
-  get toDate() {
-    return this.mealPlanForm.controls.dates.controls.to;
-  }
-
-  get name() {
-    return this.mealPlanForm.controls.name;
-  }
 
   updateDaysToPlanBasedOnSelectedDates() {
     const plannedMeals = this.getDaysFromSelectedDates().map(day => {
