@@ -122,10 +122,11 @@
           class="textarea textarea-bordered textarea-xs w-full"></textarea> -->
         <!--Name-->
         <div class="form-control w-full">
-          <label class="label">
+          <label [for]="name" class="label">
             <span class="label-text">Nazwa</span>
           </label>
           <input
+            #name
             [formControl]="recipeForm.controls.name"
             type="text"
             placeholder="Type here"
@@ -134,10 +135,12 @@
 
         <!--Preparation description-->
         <div class="form-control">
-          <label class="label">
+          <label [for]="preparationDescription" class="label">
             <span class="label-text">Przygotowanie</span>
           </label>
           <textarea
+            #preparationDescription
+            appTextareaAutoresize
             [formControl]="recipeForm.controls.preparationDescription"
             class="textarea textarea-sm textarea-bordered w-full"
             rows="3"
@@ -145,10 +148,10 @@
         </div>
 
         <!--Ingredients-->
-        <div class="">
-          <label class="label">
+        <fieldset class="">
+          <legend class="label">
             <span class="label-text">Składniki</span>
-          </label>
+          </legend>
           <div class="flex flex-col" formArrayName="ingredients">
             @for (
               ingredient of recipeForm.controls.ingredients.controls;
@@ -172,18 +175,27 @@
               </div>
             }
           </div>
-          <button
-            class="btn btn-accent"
-            type="button"
-            (click)="addIngredient()">
-            Dodaj składnik
-          </button>
-        </div>
+          <div class="join">
+            <button
+              class="btn btn-accent join-item"
+              type="button"
+              (click)="addIngredient()">
+              Dodaj składnik
+            </button>
+            <button
+              class="btn btn-accent join-item"
+              type="button"
+              (click)="openDialogToPasteIngredients()">
+              Dodaj wiele składników
+            </button>
+          </div>
+        </fieldset>
         <div class="form-control w-full">
-          <label class="label">
+          <label [for]="timeToPrepare" class="label">
             <span class="label-text">Czas przygotowania</span>
           </label>
           <select
+            #timeToPrepare
             [formControl]="recipeForm.controls.timeToPrepare"
             class="select select-bordered">
             @for (timeToPrepare of TimeToPrepareValues; track timeToPrepare) {
@@ -217,3 +229,23 @@
     </div>
   </form>
 </ng-template>
+
+<app-modal
+  [(visible)]="isDialogToShowIngredientsVisible"
+  title="Dodaj wiele składników">
+  <form>
+    <textarea
+      appTextareaAutoresize
+      placeholder="Wklej składniki"
+      [rows]="3"
+      name="ingredientsToParse"
+      type="text"
+      [(ngModel)]="ingredientsToParse"
+      class="textarea textarea-sm textarea-bordered w-full"></textarea>
+    <div class="flex justify-end mt-2">
+      <button type="button" class="btn btn-accent" (click)="parseIngredients()">
+        Dodaj
+      </button>
+    </div>
+  </form>
+</app-modal>
