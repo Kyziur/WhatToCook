@@ -13,6 +13,7 @@ import { Observable, map, of } from 'rxjs';
   templateUrl: './recipe-list.component.html',
   standalone: true,
   imports: [SearchComponent, NgFor, RecipeCardComponent, AsyncPipe],
+  providers: [RecipeListService],
 })
 export class RecipeListComponent {
   @Input() allowSelection = false;
@@ -21,7 +22,7 @@ export class RecipeListComponent {
 
   constructor(public service: RecipeListService) {
     this.service.recipeCards$.pipe(
-      map(x => x.sort((a, b) => Number(b) - Number(a)))
+      map((x) => x.sort((a, b) => Number(b) - Number(a)))
     );
   }
 }
