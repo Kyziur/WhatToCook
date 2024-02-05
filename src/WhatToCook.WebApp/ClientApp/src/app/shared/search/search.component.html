@@ -1,12 +1,10 @@
-<div class="join">
+<form class="join" [formGroup]="form">
   <div>
     <div>
       <input
+        [formControl]="form.controls.search"
         class="input input-primary input-bordered join-item"
         placeholder="Szukaj przepisów" />
     </div>
   </div>
-  <div class="indicator">
-    <button class="btn btn-primary join-item">Szukaj</button>
-  </div>
-</div>
+</form>

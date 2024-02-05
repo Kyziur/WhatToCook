@@ -6,7 +6,8 @@ import {
 } from '../recipe-card/recipe-card.component';
 import { NgFor, AsyncPipe } from '@angular/common';
 import { SearchComponent } from '../../shared/search/search.component';
-import { Observable, map, of } from 'rxjs';
+import { map } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-recipe-list',
@@ -18,11 +19,16 @@ import { Observable, map, of } from 'rxjs';
 export class RecipeListComponent {
   @Input() allowSelection = false;
 
-  recipes: Observable<RecipeCard[]> = of([]);
+  recipes: RecipeCard[] = [];
 
   constructor(public service: RecipeListService) {
-    this.service.recipeCards$.pipe(
-      map((x) => x.sort((a, b) => Number(b) - Number(a)))
-    );
+    this.service.recipeCards$
+      .pipe(
+        takeUntilDestroyed(),
+        map((x) => x.sort((a, b) => Number(b) - Number(a)))
+      )
+      .subscribe((recipes) => {
+        this.recipes = recipes;
+      });
   }
 }
