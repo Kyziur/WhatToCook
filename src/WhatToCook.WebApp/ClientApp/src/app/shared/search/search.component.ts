@@ -54,6 +54,8 @@ export class SearchComponent {
   filter(recipes: RecipeCard[], phrase: string) {
     return phrase.length === 0
       ? recipes
-      : recipes.filter((recipe) => recipe.name.includes(phrase));
+      : recipes.filter((recipe) =>
+          recipe.name.toLocaleLowerCase().includes(phrase.toLocaleLowerCase())
+        );
   }
 }
