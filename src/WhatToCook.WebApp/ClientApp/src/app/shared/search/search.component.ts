@@ -3,11 +3,13 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RecipeCard } from 'src/app/recipes/recipe-card/recipe-card.component';
+import { ConsoleLoggerService, LoggerService } from '../logger.service';
 
 @Component({
   selector: 'app-search',
   templateUrl: './search.component.html',
   standalone: true,
+  providers: [{ provide: LoggerService, useClass: ConsoleLoggerService }],
   imports: [ReactiveFormsModule],
 })
 export class SearchComponent {
@@ -26,7 +28,7 @@ export class SearchComponent {
     return this.#items;
   }
 
-  constructor() {
+  constructor(private logger: LoggerService) {
     this.form.controls.search.valueChanges
       .pipe(
         takeUntilDestroyed(),
@@ -35,10 +37,10 @@ export class SearchComponent {
         tap((value) => {
           this.#items = this.filter(this.itemsCopy, value);
           this.itemsChange.emit(this.items);
-          console.error('items', {
-            copy: this.itemsCopy,
-            searchRes: this.items,
-            phrase: value,
+          this.logger.info('Search changed', {
+            search: value,
+            filteredItems: this.#items,
+            allitems: this.itemsCopy,
           });
         })
       )
