@@ -1,10 +1,6 @@
-<form class="join" [formGroup]="form">
-  <div>
-    <div>
-      <input
-        [formControl]="form.controls.search"
-        class="input input-primary input-bordered join-item"
-        placeholder="Szukaj przepisów" />
-    </div>
-  </div>
+<form [formGroup]="form">
+  <input
+    [formControl]="form.controls.search"
+    class="input input-md input-primary input-bordered w-full"
+    placeholder="Szukaj przepisów" />
 </form>
