@@ -7,4 +7,5 @@ export interface CreateRecipe {
   preparationDescription: string;
   timeToPrepare: TimeToPrepare;
   image: string;
+  tags: string[];
 }

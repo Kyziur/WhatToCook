@@ -10,7 +10,7 @@ public class PlanOfMealRequest
 {
     public int Id { get; set; }
     public DateTime FromDate { get; set; }
-    public string Name { get; set; }
+    public required string Name { get; set; }
     public IEnumerable<PlanOfMealForDay> Recipes { get; set; } = Enumerable.Empty<PlanOfMealForDay>();
     public DateTime ToDate { get; set; }
 }

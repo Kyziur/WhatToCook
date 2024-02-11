@@ -2,7 +2,8 @@
 
 public class RecipeTag
 {
-    public int Id { get; private set; }
-    public Tag Tag { get; set; }
-    public Recipe Recipe { get; set; }
+    public int TagId { get; set; }
+    public required Tag Tag { get; set; }
+    public int RecipeId { get; set; }
+    public required Recipe Recipe { get; set; }
 }

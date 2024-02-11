@@ -22,7 +22,7 @@ public class MealPlanningService
     public async Task<PlanOfMeals> Create(PlanOfMealRequest planOfMealRequest)
     {
         var requestedRecipeIds = planOfMealRequest.Recipes.SelectMany(x => x.RecipesIds).ToList();
-        var recipes = _recipesRepository.GetRecipesByIdForMealPlan(requestedRecipeIds);
+        List<Recipe> recipes = _recipesRepository.GetRecipesByIdForMealPlan(requestedRecipeIds);
         var dayRecipePairs = planOfMealRequest.Recipes
             .SelectMany(dayRecipe => dayRecipe.RecipesIds,
                         (dayRecipe, recipeId) =>
@@ -43,7 +43,7 @@ public class MealPlanningService
 
     public async Task<PlanOfMeals> Update(UpdatePlanOfMealRequest planOfMealRequest)
     {
-        var mealPlanToUpdate = await _mealPlanningRepository.GetMealPlanByName(planOfMealRequest.Name);
+        PlanOfMeals? mealPlanToUpdate = await _mealPlanningRepository.GetMealPlanByName(planOfMealRequest.Name);
 
         if (mealPlanToUpdate == null)
         {
@@ -51,8 +51,8 @@ public class MealPlanningService
             throw new NotFoundException(nameof(mealPlanToUpdate));
         }
 
-        var recipeForMealPlanUpdate = planOfMealRequest.Recipes.SelectMany(x => x.RecipesIds);
-        var recipes = _recipesRepository.GetRecipesByIdForMealPlan(recipeForMealPlanUpdate);
+        IEnumerable<int> recipeForMealPlanUpdate = planOfMealRequest.Recipes.SelectMany(x => x.RecipesIds);
+        List<Recipe> recipes = _recipesRepository.GetRecipesByIdForMealPlan(recipeForMealPlanUpdate);
 
         var existingRecipes = recipes.Select(r => r.Id).ToList();
 

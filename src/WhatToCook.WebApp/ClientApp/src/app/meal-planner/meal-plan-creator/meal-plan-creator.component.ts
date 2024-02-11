@@ -55,16 +55,28 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
     this.setUpOnSelectedRecipesHandler();
   }
 
+  get fromDate() {
+    return this.mealPlanForm.controls.dates.controls.from;
+  }
+
+  get toDate() {
+    return this.mealPlanForm.controls.dates.controls.to;
+  }
+
+  get name() {
+    return this.mealPlanForm.controls.name;
+  }
+
   ngOnInit(): void {
     this.route.params
       .pipe(
         takeUntil(this.destroy$),
-        switchMap(params => {
+        switchMap((params) => {
           const name = params['name'] as string;
           return name ? this.service.getByName(name) : of(undefined);
         })
       )
-      .subscribe(mealPlan => {
+      .subscribe((mealPlan) => {
         if (!mealPlan) {
           return;
         }
@@ -79,7 +91,6 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
           plannedMealsForDay: mealPlan.recipes,
         });
         this.updateDaysToPlanBasedOnSelectedDates();
-        console.error('meal plan updated', this.mealPlanForm.value);
       });
   }
   ngOnDestroy(): void {
@@ -87,23 +98,11 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
     this.destroy$.unsubscribe();
   }
 
-  get fromDate() {
-    return this.mealPlanForm.controls.dates.controls.from;
-  }
-
-  get toDate() {
-    return this.mealPlanForm.controls.dates.controls.to;
-  }
-
-  get name() {
-    return this.mealPlanForm.controls.name;
-  }
-
   updateDaysToPlanBasedOnSelectedDates() {
-    const plannedMeals = this.getDaysFromSelectedDates().map(day => {
+    const plannedMeals = this.getDaysFromSelectedDates().map((day) => {
       const previouslySelectedRecipesIds =
         this.mealPlanForm.controls.plannedMealsForDay.value.find(
-          x => x.day?.getDate() === day.getDate()
+          (x) => x.day?.getDate() === day.getDate()
         )?.recipesIds ?? [];
 
       return createMealPlanForDayForm(day, previouslySelectedRecipesIds);
@@ -125,11 +124,11 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
     this.recipeListService
       .getSelected$()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(cards => {
+      .subscribe((cards) => {
         if (!this.selectedMealPlanForDay) {
           return;
         }
-        this.selectedMealPlanForDay.recipesIds = cards.map(x => x.id);
+        this.selectedMealPlanForDay.recipesIds = cards.map((x) => x.id);
       });
   }
 
@@ -155,7 +154,7 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
         fromDate: new Date(this.fromDate.value),
         toDate: new Date(this.toDate.value),
         recipes: this.mealPlanForm.controls.plannedMealsForDay.value.filter(
-          x => x.day !== undefined
+          (x) => x.day !== undefined
         ) as PlanOfMealForDayApi[],
       };
 
@@ -170,7 +169,7 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
       fromDate: new Date(this.fromDate.value),
       toDate: new Date(this.toDate.value),
       recipes: this.mealPlanForm.controls.plannedMealsForDay.value.filter(
-        x => x.day !== undefined
+        (x) => x.day !== undefined
       ) as PlanOfMealForDayApi[],
     };
 
@@ -197,7 +196,7 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
 
     this.selectedMealPlanForDay =
       this.mealPlanForm.controls.plannedMealsForDay.value.find(
-        x => x.day === day
+        (x) => x.day === day
       ) as MealPlanForDay;
 
     this.recipeListService.select(this.selectedMealPlanForDay.recipesIds);

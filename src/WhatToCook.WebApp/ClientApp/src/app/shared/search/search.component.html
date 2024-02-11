@@ -1,12 +1,6 @@
-<div class="join">
-  <div>
-    <div>
-      <input
-        class="input input-primary input-bordered join-item"
-        placeholder="Szukaj przepisów" />
-    </div>
-  </div>
-  <div class="indicator">
-    <button class="btn btn-primary join-item">Szukaj</button>
-  </div>
-</div>
+<form [formGroup]="form">
+  <input
+    [formControl]="form.controls.search"
+    class="input input-md input-primary input-bordered w-full"
+    placeholder="Szukaj przepisów" />
+</form>

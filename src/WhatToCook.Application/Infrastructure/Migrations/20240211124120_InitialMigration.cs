@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
@@ -6,45 +7,55 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace WhatToCook.Application.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigrationn2 : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Description",
-                table: "Recipes",
-                type: "text",
-                nullable: false,
-                defaultValue: "");
+            migrationBuilder.CreateTable(
+                name: "Recipes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    TimeToPrepare = table.Column<string>(type: "text", nullable: false),
+                    Statistics_Id = table.Column<int>(type: "integer", nullable: false),
+                    Statistics_Shares = table.Column<int>(type: "integer", nullable: false),
+                    Statistics_Views = table.Column<int>(type: "integer", nullable: false),
+                    Image = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Recipes", x => x.Id);
+                });
 
-            migrationBuilder.AddColumn<int>(
-                name: "Statistics_Id",
-                table: "Recipes",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
+            migrationBuilder.CreateTable(
+                name: "Tags",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tags", x => x.Id);
+                });
 
-            migrationBuilder.AddColumn<int>(
-                name: "Statistics_Shares",
-                table: "Recipes",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.AddColumn<int>(
-                name: "Statistics_Views",
-                table: "Recipes",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.AddColumn<string>(
-                name: "TimeToPrepare",
-                table: "Recipes",
-                type: "text",
-                nullable: false,
-                defaultValue: "");
+            migrationBuilder.CreateTable(
+                name: "User",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Email = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_User", x => x.Id);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Ingredient",
@@ -67,30 +78,27 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Tag",
+                name: "RecipeTag",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "text", nullable: false)
+                    TagId = table.Column<int>(type: "integer", nullable: false),
+                    RecipeId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tag", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "User",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    FirstName = table.Column<string>(type: "text", nullable: false),
-                    LastName = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_User", x => x.Id);
+                    table.PrimaryKey("PK_RecipeTag", x => new { x.RecipeId, x.TagId });
+                    table.ForeignKey(
+                        name: "FK_RecipeTag_Recipes_RecipeId",
+                        column: x => x.RecipeId,
+                        principalTable: "Recipes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RecipeTag_Tags_TagId",
+                        column: x => x.TagId,
+                        principalTable: "Tags",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -120,26 +128,21 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PlanOfmeals",
+                name: "PlanOfMeals",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    FromDateToDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    RecipeId = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    FromDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ToDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PlanOfmeals", x => x.Id);
+                    table.PrimaryKey("PK_PlanOfMeals", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PlanOfmeals_Recipes_RecipeId",
-                        column: x => x.RecipeId,
-                        principalTable: "Recipes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PlanOfmeals_User_UserId",
+                        name: "FK_PlanOfMeals_User_UserId",
                         column: x => x.UserId,
                         principalTable: "User",
                         principalColumn: "Id",
@@ -174,35 +177,34 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ShoppingList",
+                name: "RecipePlanOfMeals",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     RecipeId = table.Column<int>(type: "integer", nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: false)
+                    PlanOfMealsId = table.Column<int>(type: "integer", nullable: false),
+                    Day = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ShoppingList", x => x.Id);
+                    table.PrimaryKey("PK_RecipePlanOfMeals", x => new { x.RecipeId, x.PlanOfMealsId, x.Day });
                     table.ForeignKey(
-                        name: "FK_ShoppingList_Recipes_RecipeId",
-                        column: x => x.RecipeId,
-                        principalTable: "Recipes",
+                        name: "FK_RecipePlanOfMeals_PlanOfMeals_PlanOfMealsId",
+                        column: x => x.PlanOfMealsId,
+                        principalTable: "PlanOfMeals",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ShoppingList_User_UserId",
-                        column: x => x.UserId,
-                        principalTable: "User",
+                        name: "FK_RecipePlanOfMeals_Recipes_RecipeId",
+                        column: x => x.RecipeId,
+                        principalTable: "Recipes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Favourite_RecipeId_UserId",
+                name: "IX_Favourite_RecipeId",
                 table: "Favourite",
-                columns: new[] { "RecipeId", "UserId" });
+                column: "RecipeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Favourite_UserId",
@@ -215,13 +217,14 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                 column: "RecipeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PlanOfmeals_RecipeId",
-                table: "PlanOfmeals",
-                column: "RecipeId");
+                name: "IX_PlanOfMeals_Name",
+                table: "PlanOfMeals",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_PlanOfmeals_UserId",
-                table: "PlanOfmeals",
+                name: "IX_PlanOfMeals_UserId",
+                table: "PlanOfMeals",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -235,14 +238,20 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ShoppingList_RecipeId",
-                table: "ShoppingList",
-                column: "RecipeId");
+                name: "IX_RecipePlanOfMeals_PlanOfMealsId",
+                table: "RecipePlanOfMeals",
+                column: "PlanOfMealsId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ShoppingList_UserId",
-                table: "ShoppingList",
-                column: "UserId");
+                name: "IX_Recipes_Name",
+                table: "Recipes",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RecipeTag_TagId",
+                table: "RecipeTag",
+                column: "TagId");
         }
 
         /// <inheritdoc />
@@ -255,39 +264,25 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                 name: "Ingredient");
 
             migrationBuilder.DropTable(
-                name: "PlanOfmeals");
-
-            migrationBuilder.DropTable(
                 name: "Rating");
 
             migrationBuilder.DropTable(
-                name: "ShoppingList");
+                name: "RecipePlanOfMeals");
 
             migrationBuilder.DropTable(
-                name: "Tag");
+                name: "RecipeTag");
+
+            migrationBuilder.DropTable(
+                name: "PlanOfMeals");
+
+            migrationBuilder.DropTable(
+                name: "Recipes");
+
+            migrationBuilder.DropTable(
+                name: "Tags");
 
             migrationBuilder.DropTable(
                 name: "User");
-
-            migrationBuilder.DropColumn(
-                name: "Description",
-                table: "Recipes");
-
-            migrationBuilder.DropColumn(
-                name: "Statistics_Id",
-                table: "Recipes");
-
-            migrationBuilder.DropColumn(
-                name: "Statistics_Shares",
-                table: "Recipes");
-
-            migrationBuilder.DropColumn(
-                name: "Statistics_Views",
-                table: "Recipes");
-
-            migrationBuilder.DropColumn(
-                name: "TimeToPrepare",
-                table: "Recipes");
         }
     }
 }

@@ -8,19 +8,26 @@ internal class RecipeEntityConfiguration : IEntityTypeConfiguration<Recipe>
 {
     public void Configure(EntityTypeBuilder<Recipe> builder)
     {
-        builder.HasKey(x => x.Id);
+        _ = builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.Name);
-        builder.Property(x => x.Image);
-        builder.Property(x => x.Description);
-        builder.Property(x => x.TimeToPrepare);
+        _ = builder.HasIndex(x => x.Name).IsUnique();
 
-        builder.HasMany(x => x.RecipePlanOfMeals).WithOne(rp => rp.Recipe).HasForeignKey(rp => rp.RecipeId);
-        builder.HasMany(x => x.Ingredients).WithOne(x => x.Recipe);
+        _ = builder.Property(x => x.Name);
+        _ = builder.Property(x => x.Image);
+        _ = builder.Property(x => x.Description);
+        _ = builder.Property(x => x.TimeToPrepare);
 
-        builder.OwnsOne(x => x.Statistics);
+        _ = builder.HasMany(x => x.RecipePlanOfMeals).WithOne(rp => rp.Recipe).HasForeignKey(rp => rp.RecipeId);
+        _ = builder.HasMany(x => x.Ingredients).WithOne(x => x.Recipe);
+        _ = builder
+            .HasMany(x => x.Tags)
+            .WithMany(x => x.Recipes)
+            .UsingEntity<RecipeTag>(
+            x => x.HasOne(rt => rt.Tag).WithMany().HasForeignKey(x => x.TagId),
+                                x => x.HasOne(rt => rt.Recipe).WithMany().HasForeignKey(x => x.RecipeId));
 
-        builder.HasIndex(x => x.Name).IsUnique();
+        _ = builder.OwnsOne(x => x.Statistics);
 
+        _ = builder.Navigation(x => x.Tags).AutoInclude();
     }
 }

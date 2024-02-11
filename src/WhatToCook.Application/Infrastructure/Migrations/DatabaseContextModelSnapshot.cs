@@ -17,7 +17,7 @@ namespace WhatToCook.Application.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.12")
+                .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -174,6 +174,21 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                     b.ToTable("RecipePlanOfMeals");
                 });
 
+            modelBuilder.Entity("WhatToCook.Application.Domain.RecipeTag", b =>
+                {
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("RecipeId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("RecipeTag");
+                });
+
             modelBuilder.Entity("WhatToCook.Application.Domain.Tag", b =>
                 {
                     b.Property<int>("Id")
@@ -188,7 +203,7 @@ namespace WhatToCook.Application.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tag");
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("WhatToCook.Application.Domain.User", b =>
@@ -313,6 +328,25 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                     b.Navigation("PlanOfMeals");
 
                     b.Navigation("Recipe");
+                });
+
+            modelBuilder.Entity("WhatToCook.Application.Domain.RecipeTag", b =>
+                {
+                    b.HasOne("WhatToCook.Application.Domain.Recipe", "Recipe")
+                        .WithMany()
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WhatToCook.Application.Domain.Tag", "Tag")
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipe");
+
+                    b.Navigation("Tag");
                 });
 
             modelBuilder.Entity("WhatToCook.Application.Domain.PlanOfMeals", b =>

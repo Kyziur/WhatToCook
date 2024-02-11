@@ -36,29 +36,20 @@ public class RecipesRepository : IRecipesRepository
 
     public async Task Create(Recipe recipe)
     {
-        await _dbContext.Recipes.AddAsync(recipe);
-        await _dbContext.SaveChangesAsync();
+        _ = await _dbContext.Recipes.AddAsync(recipe);
+        _ = await _dbContext.SaveChangesAsync();
     }
 
-    public async Task Delete(int id)
-    {
-        var recipe = await _dbContext.Recipes.FindAsync(id) ??
+    public async Task Delete(int id) => _ = await _dbContext.Recipes.FindAsync(id) ??
                      throw new NotFoundException($"Recipe with ID '{id}' not found.");
-    }
 
-    public async Task<Recipe?> GetByName(string name)
-    {
-        return await _dbContext.Recipes
+    public async Task<Recipe?> GetByName(string name) => await _dbContext.Recipes
             .Include(r => r.Ingredients)
             .FirstOrDefaultAsync(r => r.Name == name);
-    }
 
-    public async Task<Recipe?> GetById(int id)
-    {
-        return await _dbContext.Recipes
+    public async Task<Recipe?> GetById(int id) => await _dbContext.Recipes
             .Include(r => r.Ingredients)
             .FirstOrDefaultAsync(r => r.Id == id);
-    }
 
     public List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids)
     {
@@ -66,8 +57,8 @@ public class RecipesRepository : IRecipesRepository
         var recipes = _dbContext.Recipes.Where(recipe => uniqueIds.Contains(recipe.Id)).ToList();
         if (recipes.Count != uniqueIds.Count)
         {
-            var missingRecipeIds = uniqueIds.Except(recipes.Select(x => x.Id));
-            var errorMessage = "Not all recipes exist in the database.";
+            IEnumerable<int> missingRecipeIds = uniqueIds.Except(recipes.Select(x => x.Id));
+            string errorMessage = "Not all recipes exist in the database.";
             _logger.LogError(errorMessage + " Missing IDs: {MissingIDs}", missingRecipeIds);
             throw new Exception(errorMessage);
         }
@@ -105,7 +96,7 @@ public class RecipesRepository : IRecipesRepository
 
     public async Task Update(Recipe recipe)
     {
-        _dbContext.Recipes.Update(recipe);
-        await _dbContext.SaveChangesAsync();
+        _ = _dbContext.Recipes.Update(recipe);
+        _ = await _dbContext.SaveChangesAsync();
     }
 }

@@ -1,4 +1,9 @@
-import { Component, Input, isDevMode } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Input,
+  isDevMode,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { Recipe } from '../Recipe';
 import { mapTimeToPrepareToBadge } from '../TimeToPrepare';
@@ -15,6 +20,7 @@ export interface RecipeCard extends Recipe {
   templateUrl: './recipe-card.component.html',
   standalone: true,
   imports: [NgIf, BadgeComponent, NgFor, NgOptimizedImage],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecipeCardComponent {
   @Input() recipe?: RecipeCard;

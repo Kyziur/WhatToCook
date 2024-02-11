@@ -42,4 +42,4 @@ bootstrapApplication(AppComponent, {
     provideHttpClient(withInterceptorsFromDi()),
     provideRouter(routes),
   ],
-}).catch(err => console.log(err));
+}).catch((err) => console.log(err));
