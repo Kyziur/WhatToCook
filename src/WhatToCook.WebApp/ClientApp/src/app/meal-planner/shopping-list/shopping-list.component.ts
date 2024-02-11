@@ -1,14 +1,22 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { MealPlanningService } from '../meal-planning.service';
 import { ShoppingListResponse } from './shopping-list-response.component';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { NgIf, NgFor, DatePipe } from '@angular/common';
+import { NgIf, NgFor, DatePipe, KeyValuePipe, JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'app-shopping-list',
   templateUrl: './shopping-list.component.html',
   standalone: true,
-  imports: [NgIf, ReactiveFormsModule, FormsModule, NgFor, DatePipe],
+  imports: [
+    NgIf,
+    ReactiveFormsModule,
+    FormsModule,
+    NgFor,
+    DatePipe,
+    KeyValuePipe,
+    JsonPipe,
+  ],
 })
 export class ShoppingListComponent {
   @Input() set mealPlanId(value: number | undefined) {
@@ -20,13 +28,12 @@ export class ShoppingListComponent {
   shouldDisplayEntireList = false;
 
   entireShoppingList: string[] = [];
-  shoppingList: ShoppingListResponse = {
-    fromDate: new Date(),
-    toDate: new Date(),
-    ingredientsPerDay: [],
-  };
+  shoppingList: Map<string, string[]> = new Map<string, string[]>();
 
-  constructor(private mealPlanService: MealPlanningService) {}
+  constructor(
+    private mealPlanService: MealPlanningService,
+    private datePipe: DatePipe
+  ) {}
 
   fetchIngredients(): void {
     if (!this._mealPlanId) {
@@ -35,10 +42,26 @@ export class ShoppingListComponent {
     this.mealPlanService
       .getIngredientsForShoppingList(this._mealPlanId)
       .subscribe(response => {
-        this.shoppingList = response;
+        this.shoppingList = this.groupShoppingItemsByDay(response);
         this.entireShoppingList = response.ingredientsPerDay.flatMap(
           x => x.ingredients
         );
       });
+  }
+
+  groupShoppingItemsByDay(list: ShoppingListResponse): Map<string, string[]> {
+    const map = new Map<string, string[]>();
+    const toFullDate = (date: Date) =>
+      this.datePipe.transform(date, 'fullDate');
+
+    console.error('list', list);
+    for (const item of list.ingredientsPerDay) {
+      const dayFormatted = toFullDate(item.day) ?? '';
+      map.set(
+        dayFormatted,
+        (map.get(dayFormatted) || []).concat(item.ingredients)
+      );
+    }
+    return map;
   }
 }

@@ -35,7 +35,7 @@ interface ShoppingListView {
     ModalComponent,
     ShoppingListComponent,
   ],
-  providers: [provideIcons({ heroListBullet, heroArrowRight })],
+  providers: [provideIcons({ heroListBullet, heroArrowRight }), DatePipe],
 })
 export class MealPlanListComponent {
   constructor(

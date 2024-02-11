@@ -9,7 +9,7 @@ import {
   provideHttpClient,
 } from '@angular/common/http';
 import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
-import { MEAL_PLANNER_ROUTES } from './app/meal-planner/meal-planner.routes';
+import { MEAL_PLANNER_ROUTES } from './app/meal-planner/mealPlanner.routes';
 import { RECIPES_ROUTES } from './app/recipes/recipes.routes';
 
 const routes: Routes = [
