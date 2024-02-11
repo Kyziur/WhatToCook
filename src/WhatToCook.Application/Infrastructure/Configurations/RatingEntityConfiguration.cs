@@ -8,12 +8,11 @@ internal class RatingEntityConfiguration : IEntityTypeConfiguration<Rating>
 {
     public void Configure(EntityTypeBuilder<Rating> builder)
     {
-        builder.HasKey(x => x.Id);
+        _ = builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.Score);
+        _ = builder.Property(x => x.Score);
 
-        builder.HasOne(x => x.User);
-        builder.HasOne(x => x.Recipe);
+        _ = builder.HasOne(x => x.User);
+        _ = builder.HasOne(x => x.Recipe);
     }
-
 }

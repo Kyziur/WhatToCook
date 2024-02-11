@@ -6,12 +6,9 @@ namespace WhatToCook.Application.Services;
 
 public class RecipeServiceQuery
 {
-    private readonly DatabaseContext _dbcontext;
+    private readonly DatabaseContext _dbContext;
 
-    public RecipeServiceQuery(DatabaseContext dbcontext)
-    {
-        _dbcontext = dbcontext;
-    }
+    public RecipeServiceQuery(DatabaseContext dbcontext) => _dbContext = dbcontext;
 
     public async Task<RecipeResponse?> GetByName(string name)
     {
@@ -20,8 +17,11 @@ public class RecipeServiceQuery
             return null;
         }
 
-        var recipe = await _dbcontext.Recipes.Include(r => r.Ingredients)
-            .FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower());
+        Domain.Recipe? recipe = await _dbContext.Recipes
+            .AsNoTracking()
+            .Include(r => r.Ingredients)
+            .FirstOrDefaultAsync(x => x.Name == name);
+
         if (recipe is null)
         {
             return null;
@@ -32,17 +32,13 @@ public class RecipeServiceQuery
         return recipeResponse;
     }
 
-    public async Task<List<RecipeResponse>> GetRecipes()
+    public async Task<List<RecipeResponse>> GetRecipes() => await _dbContext.Recipes.Select(recipe => new RecipeResponse()
     {
-        var query = await _dbcontext.Recipes.Select(recipe => new RecipeResponse()
-        {
-            Id = recipe.Id,
-            Name = recipe.Name,
-            Ingredients = recipe.Ingredients.Select(x => x.Name),
-            PreparationDescription = recipe.Description,
-            TimeToPrepare = recipe.TimeToPrepare,
-            ImagePath = recipe.Image
-        }).ToListAsync();
-        return query;
-    }
+        Id = recipe.Id,
+        Name = recipe.Name,
+        Ingredients = recipe.Ingredients.Select(x => x.Name),
+        PreparationDescription = recipe.Description,
+        TimeToPrepare = recipe.TimeToPrepare,
+        ImagePath = recipe.Image
+    }).ToListAsync();
 }

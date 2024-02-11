@@ -21,15 +21,15 @@ public class RecipeService
 
     private async Task<IEnumerable<Tag>> GetOrCreateTags(IEnumerable<string> tags)
     {
-        var existingTags = tagsRepository.GetTagsByNames(tags.Distinct().ToArray());
+        IEnumerable<Tag> existingTags = await tagsRepository.GetTagsByNames(tags.Distinct().ToArray());
 
         if (existingTags.Count() == tags.Count())
         {
             return existingTags;
         }
 
-        var missingTags = tags.Select(x => x.ToLowerInvariant()).Except(existingTags.Select(x => x.Name.ToLowerInvariant()));
-        var newTags = await tagsRepository.Create(missingTags);
+        IEnumerable<string> missingTags = tags.Select(x => x.ToLowerInvariant()).Except(existingTags.Select(x => x.Name.ToLowerInvariant()));
+        IEnumerable<Tag> newTags = await tagsRepository.Create(missingTags);
 
         return newTags.Concat(existingTags);
     }
@@ -58,7 +58,7 @@ public class RecipeService
             image: imagePath
             );
 
-        var tags = await GetOrCreateTags(request.Tags);
+        IEnumerable<Tag> tags = await GetOrCreateTags(request.Tags);
         recipe.SetTags(tags);
 
         await recipesRepository.Create(recipe);
@@ -90,7 +90,7 @@ public class RecipeService
         recipe.SetTimeToPrepare(request.TimeToPrepare);
         recipe.UpdateIngredients(request.Ingredients);
 
-        var tags = await GetOrCreateTags(request.Tags);
+        IEnumerable<Tag> tags = await GetOrCreateTags(request.Tags);
         recipe.SetTags(tags);
 
         await recipesRepository.Update(recipe);

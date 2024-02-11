@@ -31,16 +31,16 @@ public class DatabaseContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseNpgsql(_connectionString);
+        _ = optionsBuilder.UseNpgsql(_connectionString);
         if (_isDevelopment)
         {
-            optionsBuilder.EnableDetailedErrors().EnableSensitiveDataLogging();
+            _ = optionsBuilder.EnableDetailedErrors().EnableSensitiveDataLogging();
         }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(RecipeEntityConfiguration).Assembly);
+        _ = modelBuilder.ApplyConfigurationsFromAssembly(typeof(RecipeEntityConfiguration).Assembly);
         base.OnModelCreating(modelBuilder);
     }
 }

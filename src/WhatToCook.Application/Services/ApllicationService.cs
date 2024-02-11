@@ -6,9 +6,9 @@ public static class ApllicationServices
 {
     public static void RegisterApplicationServices(this IServiceCollection services)
     {
-        services.AddScoped<RecipeService>();
-        services.AddScoped<RecipeServiceQuery>();
-        services.AddScoped<MealPlanningService>();
-        services.AddScoped<MealPlanningServiceQuery>();
+        _ = services.AddScoped<RecipeService>();
+        _ = services.AddScoped<RecipeServiceQuery>();
+        _ = services.AddScoped<MealPlanningService>();
+        _ = services.AddScoped<MealPlanningServiceQuery>();
     }
 }

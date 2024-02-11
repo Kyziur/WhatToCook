@@ -8,11 +8,11 @@ public class Recipe
     public string Name { get; private set; }
     public string Description { get; private set; }
     public string TimeToPrepare { get; private set; }
-    public List<Ingredient> Ingredients { get; private set; } = new();
+    public List<Ingredient> Ingredients { get; private set; } = [];
     public Statistics Statistics { get; private set; }
     public string Image { get; private set; }
-    public List<RecipePlanOfMeals> RecipePlanOfMeals { get; private set; } = new();
-    public List<Tag> Tags { get; private set; } = new();
+    public List<RecipePlanOfMeals> RecipePlanOfMeals { get; private set; } = [];
+    public List<Tag> Tags { get; private set; } = [];
 
     public Recipe(string name, string description, string timeToPrepare, List<Ingredient> ingredients, Statistics statistics, string image)
     {
@@ -80,7 +80,7 @@ public class Recipe
 
         try
         {
-            var fullPath = Path.Combine(imagesDirectory, Image);
+            string fullPath = Path.Combine(imagesDirectory, Image);
             if (File.Exists(fullPath))
             {
                 File.Delete(fullPath);
@@ -100,7 +100,7 @@ public class Recipe
         }
 
         Ingredients.Clear();
-        foreach (var ingredient in newIngredients)
+        foreach (string ingredient in newIngredients)
         {
             Ingredients.Add(new Ingredient(ingredient));
         }
