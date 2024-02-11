@@ -47,7 +47,7 @@ public class PlanOfMeals
     public void SetRecipes(List<RecipePerDay> recipes)
     {
         RecipePlanOfMeals.Clear();
-        foreach (var recipe in recipes)
+        foreach (RecipePerDay recipe in recipes)
         {
             var recipePerDay = new RecipePlanOfMeals(recipe.Recipe, this, recipe.Day);
             RecipePlanOfMeals.Add(recipePerDay);

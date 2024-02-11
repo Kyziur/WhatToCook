@@ -10,6 +10,8 @@ internal class RecipeEntityConfiguration : IEntityTypeConfiguration<Recipe>
     {
         builder.HasKey(x => x.Id);
 
+        builder.HasIndex(x => x.Name).IsUnique();
+
         builder.Property(x => x.Name);
         builder.Property(x => x.Image);
         builder.Property(x => x.Description);
@@ -17,10 +19,15 @@ internal class RecipeEntityConfiguration : IEntityTypeConfiguration<Recipe>
 
         builder.HasMany(x => x.RecipePlanOfMeals).WithOne(rp => rp.Recipe).HasForeignKey(rp => rp.RecipeId);
         builder.HasMany(x => x.Ingredients).WithOne(x => x.Recipe);
+        builder
+            .HasMany(x => x.Tags)
+            .WithMany(x => x.Recipes)
+            .UsingEntity<RecipeTag>(
+            x => x.HasOne(rt => rt.Tag).WithMany().HasForeignKey(x => x.TagId),
+                                x => x.HasOne(rt => rt.Recipe).WithMany().HasForeignKey(x => x.RecipeId));
 
         builder.OwnsOne(x => x.Statistics);
 
-        builder.HasIndex(x => x.Name).IsUnique();
-
+        builder.Navigation(x => x.Tags).AutoInclude();
     }
 }

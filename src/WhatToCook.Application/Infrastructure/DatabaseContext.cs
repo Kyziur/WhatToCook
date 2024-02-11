@@ -10,11 +10,15 @@ public class DatabaseContext : DbContext
 {
     private readonly string _connectionString;
     private readonly bool _isDevelopment;
+
     public DatabaseContext()
     {
     }
 
-    public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
+    public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
+    {
+    }
+
     public DatabaseContext(DbContextOptions<DatabaseContext> options, IConfiguration configuration, IHostEnvironment environment)
     {
         _connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new Exception("Connection string is required");
@@ -23,6 +27,7 @@ public class DatabaseContext : DbContext
 
     public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<PlanOfMeals> PlanOfMeals => Set<PlanOfMeals>();
+    public DbSet<Tag> Tags { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

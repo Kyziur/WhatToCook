@@ -10,6 +10,7 @@ public static class DependencyInjection
         return services.AddDbContext<DatabaseContext>()
             .AddScoped<IRecipesRepository, RecipesRepository>()
             .AddScoped<IMealPlanningRepository, MealPlanningRepository>()
-            .AddScoped<IFileSaver, FileSaver>();
+            .AddScoped<IFileSaver, FileSaver>()
+            .AddScoped<ITagsRepository, TagsRepository>();
     }
 }

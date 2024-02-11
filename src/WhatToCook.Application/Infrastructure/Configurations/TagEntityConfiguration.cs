@@ -10,5 +10,10 @@ internal class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
     {
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name);
+
+        builder
+    .HasMany(x => x.Recipes)
+    .WithMany(x => x.Tags)
+    .UsingEntity<RecipeTag>(x => x.HasOne(z => z.Recipe).WithMany(), x => x.HasOne(z => z.Tag).WithMany());
     }
 }

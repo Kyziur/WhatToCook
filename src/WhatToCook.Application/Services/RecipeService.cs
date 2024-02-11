@@ -8,13 +8,30 @@ namespace WhatToCook.Application.Services;
 
 public class RecipeService
 {
-    private readonly ILogger _logger;
-    private readonly IRecipesRepository _recipesRepository;
+    private readonly ILogger logger;
+    private readonly IRecipesRepository recipesRepository;
+    private readonly ITagsRepository tagsRepository;
 
-    public RecipeService(IRecipesRepository recipesRepository, ILogger<RecipeService> logger)
+    public RecipeService(IRecipesRepository recipesRepository, ITagsRepository tagsRepository, ILogger<RecipeService> logger)
     {
-        _recipesRepository = recipesRepository;
-        _logger = logger;
+        this.recipesRepository = recipesRepository;
+        this.tagsRepository = tagsRepository;
+        this.logger = logger;
+    }
+
+    private async Task<IEnumerable<Tag>> GetOrCreateTags(IEnumerable<string> tags)
+    {
+        var existingTags = tagsRepository.GetTagsByNames(tags.Distinct().ToArray());
+
+        if (existingTags.Count() == tags.Count())
+        {
+            return existingTags;
+        }
+
+        var missingTags = tags.Select(x => x.ToLowerInvariant()).Except(existingTags.Select(x => x.Name.ToLowerInvariant()));
+        var newTags = await tagsRepository.Create(missingTags);
+
+        return newTags.Concat(existingTags);
     }
 
     public async Task<Recipe> Create(RecipeRequest request, string imagesDirectory)
@@ -23,7 +40,7 @@ public class RecipeService
         if (request.Image.Length > 0)
         {
             var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
-            imagePath = await _recipesRepository.SaveImage(imageInfo);
+            imagePath = await recipesRepository.SaveImage(imageInfo);
         }
         else
         {
@@ -41,35 +58,42 @@ public class RecipeService
             image: imagePath
             );
 
-        await _recipesRepository.Create(recipe);
+        var tags = await GetOrCreateTags(request.Tags);
+        recipe.SetTags(tags);
+
+        await recipesRepository.Create(recipe);
         return recipe;
     }
 
-    public async Task Delete(int id)
-    {
-        await _recipesRepository.Delete(id);
-    }
+    public async Task Delete(int id) => await recipesRepository.Delete(id);
 
     public async Task<Recipe> Update(UpdateRecipeRequest request, string imagesDirectory)
     {
-        var recipe = await _recipesRepository.GetById(request.Id);
+        Recipe? recipe = await recipesRepository.GetById(request.Id);
 
         if (recipe == null)
         {
-            _logger.LogError($"Attempted to update a recipe: {request.Name}");
+            logger.LogError($"Attempted to update a recipe: {request.Name}");
             throw new NotFoundException($"Cannot update {request.Id}");
         }
 
         recipe.RemoveImage(imagesDirectory);
-        var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
-        var imagePath = await _recipesRepository.SaveImage(imageInfo);
+        if (request.Image.Length > 0)
+        {
+            var imageInfo = new ImageInfo(request.Image, Guid.NewGuid().ToString(), imagesDirectory);
+            string imagePath = await recipesRepository.SaveImage(imageInfo);
+            recipe.SetImage(imagePath);
+        }
 
-        recipe.SetImage(imagePath);
         recipe.SetName(request.Name);
         recipe.SetDescription(request.PreparationDescription);
         recipe.SetTimeToPrepare(request.TimeToPrepare);
         recipe.UpdateIngredients(request.Ingredients);
-        await _recipesRepository.Update(recipe);
+
+        var tags = await GetOrCreateTags(request.Tags);
+        recipe.SetTags(tags);
+
+        await recipesRepository.Update(recipe);
         return recipe;
     }
 }

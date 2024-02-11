@@ -29,7 +29,7 @@ public class MealPlanningServiceQuery
             .ToList();
 
         var shoppingList = new ShoppingListResponse
-            { FromDate = mealPlan.FromDate, ToDate = mealPlan.ToDate, IngredientsPerDay = dayWiseIngredientsList };
+        { FromDate = mealPlan.FromDate, ToDate = mealPlan.ToDate, IngredientsPerDay = dayWiseIngredientsList };
         return shoppingList;
     }
 
@@ -48,7 +48,7 @@ public class MealPlanningServiceQuery
                 Recipes = planOfMeal.RecipePlanOfMeals.Select(recipe =>
                     new
                     {
-                        recipe.Day, 
+                        recipe.Day,
                         recipe.RecipeId
                     })
             }).ToListAsync(token);
@@ -85,7 +85,7 @@ public class MealPlanningServiceQuery
                 Recipes = planOfMeal.RecipePlanOfMeals.Select(recipe =>
                     new
                     {
-                        recipe.Day, 
+                        recipe.Day,
                         recipe.RecipeId
                     })
             }).FirstOrDefaultAsync(token);

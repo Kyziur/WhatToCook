@@ -35,6 +35,7 @@ export interface RecipeForm {
   preparationDescription: FormControl<string>;
   timeToPrepare: FormControl<TimeToPrepare>;
   image: FormControl<string>;
+  tags: FormControl<string>;
 }
 
 @Component({
@@ -60,6 +61,7 @@ export class RecipeViewComponent implements OnInit {
   recipeForm: FormGroup<RecipeForm> | null = null;
   isEditable = false;
 
+  tags: string[] = ['test1', 'test2'];
   constructor(
     private fb: FormBuilder,
     private recipeService: RecipeService,
@@ -136,6 +138,7 @@ export class RecipeViewComponent implements OnInit {
     const updatedRecipe: CreateRecipe = {
       id: this.recipe?.id ?? 0,
       ...form.getRawValue(),
+      tags: form.controls.tags.value.split(',').map((x) => x.trim()),
     };
 
     return this.recipeService.update(updatedRecipe).pipe(
@@ -155,7 +158,10 @@ export class RecipeViewComponent implements OnInit {
     switch (this.getDisplayMode()) {
       case DisplayMode.New:
         this.recipeService
-          .create(this.recipeForm.value as CreateRecipe)
+          .create({
+            ...this.recipeForm.value,
+            tags: this.recipeForm.value.tags?.split(',').map((x) => x.trim()),
+          } as CreateRecipe)
           .subscribe(() => this.redirectToRecipesPage());
         break;
       case DisplayMode.Edit:
@@ -238,6 +244,7 @@ export class RecipeViewComponent implements OnInit {
         recipe?.timeToPrepare ?? 'Short'
       ),
       image: this.createStringControl(),
+      tags: this.createStringControl(),
     });
   }
 

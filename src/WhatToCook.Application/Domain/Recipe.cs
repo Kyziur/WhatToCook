@@ -1,8 +1,10 @@
-﻿namespace WhatToCook.Application.Domain;
+﻿using WhatToCook.Application.Exceptions;
+
+namespace WhatToCook.Application.Domain;
 
 public class Recipe
 {
-    public int Id { get; private set; }
+    public int Id { get; }
     public string Name { get; private set; }
     public string Description { get; private set; }
     public string TimeToPrepare { get; private set; }
@@ -10,6 +12,7 @@ public class Recipe
     public Statistics Statistics { get; private set; }
     public string Image { get; private set; }
     public List<RecipePlanOfMeals> RecipePlanOfMeals { get; private set; } = new();
+    public List<Tag> Tags { get; private set; } = new();
 
     public Recipe(string name, string description, string timeToPrepare, List<Ingredient> ingredients, Statistics statistics, string image)
     {
@@ -32,8 +35,9 @@ public class Recipe
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new Exception("Name cannot be null, empty, or whitespace");
+            throw new DomainException("Name cannot be null, empty, or whitespace");
         }
+
         Name = name;
     }
 
@@ -41,8 +45,9 @@ public class Recipe
     {
         if (string.IsNullOrWhiteSpace(description))
         {
-            throw new Exception("Description cannot be null, empty, or whitespace");
+            throw new DomainException("Description cannot be null, empty, or whitespace");
         }
+
         Description = description;
     }
 
@@ -50,8 +55,9 @@ public class Recipe
     {
         if (string.IsNullOrWhiteSpace(timeToPrepare))
         {
-            throw new Exception("TimeToPrepare cannot be null, empty, or whitespace");
+            throw new DomainException("TimeToPrepare cannot be null, empty, or whitespace");
         }
+
         TimeToPrepare = timeToPrepare;
     }
 
@@ -59,14 +65,15 @@ public class Recipe
     {
         if (string.IsNullOrWhiteSpace(imagePath))
         {
-            throw new Exception("Image path cannot be null, empty, or whitespace");
+            throw new DomainException("Image path cannot be null, empty, or whitespace");
         }
+
         Image = imagePath;
     }
 
     public void RemoveImage(string imagesDirectory)
     {
-        if (string.IsNullOrWhiteSpace(Image))
+        if (string.IsNullOrWhiteSpace(Image) || Image.Equals("default_image.png"))
         {
             return;
         }
@@ -81,7 +88,7 @@ public class Recipe
         }
         catch (Exception exception)
         {
-            throw new Exception($"Failed to delete the existing image: {exception.Message}", exception);
+            throw new DomainException($"Failed to delete the existing image: {exception.Message}", exception);
         }
     }
 
@@ -98,4 +105,6 @@ public class Recipe
             Ingredients.Add(new Ingredient(ingredient));
         }
     }
+
+    public void SetTags(IEnumerable<Tag> tags) => Tags = tags.ToList();
 }

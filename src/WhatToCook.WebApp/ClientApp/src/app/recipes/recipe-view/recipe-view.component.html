@@ -129,10 +129,25 @@
             #name
             [formControl]="recipeForm.controls.name"
             type="text"
-            placeholder="Type here"
+            placeholder="Wpisz nazwę"
             class="input input-bordered w-full" />
         </div>
-
+        <div class="form-control w-full">
+          <label [for]="tagsControl" class="label">
+            <span class="label-text">
+              Tagi
+              <small>(wpisuj po przecinku)</small>
+            </span>
+          </label>
+          <input
+            #tagsControl
+            autocomplete="off"
+            list="tagsChoices"
+            [formControl]="recipeForm.controls.tags"
+            type="text"
+            placeholder="Wpisz tagi po przecinku"
+            class="input input-bordered w-full" />
+        </div>
         <!--Preparation description-->
         <div class="form-control">
           <label [for]="preparationDescription" class="label">
