@@ -9,6 +9,7 @@ import { SearchComponent } from '../../shared/search/search.component';
   templateUrl: './recipe-list.component.html',
   standalone: true,
   imports: [SearchComponent, NgFor, RecipeCardComponent, AsyncPipe],
+  providers: [RecipeListService],
 })
 export class RecipeListComponent {
   @Input() allowSelection = false;

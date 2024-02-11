@@ -23,20 +23,21 @@ import { InputDateComponent } from '../../shared/input-date/input-date.component
 import { NgIf, NgClass, NgFor, DatePipe } from '@angular/common';
 
 @Component({
-    selector: 'app-meal-creator',
-    templateUrl: './meal-plan-creator.component.html',
-    styleUrls: ['./meal-plan-creator.component.scss'],
-    standalone: true,
-    imports: [
-        NgIf,
-        ReactiveFormsModule,
-        InputDateComponent,
-        NgClass,
-        NgFor,
-        BadgeComponent,
-        RecipeListComponent,
-        DatePipe,
-    ],
+  selector: 'app-meal-creator',
+  templateUrl: './meal-plan-creator.component.html',
+  styleUrls: ['./meal-plan-creator.component.scss'],
+  standalone: true,
+  imports: [
+    NgIf,
+    ReactiveFormsModule,
+    InputDateComponent,
+    NgClass,
+    NgFor,
+    BadgeComponent,
+    RecipeListComponent,
+    DatePipe,
+  ],
+  providers: [RecipeListService],
 })
 export class MealPlanCreatorComponent implements OnInit, OnDestroy {
   public selectedMealPlanForDay?: MealPlanForDay;
