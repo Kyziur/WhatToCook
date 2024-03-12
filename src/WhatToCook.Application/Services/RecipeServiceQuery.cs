@@ -39,6 +39,7 @@ public class RecipeServiceQuery
         Ingredients = recipe.Ingredients.Select(x => x.Name),
         PreparationDescription = recipe.Description,
         TimeToPrepare = recipe.TimeToPrepare,
-        ImagePath = recipe.Image
+        ImagePath = recipe.Image,
+        Tags = recipe.Tags.Select(x => x.Name).ToArray()
     }).ToListAsync();
 }

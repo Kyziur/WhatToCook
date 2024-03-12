@@ -10,6 +10,7 @@ internal class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
     {
         _ = builder.HasKey(x => x.Id);
         _ = builder.Property(x => x.Name);
+        _ = builder.HasIndex(x => x.Name).IsUnique();
 
         _ = builder
     .HasMany(x => x.Recipes)

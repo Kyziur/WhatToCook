@@ -61,7 +61,6 @@ export class RecipeViewComponent implements OnInit {
   recipeForm: FormGroup<RecipeForm> | null = null;
   isEditable = false;
 
-  tags: string[] = ['test1', 'test2'];
   constructor(
     private fb: FormBuilder,
     private recipeService: RecipeService,
@@ -244,7 +243,7 @@ export class RecipeViewComponent implements OnInit {
         recipe?.timeToPrepare ?? 'Short'
       ),
       image: this.createStringControl(),
-      tags: this.createStringControl(),
+      tags: this.createStringControl(recipe?.tags.join(',')),
     });
   }
 

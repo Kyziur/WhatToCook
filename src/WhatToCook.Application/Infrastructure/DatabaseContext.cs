@@ -27,7 +27,7 @@ public class DatabaseContext : DbContext
 
     public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<PlanOfMeals> PlanOfMeals => Set<PlanOfMeals>();
-    public DbSet<Tag> Tags { get; set; }
+    public DbSet<Tag> Tags => Set<Tag>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

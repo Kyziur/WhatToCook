@@ -106,5 +106,5 @@ public class Recipe
         }
     }
 
-    public void SetTags(IEnumerable<Tag> tags) => Tags = tags.ToList();
+    public void SetTags(IEnumerable<Tag> tags) => Tags = new(tags);
 }

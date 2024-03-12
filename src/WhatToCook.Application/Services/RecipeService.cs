@@ -21,14 +21,17 @@ public class RecipeService
 
     private async Task<IEnumerable<Tag>> GetOrCreateTags(IEnumerable<string> tags)
     {
-        IEnumerable<Tag> existingTags = await tagsRepository.GetTagsByNames(tags.Distinct().ToArray());
 
-        if (existingTags.Count() == tags.Count())
+        List<Tag> existingTags = await tagsRepository.GetTagsByNames(tags.Distinct().ToArray());
+        if (existingTags.Count == tags.Distinct().Count())
         {
             return existingTags;
         }
 
-        IEnumerable<string> missingTags = tags.Select(x => x.ToLowerInvariant()).Except(existingTags.Select(x => x.Name.ToLowerInvariant()));
+        IEnumerable<string> missingTags = tags
+            .Select(x => x.ToLowerInvariant())
+            .Except(existingTags.Select(x => x.Name.ToLowerInvariant()));
+
         IEnumerable<Tag> newTags = await tagsRepository.Create(missingTags);
 
         return newTags.Concat(existingTags);
