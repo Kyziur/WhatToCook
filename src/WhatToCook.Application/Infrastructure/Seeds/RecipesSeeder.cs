@@ -51,7 +51,6 @@ internal static class RecipesSeeder
                     new Ingredient("50 g orzechów pekan, z grubsza posiekanych"),
                     new Ingredient("140 g posiekanej białej czekolady lub białych chocolate chips")
                 ],
-                new Statistics(),
-                "Images/default_image.png"));
+                new Image("Images/default_image.png")));
     }
 }

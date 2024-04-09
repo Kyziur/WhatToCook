@@ -8,30 +8,22 @@ namespace WhatToCook.Application.Infrastructure.Repositories;
 public interface IRecipesRepository
 {
     Task Create(Recipe recipe);
-
     Task Delete(int id);
-
     Task<Recipe?> GetByName(string name);
     Task<Recipe?> GetById(int id);
-
     List<Recipe> GetRecipesByIdForMealPlan(IEnumerable<int> ids);
-
-    Task<string> SaveImage(ImageInfo imageInfo);
-
     Task Update(Recipe recipe);
 }
 
 public class RecipesRepository : IRecipesRepository
 {
     private readonly DatabaseContext _dbContext;
-    private readonly IFileSaver _fileSaver;
     private readonly ILogger _logger;
 
-    public RecipesRepository(DatabaseContext dbContext, ILogger<RecipesRepository> logger, IFileSaver fileSaver)
+    public RecipesRepository(DatabaseContext dbContext, ILogger<RecipesRepository> logger)
     {
         _dbContext = dbContext;
         _logger = logger;
-        _fileSaver = fileSaver;
     }
 
     public async Task Create(Recipe recipe)
@@ -64,34 +56,6 @@ public class RecipesRepository : IRecipesRepository
         }
 
         return recipes;
-    }
-
-    public async Task<string> SaveImage(ImageInfo imageInfo)
-    {
-        string imageFullPath;
-        if (string.IsNullOrEmpty(imageInfo.Base64Image))
-        {
-            return "";
-        }
-
-        try
-        {
-            string finalFileName = $"{imageInfo.FileNameWithoutExtension}{imageInfo.FileExtension}";
-
-            string filePath = Path.Combine(imageInfo.ImagesDirectory, "Images", finalFileName);
-            byte[] imageBytes = imageInfo.GetImageBytes();
-
-            await _fileSaver.SaveAsync(filePath, imageBytes);
-
-            imageFullPath = $"Images/{finalFileName}";
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError("An error occurred while saving the image. Error: {message}", exception.Message);
-            throw;
-        }
-
-        return imageFullPath;
     }
 
     public async Task Update(Recipe recipe)

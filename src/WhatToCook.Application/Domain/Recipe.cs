@@ -2,19 +2,27 @@
 
 namespace WhatToCook.Application.Domain;
 
+public static class ImageConstants
+{
+    public const string FileName = "default_image.png";
+}
+
+public record Image(string Path);
+
 public class Recipe
 {
     public int Id { get; }
     public string Name { get; private set; }
-    public string Description { get; private set; }
+    public string PreparationDescription { get; private set; }
+    public string ShortDescription { get; private set; }
     public string TimeToPrepare { get; private set; }
     public List<Ingredient> Ingredients { get; private set; } = [];
     public Statistics Statistics { get; private set; }
-    public string Image { get; private set; }
+    public Image Image { get; private set; }
     public List<RecipePlanOfMeals> RecipePlanOfMeals { get; private set; } = [];
     public List<Tag> Tags { get; private set; } = [];
 
-    public Recipe(string name, string description, string timeToPrepare, List<Ingredient> ingredients, Statistics statistics, string image)
+    public Recipe(string name, string description, string timeToPrepare, List<Ingredient> ingredients, Image image)
     {
         SetName(name);
         SetDescription(description);
@@ -48,7 +56,12 @@ public class Recipe
             throw new DomainException("Description cannot be null, empty, or whitespace");
         }
 
-        Description = description;
+        PreparationDescription = description;
+    }
+
+    public void SetShortDescription(string shortDescription)
+    {
+        ShortDescription = shortDescription;
     }
 
     public void SetTimeToPrepare(string timeToPrepare)
@@ -61,35 +74,9 @@ public class Recipe
         TimeToPrepare = timeToPrepare;
     }
 
-    public void SetImage(string imagePath)
+    public void SetImage(Image image)
     {
-        if (string.IsNullOrWhiteSpace(imagePath))
-        {
-            throw new DomainException("Image path cannot be null, empty, or whitespace");
-        }
-
-        Image = imagePath;
-    }
-
-    public void RemoveImage(string imagesDirectory)
-    {
-        if (string.IsNullOrWhiteSpace(Image) || Image.Equals("default_image.png"))
-        {
-            return;
-        }
-
-        try
-        {
-            string fullPath = Path.Combine(imagesDirectory, Image);
-            if (File.Exists(fullPath))
-            {
-                File.Delete(fullPath);
-            }
-        }
-        catch (Exception exception)
-        {
-            throw new DomainException($"Failed to delete the existing image: {exception.Message}", exception);
-        }
+        Image = image;
     }
 
     public void UpdateIngredients(List<string> newIngredients)

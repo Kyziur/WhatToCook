@@ -2,6 +2,7 @@
 using WhatToCook.Application.DataTransferObjects.Requests;
 using WhatToCook.Application.Domain;
 using WhatToCook.Application.Exceptions;
+using WhatToCook.Application.Infrastructure.Images;
 using WhatToCook.Application.Infrastructure.Repositories;
 using WhatToCook.Application.Services;
 
@@ -12,6 +13,7 @@ public class RecipeServiceTests
     private readonly Mock<ILogger<RecipeService>> _loggerMock;
     private readonly Mock<IRecipesRepository> _recipesRepositoryMock;
     private readonly Mock<ITagsRepository> _tagsRepositoryMock;
+    private readonly Mock<IImagesManager> _imagesManagerMock;
 
     public RecipeServiceTests()
     {
@@ -25,7 +27,7 @@ public class RecipeServiceTests
     public async Task Given_IncorrectData_When_UpdatingRecipe_ThenThrowsException()
     {
         string recipeName = "Test123";
-        var mockExistingRecipe = new Recipe(recipeName, "desc", "long", [], new Statistics(), "imagePath");
+        var mockExistingRecipe = new Recipe(recipeName, "desc", "long", [], new Image("imagePath"));
         _ = _recipesRepositoryMock.Setup(x => x.GetById(1)).ReturnsAsync(mockExistingRecipe);
 
         string invalidBase64Image = "INVALID_BASE64";
@@ -43,9 +45,10 @@ public class RecipeServiceTests
             PreparationDescription = "",
             TimeToPrepare = "medium"
         };
+        ICollection<ImageInfo> savedImages = [];
 
         var sut = new RecipeService(_recipesRepositoryMock.Object, _tagsRepositoryMock.Object, _loggerMock.Object);
-        Func<Task<Recipe>> action = async () => await sut.Update(recipeUpdateRequest, "");
+        Func<Task<Recipe>> action = async () => await sut.Update(recipeUpdateRequest);
 
         _ = await action.Should().ThrowAsync<ArgumentException>();
     }
@@ -82,17 +85,15 @@ public class RecipeServiceTests
             TimeToPrepare = "medium"
         };
 
-        string imagesDirectory = "some directory";
-
         var mockRecipePlanOfMealsList = new List<RecipePlanOfMeals>();
         var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), []);
-        var mockExistingRecipe = new Recipe(recipeName, "desc", "long", [], new Statistics(), "imagePath");
+        var mockExistingRecipe = new Recipe(recipeName, "desc", "long", [], new Image("imagePath"));
 
         mockRecipePlanOfMealsList.Add(new RecipePlanOfMeals(mockExistingRecipe, mockPlanOfMeals, DateTime.UtcNow));
 
         _ = _recipesRepositoryMock.Setup(x => x.GetByName(recipeName)).ReturnsAsync(mockExistingRecipe);
 
-        _ = await Assert.ThrowsAsync<NotFoundException>(() => sut.Update(updateRequest, imagesDirectory));
+        _ = await Assert.ThrowsAsync<NotFoundException>(() => sut.Update(updateRequest));
 
         _recipesRepositoryMock.Verify(x => x.Update(It.IsAny<Recipe>()), Times.Never);
     }
@@ -115,10 +116,8 @@ public class RecipeServiceTests
             TimeToPrepare = "medium"
         };
 
-        string imagesDirectory = "some directory";
-
         _ = _recipesRepositoryMock.Setup<Task<Recipe?>>(x => x.GetByName(nonexistentRecipeName)).ReturnsAsync((Recipe?)null);
-        _ = await Assert.ThrowsAsync<NotFoundException>(() => sut.Update(updateRequest, imagesDirectory));
+        _ = await Assert.ThrowsAsync<NotFoundException>(() => sut.Update(updateRequest));
 
         _recipesRepositoryMock.Verify(x => x.Update(It.IsAny<Recipe>()), Times.Never);
     }
@@ -138,20 +137,18 @@ public class RecipeServiceTests
             PreparationDescription = "124asfafafas",
             TimeToPrepare = "short"
         };
-
-        string imagesDirectory = "some directory";
         string expectedImagePath = "some path";
 
         _recipesRepositoryMock.Setup(x => x.Create(It.IsAny<Recipe>())).Returns(Task.CompletedTask).Verifiable();
         _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>())).ReturnsAsync(expectedImagePath).Verifiable();
-        Recipe result = await sut.Create(recipeRequest, imagesDirectory);
+        Recipe result = await sut.Create(recipeRequest);
 
         _ = result.Should().NotBeNull();
         _ = result.Name.Should().NotBeNullOrWhiteSpace().And.Be("Test123");
         _ = result.Ingredients.Should().HaveCount(3);
-        Assert.Equal(expectedImagePath, result.Image);
+        Assert.Equal(expectedImagePath, result.Image.Path);
         Assert.Equal(recipeRequest.Name, result.Name);
-        Assert.Equal(recipeRequest.PreparationDescription, result.Description);
+        Assert.Equal(recipeRequest.PreparationDescription, result.PreparationDescription);
         Assert.Equal(recipeRequest.TimeToPrepare, result.TimeToPrepare);
         Assert.Equal(recipeRequest.Ingredients.Count, result.Ingredients.Count);
 
@@ -172,8 +169,8 @@ public class RecipeServiceTests
                 new Ingredient("old ingredient3"),
                 new Ingredient("old ingredient4"),
             ],
-            new Statistics(),
-            "oldimage.png"
+
+            new Image("oldimage.png")
             );
 
         var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), []);
@@ -202,7 +199,7 @@ public class RecipeServiceTests
 
         var mockRecipePlanOfMealsList = new List<RecipePlanOfMeals>();
         var mockPlanOfMeals = new PlanOfMeals("SomePlan", DateTime.UtcNow, DateTime.UtcNow.AddDays(1), []);
-        var mockExistingRecipe = new Recipe(oldRecipeName, "desc", "long", [], new Statistics(), "imagePath");
+        var mockExistingRecipe = new Recipe(oldRecipeName, "desc", "long", [], new Image("imagePath"));
 
         mockRecipePlanOfMealsList.Add(new RecipePlanOfMeals(mockExistingRecipe, mockPlanOfMeals, DateTime.UtcNow));
 
@@ -216,20 +213,18 @@ public class RecipeServiceTests
             TimeToPrepare = "medium"
         };
 
-        string imagesDirectory = "some updated directory";
-
         _ = _recipesRepositoryMock.Setup(x => x.GetById(1)).ReturnsAsync(mockExistingRecipe);
         _recipesRepositoryMock.Setup(x => x.SaveImage(It.IsAny<ImageInfo>())).ReturnsAsync("some updated path").Verifiable();
         _recipesRepositoryMock.Setup(x => x.Update(It.IsAny<Recipe>())).Returns(Task.CompletedTask).Verifiable();
 
-        Recipe result = await sut.Update(recipeUpdateRequest, imagesDirectory);
+        Recipe result = await sut.Update(recipeUpdateRequest);
 
         _ = result.Should().NotBeNull();
         _ = result.Name.Should().NotBeNullOrWhiteSpace().And.Be(newRecipeName);
         _ = result.Ingredients.Should().HaveCount(3);
-        Assert.Equal("some updated path", result.Image);
+        Assert.Equal("some updated path", result.Image.Path);
         Assert.Equal(recipeUpdateRequest.Name, result.Name);
-        Assert.Equal(recipeUpdateRequest.PreparationDescription, result.Description);
+        Assert.Equal(recipeUpdateRequest.PreparationDescription, result.PreparationDescription);
         Assert.Equal(recipeUpdateRequest.TimeToPrepare, result.TimeToPrepare);
         Assert.Equal(recipeUpdateRequest.Ingredients.Count, result.Ingredients.Count);
 

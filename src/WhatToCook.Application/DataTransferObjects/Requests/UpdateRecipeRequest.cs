@@ -8,7 +8,8 @@ public class UpdateRecipeRequest
     public required string Name { get; set; }
     public required string PreparationDescription { get; set; }
     public required string TimeToPrepare { get; set; }
-    public IEnumerable<string> Tags { get; set; } = Enumerable.Empty<string>();
+    public IEnumerable<string> Tags { get; set; } = [];
+    public string ShortDescription { get; set; } = string.Empty;
 }
 
 public record TagDto

@@ -51,15 +51,14 @@ public class RecipeController : ControllerBase
     public async Task<ActionResult> Post(RecipeRequest request)
     {
         var filesDirectory = _environment.WebRootPath;
-        await _recipeService.Create(request, filesDirectory);
+        await _recipeService.Create(request);
         return Ok();
     }
 
     [HttpPut]
     public async Task<ActionResult> Put(UpdateRecipeRequest request)
     {
-        var filesDirectory = _environment.WebRootPath;
-        await _recipeService.Update(request, filesDirectory);
+        await _recipeService.Update(request);
         return Ok();
     }
 

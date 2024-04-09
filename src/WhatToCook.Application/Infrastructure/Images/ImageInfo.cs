@@ -1,26 +1,19 @@
-﻿namespace WhatToCook.Application.Domain;
+﻿namespace WhatToCook.Application.Infrastructure.Images;
 
-public class ImageInfo
+public record ImageInfo
 {
     public string Base64Image { get; private set; }
     public string FileNameWithoutExtension { get; private set; }
-    public string ImagesDirectory { get; private set; }
     public string FileExtension { get; private set; }
 
-    public ImageInfo(string base64Image, string fileNameWithoutExtension, string imagesDirectory)
+    public ImageInfo(string base64Image, string fileNameWithoutExtension)
     {
         Base64Image = base64Image;
         FileNameWithoutExtension = fileNameWithoutExtension;
-        if (string.IsNullOrWhiteSpace(imagesDirectory))
-        {
-            throw new ArgumentException("Path cannot be empty", nameof(imagesDirectory));
-        }
-
-        ImagesDirectory = imagesDirectory;
-
         FileExtension = DetermineImageExtension();
     }
     public byte[] GetImageBytes() => Convert.FromBase64String(Base64Image);
+    public string GetFileName() => $"{FileNameWithoutExtension}{FileExtension}";
     private string DetermineImageExtension()
     {
         byte[] bytes = GetImageBytes();

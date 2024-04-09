@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WhatToCook.Application.Infrastructure;
@@ -11,9 +12,11 @@ using WhatToCook.Application.Infrastructure;
 namespace WhatToCook.Application.Infrastructure.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20240312194021_RecipeAddedShortDescription")]
+    partial class RecipeAddedShortDescription
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -131,6 +134,10 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Image")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -288,23 +295,6 @@ namespace WhatToCook.Application.Infrastructure.Migrations
 
             modelBuilder.Entity("WhatToCook.Application.Domain.Recipe", b =>
                 {
-                    b.OwnsOne("WhatToCook.Application.Domain.Image", "Image", b1 =>
-                        {
-                            b1.Property<int>("RecipeId")
-                                .HasColumnType("integer");
-
-                            b1.Property<string>("Path")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.HasKey("RecipeId");
-
-                            b1.ToTable("Recipes");
-
-                            b1.WithOwner()
-                                .HasForeignKey("RecipeId");
-                        });
-
                     b.OwnsOne("WhatToCook.Application.Domain.Statistics", "Statistics", b1 =>
                         {
                             b1.Property<int>("RecipeId")
@@ -326,9 +316,6 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("RecipeId");
                         });
-
-                    b.Navigation("Image")
-                        .IsRequired();
 
                     b.Navigation("Statistics")
                         .IsRequired();

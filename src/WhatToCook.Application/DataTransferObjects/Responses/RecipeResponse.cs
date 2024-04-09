@@ -9,6 +9,7 @@ public class RecipeResponse
     public IEnumerable<string> Ingredients { get; set; } = Enumerable.Empty<string>();
     public required string Name { get; set; }
     public required string PreparationDescription { get; set; }
+    public string ShortDescription { get; set; } = "";
     public required string TimeToPrepare { get; set; }
     public string[] Tags { get; set; } = Array.Empty<string>();
 
@@ -17,9 +18,10 @@ public class RecipeResponse
         Id = recipe.Id,
         Name = recipe.Name,
         Ingredients = recipe.Ingredients.Select(x => x.Name),
-        PreparationDescription = recipe.Description,
+        PreparationDescription = recipe.PreparationDescription,
+        ShortDescription = recipe.ShortDescription,
         TimeToPrepare = recipe.TimeToPrepare,
-        ImagePath = recipe.Image,
+        ImagePath = recipe.Image.Path,
         Tags = recipe.Tags.Select(x => x.Name).ToArray()
     };
 }
