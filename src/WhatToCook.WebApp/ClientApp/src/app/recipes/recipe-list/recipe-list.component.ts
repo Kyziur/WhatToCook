@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { RecipeListService } from './recipe-list.service';
 import {
   RecipeCard,
@@ -16,7 +16,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   imports: [SearchComponent, NgFor, RecipeCardComponent, AsyncPipe],
   providers: [RecipeListService],
 })
-export class RecipeListComponent {
+export class RecipeListComponent implements OnChanges {
   @Input() allowSelection = false;
 
   recipes: RecipeCard[] = [];
@@ -30,5 +30,9 @@ export class RecipeListComponent {
       .subscribe((recipes) => {
         this.recipes = recipes;
       });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    console.error('changes', changes);
   }
 }
