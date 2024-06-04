@@ -1,8 +1,13 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { RecipeListService } from './recipe-list.service';
-import { RecipeCardComponent } from '../recipe-card/recipe-card.component';
+import {
+  RecipeCard,
+  RecipeCardComponent,
+} from '../recipe-card/recipe-card.component';
 import { NgFor, AsyncPipe } from '@angular/common';
 import { SearchComponent } from '../../shared/search/search.component';
+import { map } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-recipe-list',
@@ -11,8 +16,23 @@ import { SearchComponent } from '../../shared/search/search.component';
   imports: [SearchComponent, NgFor, RecipeCardComponent, AsyncPipe],
   providers: [RecipeListService],
 })
-export class RecipeListComponent {
+export class RecipeListComponent implements OnChanges {
   @Input() allowSelection = false;
 
-  constructor(public service: RecipeListService) {}
+  recipes: RecipeCard[] = [];
+
+  constructor(public service: RecipeListService) {
+    this.service.recipeCards$
+      .pipe(
+        takeUntilDestroyed(),
+        map((x) => x.sort((a, b) => Number(b) - Number(a)))
+      )
+      .subscribe((recipes) => {
+        this.recipes = recipes;
+      });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    console.error('changes', changes);
+  }
 }

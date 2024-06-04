@@ -8,14 +8,11 @@ public class MealPlanningServiceQuery
 {
     private readonly DatabaseContext _dbContext;
 
-    public MealPlanningServiceQuery(DatabaseContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
+    public MealPlanningServiceQuery(DatabaseContext dbContext) => _dbContext = dbContext;
 
     public async Task<ShoppingListResponse> GetIngredientsForMealPlanById(int mealPlanId)
     {
-        var mealPlan = await _dbContext.PlanOfMeals
+        Domain.PlanOfMeals mealPlan = await _dbContext.PlanOfMeals
             .AsNoTracking()
             .AsSplitQuery()
             .Include(mp => mp.RecipePlanOfMeals)
@@ -29,7 +26,7 @@ public class MealPlanningServiceQuery
             .ToList();
 
         var shoppingList = new ShoppingListResponse
-            { FromDate = mealPlan.FromDate, ToDate = mealPlan.ToDate, IngredientsPerDay = dayWiseIngredientsList };
+        { FromDate = mealPlan.FromDate, ToDate = mealPlan.ToDate, IngredientsPerDay = dayWiseIngredientsList };
         return shoppingList;
     }
 
@@ -48,7 +45,7 @@ public class MealPlanningServiceQuery
                 Recipes = planOfMeal.RecipePlanOfMeals.Select(recipe =>
                     new
                     {
-                        recipe.Day, 
+                        recipe.Day,
                         recipe.RecipeId
                     })
             }).ToListAsync(token);
@@ -75,7 +72,7 @@ public class MealPlanningServiceQuery
             .AsNoTracking()
             .Include(p => p.RecipePlanOfMeals)
             .ThenInclude(x => x.Recipe)
-            .Where(x => x.Name.ToLower() == name.ToLower())
+            .Where(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
             .Select(planOfMeal => new
             {
                 planOfMeal.Name,
@@ -85,27 +82,24 @@ public class MealPlanningServiceQuery
                 Recipes = planOfMeal.RecipePlanOfMeals.Select(recipe =>
                     new
                     {
-                        recipe.Day, 
+                        recipe.Day,
                         recipe.RecipeId
                     })
             }).FirstOrDefaultAsync(token);
 
-        if (query is null)
-        {
-            return null;
-        }
-
-        return new PlanOfMealResponse
-        {
-            Name = query.Name,
-            Id = query.Id,
-            FromDate = query.FromDate,
-            ToDate = query.ToDate,
-            Recipes = query.Recipes.GroupBy(x => x.Day).Select(x => new MealPlanForDayResponse
+        return query is null
+            ? null
+            : new PlanOfMealResponse
             {
-                Day = x.Key,
-                RecipesIds = x.Select(r => r.RecipeId)
-            })
-        };
+                Name = query.Name,
+                Id = query.Id,
+                FromDate = query.FromDate,
+                ToDate = query.ToDate,
+                Recipes = query.Recipes.GroupBy(x => x.Day).Select(x => new MealPlanForDayResponse
+                {
+                    Day = x.Key,
+                    RecipesIds = x.Select(r => r.RecipeId)
+                })
+            };
     }
 }

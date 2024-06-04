@@ -12,15 +12,15 @@ using WhatToCook.Application.Infrastructure;
 namespace WhatToCook.Application.Infrastructure.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20230401155107_DatabaseUpdate")]
-    partial class DatabaseUpdate
+    [Migration("20240409190102_AddedImageAndDescription")]
+    partial class AddedImageAndDescription
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.0")
+                .HasAnnotation("ProductVersion", "8.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -81,8 +81,9 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                     b.Property<DateTime>("FromDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("integer");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("ToDate")
                         .HasColumnType("timestamp with time zone");
@@ -92,7 +93,8 @@ namespace WhatToCook.Application.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RecipeId");
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -133,15 +135,15 @@ namespace WhatToCook.Application.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Image")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PreparationDescription")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShortDescription")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -151,32 +153,43 @@ namespace WhatToCook.Application.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name");
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Recipes");
                 });
 
-            modelBuilder.Entity("WhatToCook.Application.Domain.ShoppingList", b =>
+            modelBuilder.Entity("WhatToCook.Application.Domain.RecipePlanOfMeals", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
                     b.Property<int>("RecipeId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("UserId")
+                    b.Property<int>("PlanOfMealsId")
                         .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.Property<DateTime>("Day")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.HasIndex("RecipeId");
+                    b.HasKey("RecipeId", "PlanOfMealsId", "Day");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("PlanOfMealsId");
 
-                    b.ToTable("ShoppingList");
+                    b.ToTable("RecipePlanOfMeals");
+                });
+
+            modelBuilder.Entity("WhatToCook.Application.Domain.RecipeTag", b =>
+                {
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("RecipeId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("RecipeTag");
                 });
 
             modelBuilder.Entity("WhatToCook.Application.Domain.Tag", b =>
@@ -193,7 +206,10 @@ namespace WhatToCook.Application.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tag");
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("WhatToCook.Application.Domain.User", b =>
@@ -245,19 +261,11 @@ namespace WhatToCook.Application.Infrastructure.Migrations
 
             modelBuilder.Entity("WhatToCook.Application.Domain.PlanOfMeals", b =>
                 {
-                    b.HasOne("WhatToCook.Application.Domain.Recipe", "Recipe")
-                        .WithMany()
-                        .HasForeignKey("RecipeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("WhatToCook.Application.Domain.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Recipe");
 
                     b.Navigation("User");
                 });
@@ -283,6 +291,23 @@ namespace WhatToCook.Application.Infrastructure.Migrations
 
             modelBuilder.Entity("WhatToCook.Application.Domain.Recipe", b =>
                 {
+                    b.OwnsOne("WhatToCook.Application.Domain.Image", "Image", b1 =>
+                        {
+                            b1.Property<int>("RecipeId")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("Path")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.HasKey("RecipeId");
+
+                            b1.ToTable("Recipes");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RecipeId");
+                        });
+
                     b.OwnsOne("WhatToCook.Application.Domain.Statistics", "Statistics", b1 =>
                         {
                             b1.Property<int>("RecipeId")
@@ -305,11 +330,33 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                                 .HasForeignKey("RecipeId");
                         });
 
+                    b.Navigation("Image")
+                        .IsRequired();
+
                     b.Navigation("Statistics")
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("WhatToCook.Application.Domain.ShoppingList", b =>
+            modelBuilder.Entity("WhatToCook.Application.Domain.RecipePlanOfMeals", b =>
+                {
+                    b.HasOne("WhatToCook.Application.Domain.PlanOfMeals", "PlanOfMeals")
+                        .WithMany("RecipePlanOfMeals")
+                        .HasForeignKey("PlanOfMealsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WhatToCook.Application.Domain.Recipe", "Recipe")
+                        .WithMany("RecipePlanOfMeals")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PlanOfMeals");
+
+                    b.Navigation("Recipe");
+                });
+
+            modelBuilder.Entity("WhatToCook.Application.Domain.RecipeTag", b =>
                 {
                     b.HasOne("WhatToCook.Application.Domain.Recipe", "Recipe")
                         .WithMany()
@@ -317,20 +364,27 @@ namespace WhatToCook.Application.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WhatToCook.Application.Domain.User", "User")
+                    b.HasOne("WhatToCook.Application.Domain.Tag", "Tag")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Recipe");
 
-                    b.Navigation("User");
+                    b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("WhatToCook.Application.Domain.PlanOfMeals", b =>
+                {
+                    b.Navigation("RecipePlanOfMeals");
                 });
 
             modelBuilder.Entity("WhatToCook.Application.Domain.Recipe", b =>
                 {
                     b.Navigation("Ingredients");
+
+                    b.Navigation("RecipePlanOfMeals");
                 });
 #pragma warning restore 612, 618
         }

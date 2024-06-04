@@ -6,7 +6,7 @@ import { RecipeCard } from '../recipe-card/recipe-card.component';
 @Injectable()
 export class RecipeListService {
   private recipeCards = new BehaviorSubject<RecipeCard[]>([]);
-  public recipeCards$: Observable<RecipeCard[]> =
+    public recipeCards$: Observable<RecipeCard[]> =
     this.recipeCards.asObservable();
 
   constructor(private service: RecipeService) {

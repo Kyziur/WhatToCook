@@ -8,7 +8,7 @@ internal class UserEntityConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.HasKey(x => x.Id);
-        builder.Property(x => x.Email);
+        _ = builder.HasKey(x => x.Id);
+        _ = builder.Property(x => x.Email);
     }
 }

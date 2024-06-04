@@ -5,6 +5,7 @@ import {
   FormBuilder,
   FormArray,
   ReactiveFormsModule,
+  FormsModule,
 } from '@angular/forms';
 import { CreateRecipe } from './CreateRecipe';
 import { RecipeService } from '../recipe.service';
@@ -20,6 +21,7 @@ import {
   NgIf,
   NgFor,
 } from '@angular/common';
+import { TextareaAutoResizeDirective } from 'src/app/shared/textarea-auto-resize/textarea-auto-resize.directive';
 
 export enum DisplayMode {
   New = 'New',
@@ -33,6 +35,7 @@ export interface RecipeForm {
   preparationDescription: FormControl<string>;
   timeToPrepare: FormControl<TimeToPrepare>;
   image: FormControl<string>;
+  tags: FormControl<string>;
 }
 
 @Component({
@@ -47,6 +50,8 @@ export interface RecipeForm {
     ModalComponent,
     NgFor,
     ReactiveFormsModule,
+    FormsModule,
+    TextareaAutoResizeDirective,
   ],
 })
 export class RecipeViewComponent implements OnInit {
@@ -70,7 +75,7 @@ export class RecipeViewComponent implements OnInit {
   ngOnInit(): void {
     this.route.params
       .pipe(
-        switchMap(params => {
+        switchMap((params) => {
           const name = params['name'];
           if (!name) {
             return of(undefined);
@@ -78,7 +83,7 @@ export class RecipeViewComponent implements OnInit {
           return this.recipeService.getByName(name);
         })
       )
-      .subscribe(recipe => {
+      .subscribe((recipe) => {
         this.recipe = recipe;
         this.loadFormData(recipe);
       });
@@ -132,6 +137,7 @@ export class RecipeViewComponent implements OnInit {
     const updatedRecipe: CreateRecipe = {
       id: this.recipe?.id ?? 0,
       ...form.getRawValue(),
+      tags: form.controls.tags.value.split(',').map((x) => x.trim()),
     };
 
     return this.recipeService.update(updatedRecipe).pipe(
@@ -151,11 +157,14 @@ export class RecipeViewComponent implements OnInit {
     switch (this.getDisplayMode()) {
       case DisplayMode.New:
         this.recipeService
-          .create(this.recipeForm.value as CreateRecipe)
+          .create({
+            ...this.recipeForm.value,
+            tags: this.recipeForm.value.tags?.split(',').map((x) => x.trim()),
+          } as CreateRecipe)
           .subscribe(() => this.redirectToRecipesPage());
         break;
       case DisplayMode.Edit:
-        this.updateRecipe(this.recipeForm).subscribe(recipe => {
+        this.updateRecipe(this.recipeForm).subscribe((recipe) => {
           this.recipe = recipe;
           this.loadFormData(this.recipe);
           this.isEditable = false;
@@ -166,8 +175,44 @@ export class RecipeViewComponent implements OnInit {
     }
   }
 
-  addIngredient() {
-    this.recipeForm?.controls.ingredients.push(this.fb.nonNullable.control(''));
+  isDialogToShowIngredientsVisible = false;
+  ingredientsToParse = '';
+  openDialogToPasteIngredients() {
+    this.isDialogToShowIngredientsVisible = true;
+  }
+  closeDialogToPasteIngredients() {
+    this.isDialogToShowIngredientsVisible = false;
+  }
+
+  parseIngredients() {
+    const splitted = this.ingredientsToParse
+      .trim()
+      .split(/\r?\n/)
+      .filter((x) => x.length > 0);
+
+    if (splitted.length < 1) {
+      return;
+    }
+
+    splitted.forEach((ingredient) => this.addIngredient(ingredient));
+
+    this.removeEmptyIngredients();
+    this.ingredientsToParse = '';
+    this.closeDialogToPasteIngredients();
+  }
+
+  addIngredient(value: string = '') {
+    this.recipeForm?.controls.ingredients.push(
+      this.createStringControl(value.trim())
+    );
+  }
+
+  removeEmptyIngredients() {
+    const indexesOfEmptyFields = this.recipeForm?.controls.ingredients.controls
+      .map((field, index) => (field.value.trim().length === 0 ? index : -1))
+      .filter((x) => x > -1);
+
+    indexesOfEmptyFields?.forEach((x) => this.removeIngredient(x));
   }
 
   removeIngredient(index: number) {
@@ -180,7 +225,7 @@ export class RecipeViewComponent implements OnInit {
 
   loadFormData(recipe?: Recipe) {
     const ingredientsControls =
-      recipe?.ingredients.map(ingredient => {
+      recipe?.ingredients.map((ingredient) => {
         return this.createStringControl(ingredient);
       }) ?? [];
 
@@ -198,6 +243,7 @@ export class RecipeViewComponent implements OnInit {
         recipe?.timeToPrepare ?? 'Short'
       ),
       image: this.createStringControl(),
+      tags: this.createStringControl(recipe?.tags.join(',')),
     });
   }
 
@@ -221,7 +267,7 @@ export class RecipeViewComponent implements OnInit {
 
     this.recipeService.deleteRecipe(id).subscribe({
       next: () => this.redirectToRecipesPage(),
-      error: error =>
+      error: (error) =>
         console.error('Error occured when deleting recipe', error),
     });
   }

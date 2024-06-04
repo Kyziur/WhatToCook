@@ -3,5 +3,5 @@
 public class User
 {
     public int Id { get; private set; }
-    public string Email { get; set; }
+    public required string Email { get; set; }
 }

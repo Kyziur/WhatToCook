@@ -8,10 +8,10 @@ internal class IngredientEntityConfiguration : IEntityTypeConfiguration<Ingredie
 {
     public void Configure(EntityTypeBuilder<Ingredient> builder)
     {
-        builder.HasKey(x => x.Id);
+        _ = builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.Name);
+        _ = builder.Property(x => x.Name);
 
-        builder.HasOne(x => x.Recipe).WithMany(x => x.Ingredients);
+        _ = builder.HasOne(x => x.Recipe).WithMany(x => x.Ingredients);
     }
 }

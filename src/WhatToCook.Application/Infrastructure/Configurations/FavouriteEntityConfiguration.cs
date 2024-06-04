@@ -8,10 +8,10 @@ internal class FavouriteEntityConfiguration : IEntityTypeConfiguration<Favourite
 {
     public void Configure(EntityTypeBuilder<Favourite> builder)
     {
-        builder.HasKey(x => x.Id);
+        _ = builder.HasKey(x => x.Id);
 
-        builder.HasOne(x => x.User);
+        _ = builder.HasOne(x => x.User);
 
-        builder.HasOne(x => x.Recipe);
+        _ = builder.HasOne(x => x.Recipe);
     }
 }

@@ -12,6 +12,7 @@ public class Ingredient
         {
             throw new ArgumentException("Ingredient name cannot be empty or null.");
         }
+
         Name = name;
     }
     private Ingredient() { }
