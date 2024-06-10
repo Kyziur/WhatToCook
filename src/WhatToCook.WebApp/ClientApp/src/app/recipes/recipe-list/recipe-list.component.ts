@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { RecipeListService } from './recipe-list.service';
 import {
   RecipeCard,
@@ -16,7 +16,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   imports: [SearchComponent, NgFor, RecipeCardComponent, AsyncPipe],
   providers: [RecipeListService],
 })
-export class RecipeListComponent implements OnChanges {
+export class RecipeListComponent {
   @Input() allowSelection = false;
 
   recipes: RecipeCard[] = [];
@@ -32,7 +32,7 @@ export class RecipeListComponent implements OnChanges {
       });
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    console.error('changes', changes);
+  toggleSelection($event: Pick<RecipeCard, 'id'>) {
+    this.service.toggleSelect($event.id);
   }
 }

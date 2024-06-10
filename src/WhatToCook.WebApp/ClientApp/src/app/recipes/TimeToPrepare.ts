@@ -1,24 +1,31 @@
-﻿import { Badge } from '../shared/badge/badge.component';
+﻿import { Pipe, PipeTransform } from '@angular/core';
+import { Badge } from '../shared/badge/badge.component';
 
 export type TimeToPrepare = 'Short' | 'Medium' | 'Long';
 export const TimeToPrepareValues: TimeToPrepare[] = ['Short', 'Medium', 'Long'];
 
-export function mapTimeToPrepareToBadge(timeToPrepare: TimeToPrepare): Badge {
-  switch (timeToPrepare) {
-    case 'Short':
-      return {
-        level: 'success',
-        text: timeToPrepare,
-      };
-    case 'Medium':
-      return {
-        level: 'warning',
-        text: timeToPrepare,
-      };
-    case 'Long':
-      return {
-        level: 'error',
-        text: timeToPrepare,
-      };
+@Pipe({
+  name: 'prepareTimeToBadgePipe',
+  standalone: true,
+})
+export class PrepareTimeToBadgePipe implements PipeTransform {
+  transform(value: TimeToPrepare): Badge {
+    switch (value) {
+      case 'Short':
+        return {
+          level: 'success',
+          text: value,
+        };
+      case 'Medium':
+        return {
+          level: 'warning',
+          text: value,
+        };
+      case 'Long':
+        return {
+          level: 'error',
+          text: value,
+        };
+    }
   }
 }

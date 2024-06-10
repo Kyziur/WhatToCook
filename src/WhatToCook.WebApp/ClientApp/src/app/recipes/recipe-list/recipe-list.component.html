@@ -7,7 +7,8 @@
     @for (recipeCard of recipes; track recipeCard.id) {
       <app-recipe-card
         [recipe]="recipeCard"
-        [showSelectButton]="allowSelection"></app-recipe-card>
+        (selectClicked)="toggleSelection($event)"
+        [showSelectButton]="true"></app-recipe-card>
     }
   </div>
 </div>

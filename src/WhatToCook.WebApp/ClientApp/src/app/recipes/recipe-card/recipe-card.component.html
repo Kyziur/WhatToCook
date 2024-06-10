@@ -4,16 +4,18 @@
       <img
         class="cursor-pointer hover:opacity-90"
         (click)="viewRecipeDetails(recipe.name)"
-        src="{{ getImagePath() }}"
+        src="{{ imagePath }}"
+        fill
         alt="{{ recipe.name }}" />
     </figure>
     <div class="card-body">
       <h2 class="card-title">
-        <span class="cursor-pointer" (click)="viewRecipeDetails(recipe.name)">{{
-          recipe.name
-        }}</span>
+        <span class="cursor-pointer" (click)="viewRecipeDetails(recipe.name)">
+          {{ recipe.name }}
+        </span>
       </h2>
-      <app-badge [badge]="getTimeToPrepareBadge(recipe)"></app-badge>
+      <app-badge
+        [badge]="recipe.timeToPrepare | prepareTimeToBadgePipe"></app-badge>
       <p>
         Lorem ipsum dolor sit amet, consectetur adipisicing elit. Voluptatibus
         quia, nulla! Maiores et perferendis eaque, exercitationem praesentium
@@ -21,7 +23,7 @@
       </p>
 
       <div class="card-actions justify-end">
-        @for (tag of getTags(recipe); track tag) {
+        @for (tag of recipe.tags; track tag) {
           <div class="badge badge-outline">{{ tag }}</div>
         }
       </div>

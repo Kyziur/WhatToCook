@@ -6,27 +6,27 @@ import { RecipeCard } from '../recipe-card/recipe-card.component';
 @Injectable()
 export class RecipeListService {
   private recipeCards = new BehaviorSubject<RecipeCard[]>([]);
-    public recipeCards$: Observable<RecipeCard[]> =
+  public recipeCards$: Observable<RecipeCard[]> =
     this.recipeCards.asObservable();
 
   constructor(private service: RecipeService) {
     this.service
       .get()
       .pipe(
-        map(recipes => {
-          return recipes.map(recipe => ({
+        map((recipes) => {
+          return recipes.map((recipe) => ({
             ...recipe,
             isSelected: false,
           }));
         })
       )
-      .subscribe(recipeCards => {
+      .subscribe((recipeCards) => {
         this.recipeCards.next(recipeCards);
       });
   }
 
   toggleSelect(id: number) {
-    const recipe = this.recipeCards.value.find(x => x.id === id);
+    const recipe = this.recipeCards.value.find((x) => x.id === id);
     if (!recipe) {
       return;
     }
@@ -37,12 +37,12 @@ export class RecipeListService {
 
   getSelected$() {
     return this.recipeCards$.pipe(
-      map(recipes => recipes.filter(recipe => recipe.isSelected))
+      map((recipes) => recipes.filter((recipe) => recipe.isSelected))
     );
   }
 
   select(ids: number[]) {
-    this.recipeCards.value.forEach(recipe => {
+    this.recipeCards.value.forEach((recipe) => {
       recipe.isSelected = ids.includes(recipe.id);
     });
   }
