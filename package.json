@@ -1,0 +1,8 @@
+{
+    "scripts": {
+        "prepare": "lefthook install"
+    },
+    "dependencies": {
+        "lefthook": "^1.7.15"
+    }
+}

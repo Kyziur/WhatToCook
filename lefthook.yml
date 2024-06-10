@@ -1,0 +1,21 @@
+pre-commit:
+    parallel: true
+    commands:
+        backend-linter:
+            glob: "*.{cs,csproj}"
+            exclude: "{src/backend/obj/,src/backend/bin/}"
+            run: dotnet format --include {staged_files} --fix-style --fix-analyzers --severity info --verbosity detailed
+            stage_fixed: true
+        backend-formatter:
+            glob: "*.{cs,csproj}"
+            exclude: "src/backend/{obj/,bin/}"
+            run: dotnet csharpier {staged_files}
+        frontend-linter:
+            root: "src/frontend/WhatToCook.WebApp/"
+            glob: "*.{js,ts,html,json}"
+            run: "npm run lint:fix"
+            stage_fixed: true
+        frontend-formatter:
+            root: "src/frontend/WhatToCook.WebApp/"
+            glob: "*.{js,ts,html,json}"
+            run: "npm run format {staged_files}"

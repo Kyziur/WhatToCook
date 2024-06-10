@@ -1,0 +1,53 @@
+@let card = recipe;
+@let imagePath = card.imagePath.length > 0 ? card.imagePath : defaultImagePath;
+
+@if (card) {
+  <div class="card max-w-sm overflow-hidden glass">
+    <figure>
+      <a class="cursor-pointer" [routerLink]="['/recipes', card.name]">
+        <img
+          class="cursor-pointer hover:opacity-90"
+          src="{{ imagePath }}"
+          fill
+          alt="{{ card.name }}" />
+      </a>
+    </figure>
+    <div class="card-body">
+      <h2 class="card-title">
+        <a class="cursor-pointer" [routerLink]="['/recipes', card.name]">
+          {{ card.name }}
+        </a>
+      </h2>
+      <app-badge
+        [badge]="card.timeToPrepare | prepareTimeToBadgePipe"></app-badge>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Voluptatibus
+        quia, nulla! Maiores et perferendis eaque, exercitationem praesentium
+        nihil.
+      </p>
+
+      <div class="card-actions justify-end">
+        @for (tag of card.tags; track tag) {
+          <div class="badge badge-outline">{{ tag }}</div>
+        }
+      </div>
+    </div>
+    <div class="divider mb-2"></div>
+    <div class="flex p-4 pt-0 justify-between">
+      <div>
+        <ng-icon size="24px" name="bootstrapBookmarkStar"></ng-icon>
+        <ng-icon size="24px" name="bootstrapBookmarkStarFill"></ng-icon>
+      </div>
+      <div *ngIf="selectable()">
+        <ng-icon
+          size="24px"
+          (click)="toggle()"
+          [name]="
+            recipe.isSelected
+              ? 'bootstrapPlusSquareFill'
+              : 'bootstrapPlusSquare'
+          "></ng-icon>
+      </div>
+    </div>
+  </div>
+}

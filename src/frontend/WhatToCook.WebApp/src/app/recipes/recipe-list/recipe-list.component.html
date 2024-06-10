@@ -1,0 +1,17 @@
+<div class="flex flex-col justify-center items-center">
+  <div class="w-1/2">
+    <app-search
+      [(items)]="recipes"
+      [tags]="tags"
+      [ingredients]="ingredients"></app-search>
+  </div>
+
+  <div class="flex flex-wrap justify-center mt-10 gap-4">
+    @let recipeCards = recipes();
+    @for (recipeCard of recipeCards; track recipeCard.id; let idx = $index) {
+      <app-recipe-card
+        [(recipe)]="recipeCards[idx]"
+        [selectable]="true"></app-recipe-card>
+    }
+  </div>
+</div>
