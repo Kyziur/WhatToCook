@@ -1,0 +1,158 @@
+<form
+  class="my-12 mx-auto max-w-2xl p-4"
+  *ngIf="recipeForm"
+  [formGroup]="recipeForm"
+  (ngSubmit)="submitClicked()">
+  <div class="space-y-12">
+    <div class="border-b border-gray-900/10 pb-12">
+      <h1 class="text-2xl font-semibold leading-7">
+        Przepis: {{ recipeForm.controls.name.value }}
+      </h1>
+      <div class="divider"></div>
+      <!--Short description-->
+      <!-- <textarea
+          placeholder="Bio"
+          class="textarea textarea-bordered textarea-xs w-full"></textarea> -->
+      <!--Name-->
+      <div class="form-control w-full">
+        <label [for]="name" class="label">
+          <span class="label-text">Nazwa</span>
+        </label>
+        <input
+          #name
+          [formControl]="recipeForm.controls.name"
+          type="text"
+          placeholder="Wpisz nazwę"
+          class="input input-bordered w-full" />
+      </div>
+      <div class="form-control w-full">
+        <label [for]="tagsControl" class="label">
+          <span class="label-text">
+            Tagi
+            <small>(wpisuj po przecinku)</small>
+          </span>
+        </label>
+        <input
+          #tagsControl
+          autocomplete="off"
+          list="tagsChoices"
+          [formControl]="recipeForm.controls.tags"
+          type="text"
+          placeholder="Wpisz tagi po przecinku"
+          class="input input-bordered w-full" />
+      </div>
+      <!--Preparation description-->
+      <div class="form-control">
+        <label [for]="preparationDescription" class="label">
+          <span class="label-text">Przygotowanie</span>
+        </label>
+        <textarea
+          #preparationDescription
+          appTextareaAutoresize
+          [formControl]="recipeForm.controls.preparationDescription"
+          class="textarea textarea-sm textarea-bordered w-full"
+          rows="3"
+          placeholder="Napisz parę zdań o tym jak przygotować ten posiłek"></textarea>
+      </div>
+
+      <!--Ingredients-->
+      <fieldset class="">
+        <legend class="label">
+          <span class="label-text">Składniki</span>
+        </legend>
+        <div class="flex flex-col" formArrayName="ingredients">
+          @for ( ingredient of recipeForm.controls.ingredients.controls; track
+          ingredient ) {
+          <div class="my-1 join">
+            <input
+              placeholder="Składnik"
+              type="text"
+              [formControlName]="$index"
+              class="input input-bordered join-item" />
+            <button
+              [disabled]="recipeForm.controls.ingredients.controls.length === 1"
+              type="button"
+              (click)="removeIngredient($index)"
+              class="btn join-item rounded-r-full">
+              X
+            </button>
+          </div>
+          }
+        </div>
+        <div class="join">
+          <button
+            class="btn btn-accent join-item"
+            type="button"
+            (click)="addIngredient()">
+            Dodaj składnik
+          </button>
+          <button
+            class="btn btn-accent join-item"
+            type="button"
+            (click)="openDialogToPasteIngredients()">
+            Dodaj wiele składników
+          </button>
+        </div>
+      </fieldset>
+      <div class="form-control w-full">
+        <label [for]="timeToPrepare" class="label">
+          <span class="label-text">Czas przygotowania</span>
+        </label>
+        <select
+          title="Czas przygotowania"
+          #timeToPrepare
+          [formControl]="recipeForm.controls.timeToPrepare"
+          class="select select-bordered">
+          @for (timeToPrepare of TimeToPrepareValues; track timeToPrepare) {
+          <option [value]="timeToPrepare">
+            {{ timeToPrepare }}
+          </option>
+          }
+        </select>
+      </div>
+      <div class="form-control w-full">
+        <label for="image" class="label">
+          <span class="label-text">Wybierz zdjęcie</span>
+        </label>
+        <input
+          id="image"
+          name="image"
+          type="file"
+          (change)="onFileSelected($event)"
+          class="file-input file-input-bordered file-input-accent w-full" />
+        <div class="my-1">
+          <img title="Zdjęcie posiłku" [src]="image()" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mt-6 flex items-center justify-between gap-x-6">
+    <button
+      type="button"
+      (click)="goBackClicked.emit()"
+      class="btn btn-neutral">
+      Powrót
+    </button>
+    <button type="submit" class="btn btn-primary">Zapisz</button>
+  </div>
+</form>
+
+<app-modal
+  [(visible)]="isDialogToShowIngredientsVisible"
+  title="Dodaj wiele składników">
+  <form>
+    <textarea
+      appTextareaAutoresize
+      placeholder="Wklej składniki"
+      [rows]="3"
+      name="ingredientsToParse"
+      type="text"
+      [(ngModel)]="ingredientsToParse"
+      class="textarea textarea-sm textarea-bordered w-full"></textarea>
+    <div class="flex justify-end mt-2">
+      <button type="button" class="btn btn-accent" (click)="parseIngredients()">
+        Dodaj
+      </button>
+    </div>
+  </form>
+</app-modal>

@@ -1,0 +1,30 @@
+<div class="flex join">
+  <div class="flex-grow">
+    <input
+      [(ngModel)]="searchPhrase"
+      class="input input-md input-primary input-bordered w-full join-item"
+      placeholder="Szukaj przepisów" />
+  </div>
+  <button title="Szukaj" type="button" class="btn btn-primary join-item">
+    <ng-icon name="heroMagnifyingGlass" size="24px"></ng-icon>
+  </button>
+</div>
+<section class="flex">
+  <button class="btn" type="button" (click)="showTagsFilter()">
+    Wybierz tagi
+  </button>
+  <button class="btn" type="button" (click)="showIngredientsFilter()">
+    Wybierz składniki
+  </button>
+  <app-modal [title]="'Wybierz tagi'" [(visible)]="isTagFilterVisible">
+    <app-select-list [items]="tags()" [textKey]="'item'"></app-select-list>
+  </app-modal>
+
+  <app-modal
+    [title]="'Wybierz składniki'"
+    [(visible)]="isIngredientsFilterVisible">
+    <app-select-list
+      [items]="ingredients()"
+      [textKey]="'item'"></app-select-list>
+  </app-modal>
+</section>

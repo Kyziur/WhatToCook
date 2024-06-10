@@ -1,0 +1,111 @@
+@switch (displayMode) {
+  @case ('New') {
+    <app-recipe-form
+      [recipe]="recipe"
+      (submitted)="submit($event)"
+      (goBackClicked)="redirectToRecipesPage()"></app-recipe-form>
+  }
+  @case ('Edit') {
+    <app-recipe-form
+      [recipe]="recipe"
+      (submitted)="submit($event)"
+      (goBackClicked)="redirectToRecipesPage()"></app-recipe-form>
+  }
+  @case ('View') {
+    <ng-container *ngTemplateOutlet="view"></ng-container>
+  }
+}
+
+<ng-template #view>
+  <app-modal
+    [(visible)]="isDeleteConfirmationVisible"
+    title="Czy jesteś pewien, że chcesz usunąć ten przepis?">
+    <div modal-footer>
+      <div class="w-full flex justify-center gap-4">
+        <button
+          type="button"
+          class="bg-red-500 text-white py-1 px-4 rounded hover:bg-red-600"
+          (click)="onDeleteClickHandler(recipe.id)">
+          Tak
+        </button>
+        <button
+          type="button"
+          class="bg-gray-300 text-gray-800 py-1 px-4 rounded hover:bg-gray-400"
+          (click)="closeDeleteConfirmation()">
+          Nie
+        </button>
+      </div>
+    </div>
+  </app-modal>
+
+  <div *ngIf="recipe" class="max-w-6xl mx-auto p-8">
+    <div class="flex w-full">
+      <h1 class="text-4xl font-semibold text-gray-800">
+        {{ recipe.name }}
+      </h1>
+
+      <div class="ml-auto">
+        <button type="button" class="btn btn-neutral" (click)="enableEdit()">
+          Edytuj
+        </button>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="grid grid-cols-2 gap-4">
+      <div
+        class="col order-2 md:order-1 col-span-2 md:col-span-1 flex justify-center">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec et arcu
+        consectetur lacus feugiat laoreet a et magna. Cras in lorem est. Integer
+        at justo quis purus consectetur pellentesque. Vestibulum facilisis orci
+        eu feugiat ultrices. Ut ante erat, blandit vitae massa ut, aliquam porta
+        sapien. Nulla faucibus blandit semper. Aenean sit amet fermentum eros.
+        Ut dapibus faucibus diam. Fusce placerat erat eu dui volutpat, non
+        cursus mauris placerat. Nam ac neque nisl. Cras eros lectus, sagittis eu
+        urna ac, ornare accumsan tortor. Etiam dignissim felis eu ante gravida
+        molestie. Quisque vel ultrices massa. Suspendisse congue facilisis
+        turpis, vel bibendum neque fermentum vitae. Cras rutrum quam gravida,
+        luctus
+      </div>
+      <div
+        class="col order-1 md:order-2 col-span-2 md:col-span-1 flex justify-center md:justify-end">
+        <img
+          src="{{ recipe.imagePath }}"
+          alt="{{ recipe.name }}"
+          class="h-auto rounded-lg shadow-lg" />
+      </div>
+    </div>
+    <div class="grid grid-cols-5 gap-4 mt-4">
+      <!-- Ingredients Section -->
+      <section class="col col-span-5 md:col-span-2">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Ingredients</h2>
+        <ul class="list-disc list-inside text-gray-700">
+          <li *ngFor="let ingredient of recipe.ingredients">
+            {{ ingredient }}
+          </li>
+        </ul>
+      </section>
+      <!-- Preparation Description Section -->
+      <section class="col col-span-5 md:col-span-3">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Preparation</h2>
+        <p class="text-gray-700">{{ recipe.preparationDescription }}</p>
+      </section>
+    </div>
+
+    <div class="divider"></div>
+    <!-- Buttons -->
+    <section class="w-full flex justify-between">
+      <button
+        type="button"
+        class="btn btn-neutral"
+        (click)="redirectToRecipesPage()">
+        Powrót
+      </button>
+      <button
+        type="button"
+        class="btn btn-error"
+        (click)="openDeleteConfirmation()">
+        Delete
+      </button>
+    </section>
+  </div>
+</ng-template>
