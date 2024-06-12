@@ -9,3 +9,13 @@ export interface Recipe {
   imagePath: string;
   tags: string[];
 }
+
+export const EMPTY_RECIPE: Recipe = {
+  id: 0,
+  name: '',
+  ingredients: [],
+  preparationDescription: '',
+  timeToPrepare: 'Short',
+  imagePath: '',
+  tags: [],
+};

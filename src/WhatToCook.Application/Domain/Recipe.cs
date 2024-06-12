@@ -2,11 +2,6 @@
 
 namespace WhatToCook.Application.Domain;
 
-public static class ImageConstants
-{
-    public const string FileName = "default_image.png";
-}
-
 public record Image(string Path);
 
 public class Recipe

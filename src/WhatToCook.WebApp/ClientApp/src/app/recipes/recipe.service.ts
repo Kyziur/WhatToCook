@@ -15,12 +15,14 @@ export class RecipeService {
   ) {
     this.recipeUrl = this.baseUrl + 'api/v1/Recipe';
   }
+
   create(recipe: CreateRecipe) {
     return this.httpClient.post<CreateRecipe>(
       this.baseUrl + 'api/v1/Recipe',
       recipe
     );
   }
+
   get(): Observable<Recipe[]> {
     return this.httpClient.get<Recipe[]>(`${this.baseUrl}api/v1/Recipe`);
   }
@@ -28,12 +30,14 @@ export class RecipeService {
   getByName(name: string): Observable<Recipe> {
     return this.httpClient.get<Recipe>(`${this.recipeUrl}/${name}`);
   }
+
   update(recipe: CreateRecipe) {
     return this.httpClient.put<CreateRecipe>(
       this.baseUrl + 'api/v1/Recipe',
       recipe
     );
   }
+
   deleteRecipe(id: number) {
     return this.httpClient.delete(this.baseUrl + 'api/v1/Recipe/' + id);
   }

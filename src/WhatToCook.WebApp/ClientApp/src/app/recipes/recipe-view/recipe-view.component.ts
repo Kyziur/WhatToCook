@@ -10,9 +10,8 @@ import {
 import { CreateRecipe } from './CreateRecipe';
 import { RecipeService } from '../recipe.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Recipe } from '../Recipe';
-import { of, switchMap } from 'rxjs';
-import { TimeToPrepare, TimeToPrepareValues } from '../TimeToPrepare';
+import { EMPTY_RECIPE, Recipe } from '../Recipe';
+import { of, switchMap, tap } from 'rxjs';
 import { ModalComponent } from '../../shared/modal/modal.component';
 import {
   NgSwitch,
@@ -22,20 +21,12 @@ import {
   NgFor,
 } from '@angular/common';
 import { TextareaAutoResizeDirective } from 'src/app/shared/textarea-auto-resize/textarea-auto-resize.directive';
+import { RecipeFormComponent } from '../recipe-form/recipe-form.component';
 
 export enum DisplayMode {
   New = 'New',
   Edit = 'Edit',
   View = 'View',
-}
-
-export interface RecipeForm {
-  name: FormControl<string>;
-  ingredients: FormArray<FormControl<string>>;
-  preparationDescription: FormControl<string>;
-  timeToPrepare: FormControl<TimeToPrepare>;
-  image: FormControl<string>;
-  tags: FormControl<string>;
 }
 
 @Component({
@@ -52,17 +43,15 @@ export interface RecipeForm {
     ReactiveFormsModule,
     FormsModule,
     TextareaAutoResizeDirective,
+    RecipeFormComponent,
   ],
 })
 export class RecipeViewComponent implements OnInit {
-  protected readonly TimeToPrepareValues = TimeToPrepareValues;
+  recipe: Recipe = EMPTY_RECIPE;
+  displayMode = DisplayMode.View;
   isDeleteConfirmationVisible = false;
-  recipe?: Recipe;
-  recipeForm: FormGroup<RecipeForm> | null = null;
-  isEditable = false;
 
   constructor(
-    private fb: FormBuilder,
     private recipeService: RecipeService,
     private router: Router,
     private route: ActivatedRoute
@@ -77,178 +66,30 @@ export class RecipeViewComponent implements OnInit {
       .pipe(
         switchMap((params) => {
           const name = params['name'];
-          if (!name) {
-            return of(undefined);
+          return name ? this.recipeService.getByName(name) : of(undefined);
+        }),
+        tap((recipe) => {
+          if (!recipe) {
+            this.enableCreation();
+            return;
           }
-          return this.recipeService.getByName(name);
+
+          this.recipe = recipe;
         })
       )
-      .subscribe((recipe) => {
-        this.recipe = recipe;
-        this.loadFormData(recipe);
-      });
+      .subscribe();
   }
 
-  getDisplayMode(): DisplayMode {
-    //If there is no recipe then it means that we want to create a new one
-    if (!this.recipe) {
-      return DisplayMode.New;
-    }
-
-    //If there is a recipe and it is editable then it means that it is edit mode
-    if (this.isEditable) {
-      return DisplayMode.Edit;
-    }
-
-    return DisplayMode.View;
+  enableCreation() {
+    this.displayMode = DisplayMode.New;
   }
 
   enableEdit() {
-    this.isEditable = true;
+    this.displayMode = DisplayMode.Edit;
   }
 
   disableEdit() {
-    this.isEditable = false;
-  }
-
-  onFileSelected($event: Event) {
-    const target = $event.target as HTMLInputElement;
-
-    if (!target || !target.files?.length) {
-      return;
-    }
-
-    const file = target.files[0];
-    if (!file) {
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const image = reader.result as string;
-      if (this.recipeForm) {
-        this.recipeForm.get('image')?.patchValue(image.split(',')[1]);
-      }
-    };
-    reader.readAsDataURL(file);
-  }
-
-  private updateRecipe(form: FormGroup<RecipeForm>) {
-    const updatedRecipe: CreateRecipe = {
-      id: this.recipe?.id ?? 0,
-      ...form.getRawValue(),
-      tags: form.controls.tags.value.split(',').map((x) => x.trim()),
-    };
-
-    return this.recipeService.update(updatedRecipe).pipe(
-      switchMap(() => {
-        return this.recipeService.getByName(updatedRecipe.name);
-      })
-    );
-  }
-
-  submit() {
-    if (!this.recipeForm) {
-      const msg = 'Cannot update recipe that is undefined';
-      console.error(msg, this.recipeForm);
-      throw new Error(msg);
-    }
-
-    switch (this.getDisplayMode()) {
-      case DisplayMode.New:
-        this.recipeService
-          .create({
-            ...this.recipeForm.value,
-            tags: this.recipeForm.value.tags?.split(',').map((x) => x.trim()),
-          } as CreateRecipe)
-          .subscribe(() => this.redirectToRecipesPage());
-        break;
-      case DisplayMode.Edit:
-        this.updateRecipe(this.recipeForm).subscribe((recipe) => {
-          this.recipe = recipe;
-          this.loadFormData(this.recipe);
-          this.isEditable = false;
-        });
-        break;
-      case DisplayMode.View:
-        break;
-    }
-  }
-
-  isDialogToShowIngredientsVisible = false;
-  ingredientsToParse = '';
-  openDialogToPasteIngredients() {
-    this.isDialogToShowIngredientsVisible = true;
-  }
-  closeDialogToPasteIngredients() {
-    this.isDialogToShowIngredientsVisible = false;
-  }
-
-  parseIngredients() {
-    const splitted = this.ingredientsToParse
-      .trim()
-      .split(/\r?\n/)
-      .filter((x) => x.length > 0);
-
-    if (splitted.length < 1) {
-      return;
-    }
-
-    splitted.forEach((ingredient) => this.addIngredient(ingredient));
-
-    this.removeEmptyIngredients();
-    this.ingredientsToParse = '';
-    this.closeDialogToPasteIngredients();
-  }
-
-  addIngredient(value: string = '') {
-    this.recipeForm?.controls.ingredients.push(
-      this.createStringControl(value.trim())
-    );
-  }
-
-  removeEmptyIngredients() {
-    const indexesOfEmptyFields = this.recipeForm?.controls.ingredients.controls
-      .map((field, index) => (field.value.trim().length === 0 ? index : -1))
-      .filter((x) => x > -1);
-
-    indexesOfEmptyFields?.forEach((x) => this.removeIngredient(x));
-  }
-
-  removeIngredient(index: number) {
-    if (!this.recipeForm) {
-      return;
-    }
-
-    this.recipeForm.controls.ingredients.removeAt(index);
-  }
-
-  loadFormData(recipe?: Recipe) {
-    const ingredientsControls =
-      recipe?.ingredients.map((ingredient) => {
-        return this.createStringControl(ingredient);
-      }) ?? [];
-
-    if (ingredientsControls.length === 0) {
-      ingredientsControls.push(this.createStringControl());
-    }
-
-    this.recipeForm = this.fb.group({
-      name: this.createStringControl(recipe?.name),
-      ingredients: this.fb.array(ingredientsControls),
-      preparationDescription: this.createStringControl(
-        recipe?.preparationDescription
-      ),
-      timeToPrepare: this.fb.nonNullable.control<TimeToPrepare>(
-        recipe?.timeToPrepare ?? 'Short'
-      ),
-      image: this.createStringControl(),
-      tags: this.createStringControl(recipe?.tags.join(',')),
-    });
-  }
-
-  createStringControl(value: string | undefined = undefined) {
-    return this.fb.nonNullable.control(value ?? '');
+    this.displayMode = DisplayMode.View;
   }
 
   openDeleteConfirmation() {
@@ -272,7 +113,33 @@ export class RecipeViewComponent implements OnInit {
     });
   }
 
-  cancelEditClickHandler() {
-    this.disableEdit();
+  submit(recipe: CreateRecipe) {
+    if (!recipe) {
+      const msg = 'Cannot update recipe that is undefined';
+      console.error(msg, recipe);
+      throw new Error(msg);
+    }
+
+    switch (this.displayMode) {
+      case DisplayMode.New:
+        this.recipeService
+          .create(recipe)
+          .subscribe(() => this.redirectToRecipesPage());
+        break;
+      case DisplayMode.Edit:
+        this.recipeService
+          .update(recipe)
+          .pipe(
+            switchMap(() => this.recipeService.getByName(recipe.name)),
+            tap((value) => {
+              this.recipe = value;
+              this.disableEdit();
+            })
+          )
+          .subscribe();
+        break;
+      case DisplayMode.View:
+        break;
+    }
   }
 }

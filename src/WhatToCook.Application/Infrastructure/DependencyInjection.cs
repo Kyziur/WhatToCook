@@ -15,7 +15,7 @@ public static class DependencyInjection
             {
                 var fileSaver = serviceProvider.GetRequiredService<IFileSaver>();
                 var logger = serviceProvider.GetRequiredService<ILogger<ImagesManager>>();
-                return new ImagesManager(wwwRootDir, fileSaver, logger);
+                return new ImagesManager(wwwRootDir, "Images", fileSaver, logger);
             })
             .AddScoped<ITagsRepository, TagsRepository>();
 }
