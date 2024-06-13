@@ -57,11 +57,11 @@ export class RecipeViewComponent implements OnInit {
   ngOnInit(): void {
     this.route.params
       .pipe(
-        switchMap((params) => {
+        switchMap(params => {
           const name = params['name'];
           return name ? this.recipeService.getByName(name) : of(undefined);
         }),
-        tap((recipe) => {
+        tap(recipe => {
           if (!recipe) {
             this.enableCreation();
             return;
@@ -101,7 +101,7 @@ export class RecipeViewComponent implements OnInit {
 
     this.recipeService.deleteRecipe(id).subscribe({
       next: () => this.redirectToRecipesPage(),
-      error: (error) =>
+      error: error =>
         console.error('Error occured when deleting recipe', error),
     });
   }
@@ -124,7 +124,7 @@ export class RecipeViewComponent implements OnInit {
           .update(recipe)
           .pipe(
             switchMap(() => this.recipeService.getByName(recipe.name)),
-            tap((value) => {
+            tap(value => {
               this.recipe = value;
               this.disableEdit();
             })

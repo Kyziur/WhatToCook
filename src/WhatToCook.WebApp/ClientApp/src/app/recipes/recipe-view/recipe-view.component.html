@@ -1,16 +1,20 @@
-@switch (displayMode) { @case ('New') {
-<app-recipe-form
-  [recipe]="recipe"
-  (submitted)="submit($event)"
-  (goBackClicked)="redirectToRecipesPage()"></app-recipe-form>
-} @case ('Edit') {
-<app-recipe-form
-  [recipe]="recipe"
-  (submitted)="submit($event)"
-  (goBackClicked)="redirectToRecipesPage()"></app-recipe-form>
-} @case ('View') {
-<ng-container *ngTemplateOutlet="view"></ng-container>
-} }
+@switch (displayMode) {
+  @case ('New') {
+    <app-recipe-form
+      [recipe]="recipe"
+      (submitted)="submit($event)"
+      (goBackClicked)="redirectToRecipesPage()"></app-recipe-form>
+  }
+  @case ('Edit') {
+    <app-recipe-form
+      [recipe]="recipe"
+      (submitted)="submit($event)"
+      (goBackClicked)="redirectToRecipesPage()"></app-recipe-form>
+  }
+  @case ('View') {
+    <ng-container *ngTemplateOutlet="view"></ng-container>
+  }
+}
 
 <ng-template #view>
   <app-modal
