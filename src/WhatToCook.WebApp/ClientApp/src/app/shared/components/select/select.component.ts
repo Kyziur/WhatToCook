@@ -50,8 +50,8 @@ export class SelectComponent implements ControlValueAccessor {
   filter = signal<string>('');
   value: SelectOption[] = [];
 
-  touched: boolean = false;
-  isDisabled: boolean = false;
+  touched = false;
+  isDisabled = false;
   onChange = (value: SelectOption[]) => {};
   onTouched = () => {};
 
