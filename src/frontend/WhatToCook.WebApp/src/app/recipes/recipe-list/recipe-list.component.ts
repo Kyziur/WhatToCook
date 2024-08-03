@@ -1,13 +1,13 @@
-import { Component, Input } from '@angular/core';
-import { RecipeListService } from './recipe-list.service';
-import {
-  RecipeCard,
-  RecipeCardComponent,
-} from '../recipe-card/recipe-card.component';
 import { NgFor, AsyncPipe } from '@angular/common';
-import { SearchComponent } from '../../shared/search/search.component';
-import { map } from 'rxjs';
+import { Component, Input } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
+import { SearchComponent } from '../../shared/search/search.component';
+import {
+  RecipeCardComponent,
+  RecipeCard,
+} from '../recipe-card/recipe-card.component';
+import { RecipeListService } from './recipe-list.service';
 
 @Component({
   selector: 'app-recipe-list',
@@ -22,7 +22,7 @@ export class RecipeListComponent {
   recipes: RecipeCard[] = [];
   tags: string[] = [];
   ingredients: string[] = [];
-  
+
   constructor(public service: RecipeListService) {
     this.service.recipeCards$
       .pipe(

@@ -1,12 +1,17 @@
-import { Component } from '@angular/core';
+import {
+  CommonModule,
+  NgOptimizedImage,
+  AsyncPipe,
+  DatePipe,
+} from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { MealPlanningService } from '../meal-planning.service';
-import { map } from 'rxjs';
-import { shorten } from '../../common/functions/shorten';
-import { NgFor, NgOptimizedImage, AsyncPipe, DatePipe } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { heroArrowRight, heroListBullet } from '@ng-icons/heroicons/outline';
+import { heroListBullet, heroArrowRight } from '@ng-icons/heroicons/outline';
+import { map } from 'rxjs';
+import { shorten } from '../../../common/functions/shorten';
 import { ModalComponent } from '../../shared/modal/modal.component';
+import { MealPlanningService } from '../meal-planning.service';
 import { ShoppingListComponent } from '../shopping-list/shopping-list.component';
 
 export interface MealPlanItem {
@@ -27,7 +32,7 @@ interface ShoppingListView {
   styleUrls: ['./meal-plan-list.component.scss'],
   standalone: true,
   imports: [
-    NgFor,
+    CommonModule,
     NgOptimizedImage,
     AsyncPipe,
     DatePipe,
@@ -38,11 +43,9 @@ interface ShoppingListView {
   providers: [provideIcons({ heroListBullet, heroArrowRight }), DatePipe],
 })
 export class MealPlanListComponent {
-  constructor(
-    private router: Router,
-    private service: MealPlanningService
-  ) {}
+  constructor(private router: Router) {}
 
+  private service = inject(MealPlanningService);
   getPlans$ = this.service.getAll().pipe(
     map(response =>
       response.mealPlans.map(

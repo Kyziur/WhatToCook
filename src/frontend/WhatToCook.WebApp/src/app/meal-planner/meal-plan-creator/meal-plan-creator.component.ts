@@ -1,26 +1,26 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Badge, BadgeComponent } from '../../shared/badge/badge.component';
+import { CommonModule, DatePipe } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
+import { Subject, takeUntil, switchMap, of } from 'rxjs';
+import { generateRangeOfDates } from '../../../common/functions/date';
+import { RecipeListComponent } from '../../recipes/recipe-list/recipe-list.component';
+import { RecipeListService } from '../../recipes/recipe-list/recipe-list.service';
+import { BadgeComponent, Badge } from '../../shared/badge/badge.component';
+import { InputDateComponent } from '../../shared/input-date/input-date.component';
+import {
+  UpdatePlanOfMealApi,
+  PlanOfMealForDayApi,
+  CreatePlanOfMealApi,
+} from '../api-models/plan-of-meal.model';
 import { MealPlanningService } from '../meal-planning.service';
-import { of, Subject, switchMap, takeUntil } from 'rxjs';
 import { MealPlanForDay } from './models/meal-plan-for.day';
 import {
+  MealPlanForm,
   createMalPlanForm,
   createMealPlanForDayForm,
   MealPlanForDayForm,
-  MealPlanForm,
 } from './models/meal-plan-form';
-import {
-  CreatePlanOfMealApi,
-  PlanOfMealForDayApi,
-  UpdatePlanOfMealApi,
-} from '../api-models/plan-of-meal.model';
-import { generateRangeOfDates } from '../../common/functions/date';
-import { RecipeListService } from '../../recipes/recipe-list/recipe-list.service';
-import { RecipeListComponent } from '../../recipes/recipe-list/recipe-list.component';
-import { InputDateComponent } from '../../shared/input-date/input-date.component';
-import { NgIf, NgClass, NgFor, DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-meal-creator',
@@ -28,11 +28,9 @@ import { NgIf, NgClass, NgFor, DatePipe } from '@angular/common';
   styleUrls: ['./meal-plan-creator.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
+    CommonModule,
     ReactiveFormsModule,
     InputDateComponent,
-    NgClass,
-    NgFor,
     BadgeComponent,
     RecipeListComponent,
     DatePipe,
@@ -41,11 +39,11 @@ import { NgIf, NgClass, NgFor, DatePipe } from '@angular/common';
 })
 export class MealPlanCreatorComponent implements OnInit, OnDestroy {
   public selectedMealPlanForDay?: MealPlanForDay;
+  private fb = inject(FormBuilder);
   public mealPlanForm: FormGroup<MealPlanForm> = createMalPlanForm(this.fb);
   private destroy$ = new Subject<boolean>();
 
   constructor(
-    private fb: FormBuilder,
     private router: Router,
     private service: MealPlanningService,
     private route: ActivatedRoute,
@@ -71,12 +69,12 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
     this.route.params
       .pipe(
         takeUntil(this.destroy$),
-        switchMap((params) => {
+        switchMap(params => {
           const name = params['name'] as string;
           return name ? this.service.getByName(name) : of(undefined);
         })
       )
-      .subscribe((mealPlan) => {
+      .subscribe(mealPlan => {
         if (!mealPlan) {
           return;
         }
@@ -99,10 +97,10 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
   }
 
   updateDaysToPlanBasedOnSelectedDates() {
-    const plannedMeals = this.getDaysFromSelectedDates().map((day) => {
+    const plannedMeals = this.getDaysFromSelectedDates().map(day => {
       const previouslySelectedRecipesIds =
         this.mealPlanForm.controls.plannedMealsForDay.value.find(
-          (x) => x.day?.getDate() === day.getDate()
+          x => x.day?.getDate() === day.getDate()
         )?.recipesIds ?? [];
 
       return createMealPlanForDayForm(day, previouslySelectedRecipesIds);
@@ -124,11 +122,11 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
     this.recipeListService
       .getSelected$()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((cards) => {
+      .subscribe(cards => {
         if (!this.selectedMealPlanForDay) {
           return;
         }
-        this.selectedMealPlanForDay.recipesIds = cards.map((x) => x.id);
+        this.selectedMealPlanForDay.recipesIds = cards.map(x => x.id);
       });
   }
 
@@ -154,7 +152,7 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
         fromDate: new Date(this.fromDate.value),
         toDate: new Date(this.toDate.value),
         recipes: this.mealPlanForm.controls.plannedMealsForDay.value.filter(
-          (x) => x.day !== undefined
+          x => x.day !== undefined
         ) as PlanOfMealForDayApi[],
       };
 
@@ -169,7 +167,7 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
       fromDate: new Date(this.fromDate.value),
       toDate: new Date(this.toDate.value),
       recipes: this.mealPlanForm.controls.plannedMealsForDay.value.filter(
-        (x) => x.day !== undefined
+        x => x.day !== undefined
       ) as PlanOfMealForDayApi[],
     };
 
@@ -196,7 +194,7 @@ export class MealPlanCreatorComponent implements OnInit, OnDestroy {
 
     this.selectedMealPlanForDay =
       this.mealPlanForm.controls.plannedMealsForDay.value.find(
-        (x) => x.day === day
+        x => x.day === day
       ) as MealPlanForDay;
 
     this.recipeListService.select(this.selectedMealPlanForDay.recipesIds);

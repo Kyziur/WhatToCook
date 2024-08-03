@@ -1,6 +1,4 @@
-import { Recipe } from 'src/app/recipes/Recipe';
-import { containsIgnoreCase } from '../../utils/utils';
-import { RecipeCard } from 'src/app/recipes/recipe-card/recipe-card.component';
+import { RecipeCard } from '../../../recipes/recipe-card/recipe-card.component';
 
 export type RecipeFilter = Readonly<{
   phrase: string;
@@ -9,7 +7,6 @@ export type RecipeFilter = Readonly<{
 }>;
 
 export function filter(recipes: RecipeCard[], filter: RecipeFilter) {
-  
   const byPhrase = filterByPhrase(recipes, filter.phrase);
   const byTags = filterByTags(byPhrase, filter.selectedTags);
   const byIngredients = filterByIngredients(byTags, filter.selectedIngredients);

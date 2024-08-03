@@ -1,15 +1,16 @@
-import { Component, effect, input, model, signal } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RecipeCard } from 'src/app/recipes/recipe-card/recipe-card.component';
-import { ConsoleLoggerService, LoggerService } from '../logger.service';
-import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { heroMagnifyingGlass } from '@ng-icons/heroicons/outline';
-import { distinct } from '../utils/utils';
+import { CommonModule } from '@angular/common';
 import { SelectComponent } from '../components/select/select.component';
-import { filter } from '../components/select/filter';
-import { ModalComponent } from '../modal/modal.component';
+import { Component, model, input, signal, effect } from '@angular/core';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { provideIcons, NgIconComponent } from '@ng-icons/core';
+import { heroMagnifyingGlass } from '@ng-icons/heroicons/outline';
+import { RecipeCard } from '../../recipes/recipe-card/recipe-card.component';
 import { CheckboxComponent } from '../components/checkbox/checkbox.component';
 import { SelectListComponent } from '../components/select-list/select-list.component';
+import { LoggerService, ConsoleLoggerService } from '../logger.service';
+import { ModalComponent } from '../modal/modal.component';
+import { filter } from '../components/select/filter';
+
 export interface SearchItem {
   item: string;
 }
@@ -22,6 +23,7 @@ export interface SearchItem {
     { provide: LoggerService, useClass: ConsoleLoggerService },
   ],
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     NgIconComponent,
     SelectComponent,

@@ -1,29 +1,29 @@
+import { NgIf } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   Component,
-  EventEmitter,
-  Output,
-  effect,
+  ChangeDetectionStrategy,
   input,
   signal,
+  Output,
+  EventEmitter,
+  effect,
 } from '@angular/core';
 import {
-  FormArray,
-  FormBuilder,
   FormControl,
-  FormGroup,
+  FormArray,
   FormsModule,
   ReactiveFormsModule,
+  FormGroup,
+  FormBuilder,
 } from '@angular/forms';
-import { Recipe } from '../Recipe';
+import { ModalComponent } from '../../shared/modal/modal.component';
+import { TextareaAutoResizeDirective } from '../../shared/textarea-auto-resize/textarea-auto-resize.directive';
 import {
   TimeToPrepare,
   TimeToPrepareValues,
 } from '../prepare-time-to-badge.pipe';
-import { NgIf } from '@angular/common';
-import { ModalComponent } from 'src/app/shared/modal/modal.component';
+import { Recipe } from '../Recipe';
 import { CreateRecipe } from '../recipe-view/CreateRecipe';
-import { TextareaAutoResizeDirective } from 'src/app/shared/textarea-auto-resize/textarea-auto-resize.directive';
 
 export interface RecipeForm {
   name: FormControl<string>;

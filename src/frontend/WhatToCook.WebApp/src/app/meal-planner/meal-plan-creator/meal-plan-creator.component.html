@@ -29,7 +29,7 @@
         <app-input-date [formControl]="toDate"></app-input-date>
         <div
           *ngIf="
-            toDate.dirty && mealPlanForm.controls.dates.errors?.dateMismatch
+            toDate.dirty && mealPlanForm.controls.dates.errors?.['dateMismatch']
           ">
           'To' date should not be before 'From' date.
         </div>

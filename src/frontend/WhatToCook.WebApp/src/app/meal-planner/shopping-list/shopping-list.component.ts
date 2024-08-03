@@ -1,22 +1,14 @@
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, Input } from '@angular/core';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MealPlanningService } from '../meal-planning.service';
 import { ShoppingListResponse } from './shopping-list-response.component';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { NgIf, NgFor, DatePipe, KeyValuePipe, JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'app-shopping-list',
   templateUrl: './shopping-list.component.html',
   standalone: true,
-  imports: [
-    NgIf,
-    ReactiveFormsModule,
-    FormsModule,
-    NgFor,
-    DatePipe,
-    KeyValuePipe,
-    JsonPipe,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
 })
 export class ShoppingListComponent {
   @Input() set mealPlanId(value: number | undefined) {

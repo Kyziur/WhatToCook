@@ -1,20 +1,14 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { CreateRecipe } from './CreateRecipe';
-import { RecipeService } from '../recipe.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY_RECIPE, Recipe } from '../Recipe';
-import { of, switchMap, tap } from 'rxjs';
+import { Router, ActivatedRoute } from '@angular/router';
+import { switchMap, of, tap } from 'rxjs';
 import { ModalComponent } from '../../shared/modal/modal.component';
-import {
-  NgSwitch,
-  NgSwitchCase,
-  NgTemplateOutlet,
-  NgIf,
-  NgFor,
-} from '@angular/common';
-import { TextareaAutoResizeDirective } from 'src/app/shared/textarea-auto-resize/textarea-auto-resize.directive';
+import { TextareaAutoResizeDirective } from '../../shared/textarea-auto-resize/textarea-auto-resize.directive';
+import { Recipe, EMPTY_RECIPE } from '../Recipe';
 import { RecipeFormComponent } from '../recipe-form/recipe-form.component';
+import { RecipeService } from '../recipe.service';
+import { CreateRecipe } from './CreateRecipe';
 
 export enum DisplayMode {
   New = 'New',
@@ -27,12 +21,8 @@ export enum DisplayMode {
   templateUrl: './recipe-view.component.html',
   standalone: true,
   imports: [
-    NgSwitch,
-    NgSwitchCase,
-    NgTemplateOutlet,
-    NgIf,
+    CommonModule,
     ModalComponent,
-    NgFor,
     ReactiveFormsModule,
     FormsModule,
     TextareaAutoResizeDirective,

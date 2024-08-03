@@ -1,17 +1,10 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  EventEmitter,
-  Input,
-  OnChanges,
-  Output,
-  SimpleChanges,
-} from '@angular/core';
-import { Router } from '@angular/router';
-import { Recipe } from '../Recipe';
-import { PrepareTimeToBadgePipe } from '../prepare-time-to-badge.pipe';
-import { BadgeComponent } from '../../shared/badge/badge.component';
-import { NgIf, NgFor, NgOptimizedImage } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from "@angular/common";
+import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter } from "@angular/core";
+import { Router } from "@angular/router";
+import { BadgeComponent } from "../../shared/badge/badge.component";
+import { PrepareTimeToBadgePipe } from "../prepare-time-to-badge.pipe";
+import { Recipe } from "../Recipe";
+
 
 export interface RecipeCard extends Recipe {
   isSelected: boolean;
@@ -22,9 +15,8 @@ export interface RecipeCard extends Recipe {
   templateUrl: './recipe-card.component.html',
   standalone: true,
   imports: [
-    NgIf,
+    CommonModule,
     BadgeComponent,
-    NgFor,
     NgOptimizedImage,
     PrepareTimeToBadgePipe,
   ],
