@@ -5,7 +5,7 @@ import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 
 export function getBaseUrl() {
-  return 'https://localhost:7059/';
+  return document.getElementsByTagName('base')[0].href;
 }
 
 const providers = [
