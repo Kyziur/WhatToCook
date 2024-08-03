@@ -1,6 +1,7 @@
 using WhatToCook.Application.Infrastructure;
 using WhatToCook.Application.Infrastructure.Seeds;
 using WhatToCook.Application.Services;
+using WhatToCook.WebApp.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,8 @@ builder.Services.AddInfrastructure(builder.Environment.WebRootPath);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSwaggerGen();
 builder.Services.RegisterApplicationServices();
+builder.Services.AddControllers(options => { options.Filters.Add<GlobalExceptionFilter>(); });
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
