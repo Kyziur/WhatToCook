@@ -14,7 +14,7 @@ public class Recipe
     public int Id { get; }
     public string Name { get; private set; }
     public string PreparationDescription { get; private set; }
-    public string ShortDescription { get; private set; }
+    public string ShortDescription { get; private set; } = "";
     public string TimeToPrepare { get; private set; }
     public List<Ingredient> Ingredients { get; private set; } = [];
     public Statistics Statistics { get; private set; }
