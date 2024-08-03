@@ -1,5 +1,6 @@
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterModule, RouterOutlet } from '@angular/router';
 
 interface MenuItem {
   title: string;
@@ -9,7 +10,7 @@ interface MenuItem {
   selector: 'app-layout',
   templateUrl: './layout.component.html',
   standalone: true,
-  imports: [RouterLink, RouterOutlet],
+  imports: [CommonModule, RouterModule],
 })
 export class LayoutComponent {
   menuItems: MenuItem[] = [
