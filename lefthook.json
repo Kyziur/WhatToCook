@@ -1,6 +1,6 @@
 {
   "pre-commit": {
-    "parallel": true,
+    "parallel": false,
     "commands": {
       "lint": {
         "glob": "*.{js,ts,html}",
@@ -14,9 +14,9 @@
         "glob": "*.{cs}",
         "run": "dotnet format --include {staged_files} --no-restore"
       },
-      "format_backend2": {
-        "glob": "*.{cs}",
-        "run": "dotnet format style --include {staged_files} --no-restore"
+      "commit_changed": {
+        "files": "git diff --cached --name-only",
+        "run": "git add {files}"
       }
     }
   }
