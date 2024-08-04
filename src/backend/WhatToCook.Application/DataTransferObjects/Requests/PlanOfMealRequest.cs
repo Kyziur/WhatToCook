@@ -12,7 +12,7 @@ public class PlanOfMealRequest
     public DateTime FromDate { get; set; }
     public required string Name { get; set; }
     public IEnumerable<PlanOfMealForDay> Recipes { get; set; } = Enumerable.Empty<PlanOfMealForDay>();
-    public DateTime ToDate { get; set; }    
+    public DateTime ToDate { get; set; }
 }
 
 

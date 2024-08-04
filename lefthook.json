@@ -12,7 +12,11 @@
             },
             "format_backend": {
                 "glob": "*.{cs}",
-                "run": "dotnet format --include {staged_files}"
+                "run": "dotnet format --include {staged_files} --no-restore"
+            },
+            "format_backend2": {
+                "glob": "*.{cs}",
+                "run": "dotnet format style --include {staged_files} --no-restore"
             }
         }
     }
