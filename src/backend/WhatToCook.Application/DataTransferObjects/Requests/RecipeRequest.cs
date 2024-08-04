@@ -10,4 +10,8 @@ public class RecipeRequest
     public string TimeToPrepare { get; set; } = string.Empty;
     public IEnumerable<string> Tags { get; set; } = Enumerable.Empty<string>();
     public string ShortDescription { get; set; } = string.Empty;
+
+
+
+    
 }

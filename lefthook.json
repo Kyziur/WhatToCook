@@ -12,7 +12,7 @@
             },
             "format_backend": {
                 "glob": "*.{cs}",
-                "run": "dotnet format"
+                "run": "dotnet format --include {staged_files}"
             }
         }
     }
