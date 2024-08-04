@@ -1,23 +1,23 @@
 {
-    "pre-commit": {
-        "parallel": true,
-        "commands": {
-            "lint": {
-                "glob": "*.{js,ts,html}",
-                "run": "npm run lint:fix"
-            },
-            "format": {
-                "glob": "*.{js,ts,html, json}",
-                "run": "npm run format"
-            },
-            "format_backend": {
-                "glob": "*.{cs}",
-                "run": "dotnet format --include {staged_files} --no-restore"
-            },
-            "format_backend2": {
-                "glob": "*.{cs}",
-                "run": "dotnet format style --include {staged_files} --no-restore"
-            }
-        }
+  "pre-commit": {
+    "parallel": true,
+    "commands": {
+      "lint": {
+        "glob": "*.{js,ts,html}",
+        "run": "npm run lint:fix"
+      },
+      "format": {
+        "glob": "*.{js,ts,html, json}",
+        "run": "npm run format"
+      },
+      "format_backend": {
+        "glob": "*.{cs}",
+        "run": "dotnet format --include {staged_files} --no-restore"
+      },
+      "format_backend2": {
+        "glob": "*.{cs}",
+        "run": "dotnet format style --include {staged_files} --no-restore"
+      }
     }
+  }
 }

@@ -6,6 +6,7 @@
     <IsPackable>false</IsPackable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>e880fc46-e309-4852-ac7a-5b52375e4a7d</UserSecretsId>
+    <AnalysisMode>Recommended</AnalysisMode>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.3">
