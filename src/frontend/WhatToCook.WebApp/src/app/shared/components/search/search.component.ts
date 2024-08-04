@@ -1,15 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { SelectComponent } from '../components/select/select.component';
+import { SelectComponent } from '../select/select.component';
 import { Component, model, input, signal, effect } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { provideIcons, NgIconComponent } from '@ng-icons/core';
 import { heroMagnifyingGlass } from '@ng-icons/heroicons/outline';
-import { RecipeCard } from '../../recipes/recipe-card/recipe-card.component';
-import { CheckboxComponent } from '../components/checkbox/checkbox.component';
-import { SelectListComponent } from '../components/select-list/select-list.component';
-import { LoggerService, ConsoleLoggerService } from '../logger.service';
+import { CheckboxComponent } from '../checkbox/checkbox.component';
+import { SelectListComponent } from '../select-list/select-list.component';
+import {
+  LoggerService,
+  ConsoleLoggerService,
+} from '../../services/logger.service';
 import { ModalComponent } from '../modal/modal.component';
-import { filter } from '../components/select/filter';
+import { filter } from '../select/filter';
+import { RecipeCard } from '../../../recipes/recipe.types';
 
 export interface SearchItem {
   item: string;

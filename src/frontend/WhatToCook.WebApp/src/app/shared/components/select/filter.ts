@@ -1,4 +1,4 @@
-import { RecipeCard } from '../../../recipes/recipe-card/recipe-card.component';
+import { RecipeCard } from '../../../recipes/recipe.types';
 
 export type RecipeFilter = Readonly<{
   phrase: string;

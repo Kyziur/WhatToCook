@@ -3,12 +3,11 @@ import { Component, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { switchMap, of, tap } from 'rxjs';
-import { ModalComponent } from '../../shared/modal/modal.component';
-import { TextareaAutoResizeDirective } from '../../shared/textarea-auto-resize/textarea-auto-resize.directive';
-import { Recipe, EMPTY_RECIPE } from '../Recipe';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
+import { TextareaAutoResizeDirective } from '../../shared/directives/textarea-auto-resize/textarea-auto-resize.directive';
+import { Recipe, EMPTY_RECIPE, CreateRecipe } from '../recipe.types';
 import { RecipeFormComponent } from '../recipe-form/recipe-form.component';
 import { RecipeService } from '../recipe.service';
-import { CreateRecipe } from './CreateRecipe';
 
 export enum DisplayMode {
   New = 'New',

@@ -16,14 +16,13 @@ import {
   FormGroup,
   FormBuilder,
 } from '@angular/forms';
-import { ModalComponent } from '../../shared/modal/modal.component';
-import { TextareaAutoResizeDirective } from '../../shared/textarea-auto-resize/textarea-auto-resize.directive';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
+import { TextareaAutoResizeDirective } from '../../shared/directives/textarea-auto-resize/textarea-auto-resize.directive';
 import {
   TimeToPrepare,
   TimeToPrepareValues,
 } from '../prepare-time-to-badge.pipe';
-import { Recipe } from '../Recipe';
-import { CreateRecipe } from '../recipe-view/CreateRecipe';
+import { CreateRecipe, Recipe } from '../recipe.types';
 
 export interface RecipeForm {
   name: FormControl<string>;

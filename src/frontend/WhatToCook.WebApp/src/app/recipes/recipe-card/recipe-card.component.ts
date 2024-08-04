@@ -1,14 +1,24 @@
-import { CommonModule, NgOptimizedImage } from "@angular/common";
-import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter } from "@angular/core";
-import { Router } from "@angular/router";
-import { BadgeComponent } from "../../shared/badge/badge.component";
-import { PrepareTimeToBadgePipe } from "../prepare-time-to-badge.pipe";
-import { Recipe } from "../Recipe";
-
-
-export interface RecipeCard extends Recipe {
-  isSelected: boolean;
-}
+import { CommonModule } from '@angular/common';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  input,
+  output,
+  inject,
+  computed,
+} from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import {
+  bootstrapBookmarkStar,
+  bootstrapBookmarkStarFill,
+  bootstrapPlusSquare,
+  bootstrapPlusSquareFill,
+} from '@ng-icons/bootstrap-icons';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { AppConfigService } from '../../app.config.service';
+import { BadgeComponent } from '../../shared/components/badge/badge.component';
+import { PrepareTimeToBadgePipe } from '../prepare-time-to-badge.pipe';
+import { RecipeCard } from '../recipe.types';
 
 @Component({
   selector: 'app-recipe-card',
@@ -17,17 +27,27 @@ export interface RecipeCard extends Recipe {
   imports: [
     CommonModule,
     BadgeComponent,
-    NgOptimizedImage,
+    NgIconComponent,
+    RouterModule,
     PrepareTimeToBadgePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    provideIcons({
+      bootstrapBookmarkStar,
+      bootstrapBookmarkStarFill,
+      bootstrapPlusSquare,
+      bootstrapPlusSquareFill,
+    }),
+  ],
 })
 export class RecipeCardComponent {
-  @Input() recipe?: RecipeCard;
-  @Input() showSelectButton = false;
+  recipe = input.required<RecipeCard>();
+  selectable = input<boolean>(false);
+  selectClicked = output<number>();
 
-  @Output() selectClicked = new EventEmitter<Pick<RecipeCard, 'id'>>();
-  constructor(private router: Router) {}
+  private readonly router = inject(Router);
+  private readonly appConfig = inject(AppConfigService);
 
   viewRecipeDetails(name: string | undefined) {
     if (name === undefined) {
@@ -37,15 +57,9 @@ export class RecipeCardComponent {
     this.router.navigate([`/recipes/${name}`]);
   }
 
-  get imagePath() {
-    return this.recipe?.imagePath ?? 'Images/default_image.png';
-  }
-
-  selectClickHandler() {
-    if (this.recipe) {
-      this.selectClicked.emit({
-        id: this.recipe.id,
-      });
-    }
-  }
+  imagePath = computed(() => {
+    return (
+      this.recipe()?.imagePath ?? this.appConfig.getConfig().defaultImagePath
+    );
+  });
 }

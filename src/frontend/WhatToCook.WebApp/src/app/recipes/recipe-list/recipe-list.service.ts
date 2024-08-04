@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { RecipeService } from '../recipe.service';
 import { BehaviorSubject, map, Observable } from 'rxjs';
-import { RecipeCard } from '../recipe-card/recipe-card.component';
+import { RecipeCard } from '../recipe.types';
 
 @Injectable()
 export class RecipeListService {

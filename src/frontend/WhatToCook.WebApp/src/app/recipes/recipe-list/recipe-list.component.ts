@@ -1,19 +1,17 @@
-import { NgFor, AsyncPipe } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { SearchComponent } from '../../shared/search/search.component';
-import {
-  RecipeCardComponent,
-  RecipeCard,
-} from '../recipe-card/recipe-card.component';
+import { SearchComponent } from '../../shared/components/search/search.component';
+import { RecipeCardComponent } from '../recipe-card/recipe-card.component';
 import { RecipeListService } from './recipe-list.service';
+import { CommonModule } from '@angular/common';
+import { RecipeCard } from '../recipe.types';
 
 @Component({
   selector: 'app-recipe-list',
   templateUrl: './recipe-list.component.html',
   standalone: true,
-  imports: [SearchComponent, NgFor, RecipeCardComponent, AsyncPipe],
+  imports: [CommonModule, SearchComponent, RecipeCardComponent],
   providers: [RecipeListService],
 })
 export class RecipeListComponent {
@@ -44,7 +42,7 @@ export class RecipeListComponent {
       });
   }
 
-  toggleSelection($event: Pick<RecipeCard, 'id'>) {
-    this.service.toggleSelect($event.id);
+  toggleSelection($event: number) {
+    this.service.toggleSelect($event);
   }
 }

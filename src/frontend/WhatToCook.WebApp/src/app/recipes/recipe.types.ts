@@ -19,3 +19,17 @@ export const EMPTY_RECIPE: Recipe = {
   imagePath: '',
   tags: [],
 };
+
+export interface RecipeCard extends Recipe {
+  isSelected: boolean;
+}
+
+export interface CreateRecipe {
+  id: number;
+  name: string;
+  ingredients: string[];
+  preparationDescription: string;
+  timeToPrepare: TimeToPrepare;
+  image: string;
+  tags: string[];
+}

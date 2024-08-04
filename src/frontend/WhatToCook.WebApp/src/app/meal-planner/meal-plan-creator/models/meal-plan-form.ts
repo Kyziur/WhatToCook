@@ -5,7 +5,7 @@
   FormBuilder,
   Validators,
 } from '@angular/forms';
-import { notWhitespaceValidator } from '../../../../common/validators/not-white-space-validator.component';
+import { notWhitespaceValidator } from '../../../shared/validators/not-white-space-validator.component';
 import { dateRangeValidator } from './meal-plan-dates.validators';
 
 export interface MealPlanForm {

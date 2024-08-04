@@ -1,21 +1,22 @@
-@if (recipe) {
+@if (recipe()) {
   <div class="card max-w-sm overflow-hidden glass">
     <figure>
-      <img
-        class="cursor-pointer hover:opacity-90"
-        (click)="viewRecipeDetails(recipe.name)"
-        src="{{ imagePath }}"
-        fill
-        alt="{{ recipe.name }}" />
+      <a class="cursor-pointer" [routerLink]="['/recipes', recipe().name]">
+        <img
+          class="cursor-pointer hover:opacity-90"
+          src="{{ imagePath() }}"
+          fill
+          alt="{{ recipe().name }}" />
+      </a>
     </figure>
     <div class="card-body">
       <h2 class="card-title">
-        <span class="cursor-pointer" (click)="viewRecipeDetails(recipe.name)">
-          {{ recipe.name }}
-        </span>
+        <a class="cursor-pointer" [routerLink]="['/recipes', recipe().name]">
+          {{ recipe().name }}
+        </a>
       </h2>
       <app-badge
-        [badge]="recipe.timeToPrepare | prepareTimeToBadgePipe"></app-badge>
+        [badge]="recipe().timeToPrepare | prepareTimeToBadgePipe"></app-badge>
       <p>
         Lorem ipsum dolor sit amet, consectetur adipisicing elit. Voluptatibus
         quia, nulla! Maiores et perferendis eaque, exercitationem praesentium
@@ -23,7 +24,7 @@
       </p>
 
       <div class="card-actions justify-end">
-        @for (tag of recipe.tags; track tag) {
+        @for (tag of recipe().tags; track tag) {
           <div class="badge badge-outline">{{ tag }}</div>
         }
       </div>
@@ -31,30 +32,18 @@
     <div class="divider mb-2"></div>
     <div class="flex p-4 pt-0 justify-between">
       <div>
-        <img
-          class="cursor-pointer hover:opacity-75"
-          ngSrc="assets/icons/bookmark-heart-selected.svg"
-          alt="bookmark icon"
-          width="32"
-          height="32" />
+        <ng-icon size="24px" name="bootstrapBookmarkStar"></ng-icon>
+        <ng-icon size="24px" name="bootstrapBookmarkStarFill"></ng-icon>
       </div>
-      <div *ngIf="showSelectButton">
-        <img
-          *ngIf="recipe.isSelected"
-          (click)="selectClickHandler()"
-          class="cursor-pointer hover:opacity-75"
-          ngSrc="assets/icons/plus-square-selected.svg"
-          alt="plus icon"
-          width="32"
-          height="32" />
-        <img
-          *ngIf="!recipe.isSelected"
-          (click)="selectClickHandler()"
-          class="cursor-pointer hover:opacity-75"
-          ngSrc="assets/icons/plus-square.svg"
-          alt="plus icon"
-          width="32"
-          height="32" />
+      <div *ngIf="selectable()">
+        <ng-icon
+          size="24px"
+          (click)="this.selectClicked.emit(recipe().id)"
+          [name]="
+            recipe().isSelected
+              ? 'bootstrapPlusSquareFill'
+              : 'bootstrapPlusSquare'
+          "></ng-icon>
       </div>
     </div>
   </div>

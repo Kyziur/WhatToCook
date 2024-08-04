@@ -1,5 +1,5 @@
 ﻿import { Pipe, PipeTransform } from '@angular/core';
-import { Badge } from '../shared/badge/badge.component';
+import { Badge } from '../shared/components/badge/badge.component';
 
 export type TimeToPrepare = 'Short' | 'Medium' | 'Long';
 export const TimeToPrepareValues: TimeToPrepare[] = ['Short', 'Medium', 'Long'];

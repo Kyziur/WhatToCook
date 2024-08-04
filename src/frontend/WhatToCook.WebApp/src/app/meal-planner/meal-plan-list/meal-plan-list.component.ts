@@ -1,16 +1,11 @@
-import {
-  CommonModule,
-  NgOptimizedImage,
-  AsyncPipe,
-  DatePipe,
-} from '@angular/common';
+import { CommonModule, NgOptimizedImage, DatePipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { heroListBullet, heroArrowRight } from '@ng-icons/heroicons/outline';
 import { map } from 'rxjs';
-import { shorten } from '../../../common/functions/shorten';
-import { ModalComponent } from '../../shared/modal/modal.component';
+import { shorten } from '../../shared/functions/shorten';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { MealPlanningService } from '../meal-planning.service';
 import { ShoppingListComponent } from '../shopping-list/shopping-list.component';
 
@@ -34,8 +29,6 @@ interface ShoppingListView {
   imports: [
     CommonModule,
     NgOptimizedImage,
-    AsyncPipe,
-    DatePipe,
     NgIconComponent,
     ModalComponent,
     ShoppingListComponent,

@@ -3,11 +3,14 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil, switchMap, of } from 'rxjs';
-import { generateRangeOfDates } from '../../../common/functions/date';
+import { generateRangeOfDates } from '../../shared/functions/date';
 import { RecipeListComponent } from '../../recipes/recipe-list/recipe-list.component';
 import { RecipeListService } from '../../recipes/recipe-list/recipe-list.service';
-import { BadgeComponent, Badge } from '../../shared/badge/badge.component';
-import { InputDateComponent } from '../../shared/input-date/input-date.component';
+import {
+  BadgeComponent,
+  Badge,
+} from '../../shared/components/badge/badge.component';
+import { InputDateComponent } from '../../shared/components/input-date/input-date.component';
 import {
   UpdatePlanOfMealApi,
   PlanOfMealForDayApi,

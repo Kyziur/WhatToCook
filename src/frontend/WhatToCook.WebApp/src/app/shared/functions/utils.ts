@@ -2,7 +2,7 @@
 //   return [...new Map(array.map((item) => [item[key], item])).values()];
 // }
 
-export function distinct(array: Array<string>): Array<string> {
+export function distinct(array: string[]): string[] {
   return [...new Set(array)];
 }
 
