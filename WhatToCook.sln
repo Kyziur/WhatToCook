@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatToCook.Application.Test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatToCook.Application", "src\backend\WhatToCook.Application\WhatToCook.Application.csproj", "{219A51F1-0285-4E75-A323-BE2433516907}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatToCook.WebApp", "src\backend\WhatToCook.WebAPI\WhatToCook.WebApp.csproj", "{E6C966BF-574D-4D70-B0E0-95B61DF42F4E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhatToCook.WebAPI", "src\backend\WhatToCook.WebAPI\WhatToCook.WebAPI.csproj", "{E6C966BF-574D-4D70-B0E0-95B61DF42F4E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4471BFF6-F0BD-4880-AF21-71A77EC4C1D0}"
 	ProjectSection(SolutionItems) = preProject

@@ -47,7 +47,7 @@ public class RecipeServiceTests
         };
         ICollection<ImageInfo> savedImages = [];
 
-        var sut = new RecipeService(_recipesRepositoryMock.Object, _tagsRepositoryMock.Object, _loggerMock.Object);
+        var sut = new RecipeService(_recipesRepositoryMock.Object, _tagsRepositoryMock.Object, _loggerMock.Object, _imagesManagerMock.Object);
         Func<Task<Recipe>> action = async () => await sut.Update(recipeUpdateRequest);
 
         _ = await action.Should().ThrowAsync<ArgumentException>();
@@ -60,7 +60,7 @@ public class RecipeServiceTests
 
         _ = _recipesRepositoryMock.Setup(x => x.Delete(It.IsAny<int>())).ThrowsAsync(new Exception("Recipe not found"));
         var loggerMock = new Mock<ILogger<RecipeService>>();
-        var sut = new RecipeService(_recipesRepositoryMock.Object, _tagsRepositoryMock.Object, _loggerMock.Object);
+        var sut = new RecipeService(_recipesRepositoryMock.Object, _tagsRepositoryMock.Object, _loggerMock.Object, _imagesManagerMock.Object);
 
         _ = await Assert.ThrowsAsync<Exception>(() => sut.Delete(nonExistingRecipeId));
 
@@ -70,7 +70,7 @@ public class RecipeServiceTests
     [Fact]
     public async Task Given_InvalidRecipeData_When_Updating_ThenThrowsInvalidDataException()
     {
-        var sut = new RecipeService(_recipesRepositoryMock.Object, _tagsRepositoryMock.Object, _loggerMock.Object);
+        var sut = new RecipeService(_recipesRepositoryMock.Object, _tagsRepositoryMock.Object, _loggerMock.Object, _imagesManagerMock.Object);
 
         string invalidBase64Image = "INVALID_IMAGE_STRING";
         string recipeName = "ExistingRecipe";
@@ -101,7 +101,7 @@ public class RecipeServiceTests
     [Fact]
     public async Task Given_NonExistentRecipe_When_Updating_ThenThrowsNotFoundException()
     {
-        var sut = new RecipeService(_recipesRepositoryMock.Object, _tagsRepositoryMock.Object, _loggerMock.Object);
+        var sut = new RecipeService(_recipesRepositoryMock.Object, _tagsRepositoryMock.Object, _loggerMock.Object, _imagesManagerMock.Object);
 
         string validBase64Image = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
         string nonexistentRecipeName = "NonexistentRecipe";
@@ -125,7 +125,7 @@ public class RecipeServiceTests
     [Fact]
     public async Task Given_ValidData_When_CreatingRecipe_ThenSucceeds()
     {
-        var sut = new RecipeService(_recipesRepositoryMock.Object, _tagsRepositoryMock.Object, _loggerMock.Object);
+        var sut = new RecipeService(_recipesRepositoryMock.Object, _tagsRepositoryMock.Object, _loggerMock.Object, _imagesManagerMock.Object);
 
         string validBase64Image = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 

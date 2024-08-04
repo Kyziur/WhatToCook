@@ -3,7 +3,7 @@ using WhatToCook.Application.DataTransferObjects.Requests;
 using WhatToCook.Application.DataTransferObjects.Responses;
 using WhatToCook.Application.Services;
 
-namespace WhatToCook.WebApp.Controllers;
+namespace WhatToCook.WebAPI.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -25,7 +25,7 @@ public class MealPlanningController : ControllerBase
         var getPlanOfMeals = await _mealPlanningServiceQuery.GetAll();
         return Ok(getPlanOfMeals);
     }
-    
+
     [HttpGet("{name}")]
     public async Task<ActionResult<List<PlanOfMealResponse>>> GetByName(string name, CancellationToken token)
     {

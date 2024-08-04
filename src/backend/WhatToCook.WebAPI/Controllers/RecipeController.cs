@@ -3,7 +3,7 @@ using WhatToCook.Application.DataTransferObjects.Requests;
 using WhatToCook.Application.DataTransferObjects.Responses;
 using WhatToCook.Application.Services;
 
-namespace WhatToCook.WebApp.Controllers;
+namespace WhatToCook.WebAPI.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -43,7 +43,7 @@ public class RecipeController : ControllerBase
             return NotFound();
         }
 
-        getRecipe.ImagePath = $"{this.GetBaseUrl()}/{getRecipe.ImagePath}";
+        getRecipe.ImagePath = $"{GetBaseUrl()}/{getRecipe.ImagePath}";
         return Ok(getRecipe);
     }
 

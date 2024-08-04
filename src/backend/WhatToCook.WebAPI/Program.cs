@@ -1,7 +1,7 @@
 using WhatToCook.Application.Infrastructure;
 using WhatToCook.Application.Infrastructure.Seeds;
 using WhatToCook.Application.Services;
-using WhatToCook.WebApp.Filters;
+using WhatToCook.WebAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,7 +35,5 @@ app.UseRouting();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller}/{action=Index}/{id?}");
-
-app.MapFallbackToFile("index.html");
 
 app.Run();
