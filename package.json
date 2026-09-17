@@ -1,0 +1,12 @@
+{
+  "name": "whattocook-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test:e2e": "playwright test --config=playwright.config.ts",
+    "test:e2e:update-snapshots": "playwright test --config=playwright.config.ts --update-snapshots"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

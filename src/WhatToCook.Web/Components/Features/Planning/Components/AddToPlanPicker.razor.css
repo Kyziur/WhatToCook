@@ -1,0 +1,44 @@
+.add-to-plan {
+    position: relative;
+    min-width: 0;
+}
+
+.add-to-plan-panel {
+    display: grid;
+    gap: var(--space-3);
+    min-width: min(19rem, calc(100vw - 2rem));
+    margin-top: var(--space-2);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+}
+
+.add-to-plan-form,
+.add-to-plan-confirmation {
+    display: grid;
+    gap: var(--space-2);
+}
+
+.add-to-plan-form label {
+    font-weight: 700;
+}
+
+.add-to-plan-panel .inline-warning,
+.add-to-plan-panel .inline-message {
+    margin: 0;
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+}
+
+@media (min-width: 700px) {
+    .add-to-plan-panel {
+        position: absolute;
+        z-index: 2;
+        top: calc(100% + var(--space-2));
+        left: 0;
+        width: 22rem;
+        margin-top: 0;
+    }
+}

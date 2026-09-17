@@ -1,0 +1,4 @@
+interface:
+  display_name: ".NET Quality Governor"
+  short_description: "Keep .NET changes maintainable and verifiable"
+  default_prompt: "Use $dotnet-quality-governor while implementing this .NET change."

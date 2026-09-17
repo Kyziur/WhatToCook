@@ -1,0 +1,244 @@
+@page "/recipes/{RecipeId:guid}"
+@using WhatToCook.Web.Components.Shared
+@implements IDisposable
+@inject IRecipeCatalogService RecipeCatalog
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
+
+<PageTitle>@(Recipe?.Title ?? "Przepis") | WhatToCook</PageTitle>
+
+<section class="screen recipe-details-screen">
+    @if (!string.IsNullOrWhiteSpace(FeedbackMessage))
+    {
+        <section class="surface-card inline-message" role="status">
+            <p>@FeedbackMessage</p>
+        </section>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage) && LoadState == RecipeDetailsLoadState.Loaded)
+    {
+        <section class="surface-card inline-warning" role="alert">
+            <h2>Nie można wykonać operacji</h2>
+            <p>@ErrorMessage</p>
+        </section>
+    }
+
+    @if (LoadState == RecipeDetailsLoadState.Loading)
+    {
+        <section class="surface-card state-empty" aria-busy="true">
+            <h1 class="screen-title">Ładowanie przepisu</h1>
+            <p class="muted">Pobieramy składniki i kroki przygotowania.</p>
+        </section>
+    }
+    else if (LoadState == RecipeDetailsLoadState.Error)
+    {
+        <section class="surface-card state-empty inline-warning" role="alert">
+            <h1 class="screen-title">Nie można załadować przepisu</h1>
+            <p class="muted">@LoadErrorMessage</p>
+            <button type="button" class="primary-action" @onclick="LoadAsync">Spróbuj ponownie</button>
+            <a class="secondary-action" href="@SafeReturnUrl">Powrót do biblioteki</a>
+        </section>
+    }
+    else if (LoadState == RecipeDetailsLoadState.Missing)
+    {
+        <section class="surface-card state-empty">
+            <h1 class="screen-title">Przepis nie istnieje</h1>
+            <p class="muted">Sprawdź, czy przepis nadal jest aktywny.</p>
+            <a class="chip" href="@SafeReturnUrl">Powrót do biblioteki</a>
+        </section>
+    }
+    else if (Recipe is not null)
+    {
+        <div class="recipe-details-grid recipe-details-layout">
+            <article class="surface-card recipe-detail-media-card">
+                @if (string.IsNullOrWhiteSpace(Recipe.MainPhotoPath))
+                {
+                    <div class="recipe-photo-placeholder">Brak zdjęcia przepisu</div>
+                }
+                else
+                {
+                    <img class="recipe-photo-image" src="@RecipeImageUrlBuilder.Build(Recipe.MainPhotoPath)" alt="@Recipe.Title" />
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Recipe.Source))
+                {
+                    <p class="metadata-line">
+                        Źródło:
+                        @if (IsUrl(Recipe.Source))
+                        {
+                            <a href="@Recipe.Source" target="_blank" rel="noreferrer">@Recipe.Source</a>
+                        }
+                        else
+                        {
+                            <span>@Recipe.Source</span>
+                        }
+                    </p>
+                }
+            </article>
+
+            <header class="surface-card recipe-details-header">
+                <div>
+                    <p class="workspace-eyebrow">Przepis</p>
+                    <h1 class="screen-title">@Recipe.Title</h1>
+                    <p class="screen-subtitle">@Recipe.Servings porcje</p>
+                </div>
+                <div class="actions-row recipe-details-actions">
+                    <a class="chip" href="@SafeReturnUrl">Powrót</a>
+                    <a class="secondary-action" href="@GetEditLink()">Edytuj</a>
+                </div>
+            </header>
+
+            <div class="recipe-detail-content">
+                <article class="surface-card recipe-detail-section">
+                    <h2>Składniki</h2>
+                    <ul class="recipe-ingredient-list">
+                        @foreach (var ingredient in Recipe.Ingredients)
+                        {
+                            <li class="recipe-ingredient">@FormatIngredient(ingredient)</li>
+                        }
+                    </ul>
+                </article>
+
+                <article class="surface-card recipe-detail-section">
+                    <h2>Kroki</h2>
+                    <ol class="recipe-step-list">
+                        @foreach (var step in Recipe.Steps)
+                        {
+                            <li>@step</li>
+                        }
+                    </ol>
+                </article>
+            </div>
+
+            <div class="recipe-details-sticky-add">
+                <AddToPlanPicker RecipeId="@Recipe.Id" RecipeTitle="@Recipe.Title" ButtonClass="primary-action" ButtonLabel="+ Dodaj do planu" />
+            </div>
+        </div>
+
+        <div class="actions-row">
+            <button type="button" class="chip danger-chip" disabled="@IsArchiving" @onclick="ArchiveRecipeAsync">
+                @(IsArchiving ? "Archiwizowanie..." : "Archiwizuj przepis")
+            </button>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public Guid RecipeId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    private RecipeCatalogItem? Recipe { get; set; }
+    private RecipeDetailsLoadState LoadState { get; set; } = RecipeDetailsLoadState.Loading;
+    private bool IsArchiving { get; set; }
+    private string FeedbackMessage { get; set; } = string.Empty;
+    private string ErrorMessage { get; set; } = string.Empty;
+    private string LoadErrorMessage { get; set; } = string.Empty;
+    private readonly CancellationTokenSource lifetimeCts = new();
+
+    private string SafeReturnUrl =>
+        string.IsNullOrWhiteSpace(ReturnUrl)
+            || !ReturnUrl.StartsWith("/", StringComparison.Ordinal)
+            || ReturnUrl.StartsWith("//", StringComparison.Ordinal)
+            ? "/"
+            : ReturnUrl;
+
+    protected override Task OnParametersSetAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        LoadState = RecipeDetailsLoadState.Loading;
+        Recipe = null;
+        FeedbackMessage = string.Empty;
+        ErrorMessage = string.Empty;
+        LoadErrorMessage = string.Empty;
+        try
+        {
+            Recipe = await RecipeCatalog.GetByIdAsync(RecipeId, lifetimeCts.Token);
+            LoadState = Recipe is null
+                ? RecipeDetailsLoadState.Missing
+                : RecipeDetailsLoadState.Loaded;
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            LoadErrorMessage = "Sprawdź połączenie i spróbuj ponownie.";
+            LoadState = RecipeDetailsLoadState.Error;
+        }
+    }
+
+    public void Dispose()
+    {
+        lifetimeCts.Cancel();
+        lifetimeCts.Dispose();
+    }
+
+    private string GetEditLink()
+    {
+        var encodedReturnUrl = Uri.EscapeDataString(SafeReturnUrl);
+        return $"/recipes/{RecipeId}/edit?returnUrl={encodedReturnUrl}";
+    }
+
+    private static bool IsUrl(string value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out var uri)
+        && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+
+    private static string FormatIngredient(RecipeCatalogIngredient ingredient)
+    {
+        var parts = new[] { ingredient.QuantityText, ingredient.Unit, ingredient.Name }.Where(x =>
+            !string.IsNullOrWhiteSpace(x)
+        );
+        return string.Join(" ", parts);
+    }
+
+    private async Task ArchiveRecipeAsync()
+    {
+        if (Recipe is null || IsArchiving)
+        {
+            return;
+        }
+
+        var shouldArchive = await JsRuntime.InvokeAsync<bool>(
+            "confirm",
+            "Czy na pewno chcesz zarchiwizować ten przepis?"
+        );
+
+        if (!shouldArchive)
+        {
+            return;
+        }
+
+        IsArchiving = true;
+        try
+        {
+            var archived = await RecipeCatalog.ArchiveAsync(RecipeId, lifetimeCts.Token);
+            if (!archived)
+            {
+                ErrorMessage = "Nie udało się zarchiwizować przepisu. Spróbuj ponownie za chwilę.";
+                return;
+            }
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            ErrorMessage = "Nie udało się zarchiwizować przepisu. Spróbuj ponownie za chwilę.";
+            return;
+        }
+        finally
+        {
+            IsArchiving = false;
+        }
+
+        NavigationManager.NavigateTo(SafeReturnUrl);
+    }
+
+    private enum RecipeDetailsLoadState
+    {
+        Loading,
+        Loaded,
+        Missing,
+        Error,
+    }
+}

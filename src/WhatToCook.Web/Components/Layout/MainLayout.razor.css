@@ -1,0 +1,218 @@
+.app-shell {
+    min-height: 100dvh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    background: var(--color-bg);
+    min-width: 0;
+}
+
+.shell-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.625rem;
+    min-width: 0;
+    min-height: 3.25rem;
+    padding: max(0.375rem, env(safe-area-inset-top)) var(--space-4) 0.375rem;
+    background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+    border-bottom: 1px solid var(--color-border);
+    backdrop-filter: blur(8px);
+}
+
+.shell-brand-lockup {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.shell-logo-mark {
+    width: 2.75rem;
+    height: 2.75rem;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 0.625rem;
+    background: var(--accent-strong);
+    box-shadow: 0 5px 12px rgba(94, 41, 20, 0.16);
+}
+
+.shell-logo-mark svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: none;
+    stroke: #fffaf4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2.7;
+}
+
+.shell-logo-mark:focus-visible,
+.shell-mobile-actions-toggle:focus-visible {
+    outline: 3px solid var(--color-primary-hover);
+    outline-offset: 3px;
+}
+
+.shell-desktop-actions {
+    display: none;
+}
+
+.shell-desktop-nav {
+    display: none;
+}
+
+.shell-mobile-actions {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.shell-mobile-actions-toggle {
+    width: 2.75rem;
+    height: 2.75rem;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 1px solid var(--color-primary-hover);
+    background: var(--color-primary-hover);
+    color: white;
+    cursor: pointer;
+    font-size: 1.55rem;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 8px 18px rgba(94, 41, 20, 0.2);
+}
+
+.shell-mobile-actions-toggle[aria-expanded="true"] {
+    transform: rotate(45deg);
+}
+
+.shell-mobile-actions-panel {
+    position: absolute;
+    top: calc(100% + 0.65rem);
+    right: 0;
+    width: min(17rem, calc(100vw - 2rem));
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+}
+
+.shell-main {
+    width: min(1560px, 100%);
+    min-width: 0;
+    margin: 0 auto;
+    padding: var(--space-4);
+    padding-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom) + var(--space-5));
+}
+
+.shell-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    min-height: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-surface) 95%, transparent);
+    backdrop-filter: blur(8px);
+    padding: 0.5rem var(--space-4) max(0.5rem, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 641px) {
+    .shell-header {
+        min-height: 3.25rem;
+        align-items: center;
+        padding: var(--space-2) clamp(1rem, 3vw, 2.5rem);
+    }
+
+    .shell-desktop-actions {
+        display: flex;
+    }
+
+    .shell-mobile-actions {
+        display: none;
+    }
+
+    .shell-desktop-actions {
+        flex-wrap: nowrap;
+        gap: var(--space-2);
+    }
+}
+
+@media (min-width: 900px) {
+    .app-shell {
+        grid-template-rows: auto 1fr auto;
+    }
+
+    .shell-main {
+        padding: var(--space-6);
+    }
+
+    .shell-header {
+        gap: clamp(0.75rem, 2vw, 2rem);
+    }
+
+    .shell-desktop-nav {
+        display: block;
+        flex: 1 1 22rem;
+        min-width: 0;
+    }
+
+    .shell-desktop-nav ::deep .app-nav {
+        width: fit-content;
+        max-width: none;
+        margin: 0;
+        gap: 0.15rem;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .shell-footer {
+        display: none;
+    }
+}
+
+@media (min-width: 1080px) {
+    .shell-header {
+        display: grid;
+        grid-template-columns: minmax(3rem, 1fr) auto minmax(3rem, 1fr);
+    }
+
+    .shell-desktop-nav {
+        justify-self: center;
+    }
+
+    .shell-desktop-actions {
+        justify-self: end;
+    }
+}
+
+#blazor-error-ui {
+    background: #a63d40;
+    color: #fffdf8;
+    bottom: 0;
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.75rem 1rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}

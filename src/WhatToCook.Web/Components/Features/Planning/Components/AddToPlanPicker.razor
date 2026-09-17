@@ -1,0 +1,385 @@
+@using System.Globalization
+@implements IDisposable
+@inject IMealPlanService MealPlanService
+
+<div class="add-to-plan">
+    <button
+        type="button"
+        class="@ButtonClass"
+        aria-expanded="@IsOpen.ToString().ToLowerInvariant()"
+        @onclick="ToggleAsync">
+        @ButtonLabel
+    </button>
+
+    @if (IsOpen)
+    {
+        <section class="add-to-plan-panel" aria-label="Dodaj przepis do planu">
+            @if (!string.IsNullOrWhiteSpace(FeedbackMessage))
+            {
+                <p class="@(FeedbackIsError ? "inline-warning" : "inline-message")" role="@(FeedbackIsError ? "alert" : "status")">
+                    @FeedbackMessage
+                </p>
+            }
+
+            @if (IsRegenerationConfirmationOpen)
+            {
+                <section class="surface-card inline-warning add-to-plan-confirmation"
+                         role="alertdialog"
+                         aria-labelledby="add-to-plan-regeneration-title">
+                    <h2 id="add-to-plan-regeneration-title">Lista zakupów wymaga regeneracji</h2>
+                    <p>Zapisanie tego przypisania uaktualni wygenerowaną listę zakupów, zachowując zaznaczenia i ręczne pozycje.</p>
+                    <div class="planner-regeneration-actions">
+                        <button type="button" class="secondary-action" disabled="@IsSaving" @onclick="CancelRegeneration">Anuluj</button>
+                        <button type="button" class="primary-action" disabled="@IsSaving" @onclick="ConfirmRegenerationAsync">Potwierdź regenerację</button>
+                    </div>
+                </section>
+            }
+
+            @if (IsLoading)
+            {
+                <p class="muted" aria-busy="true">Ładowanie planów...</p>
+            }
+            else if (!string.IsNullOrWhiteSpace(LoadErrorMessage))
+            {
+                <div class="inline-warning" role="alert">
+                    <p>@LoadErrorMessage</p>
+                    <button type="button" class="secondary-action" @onclick="LoadAsync">Spróbuj ponownie</button>
+                </div>
+            }
+            else if (Plans.Count == 0)
+            {
+                <p class="muted">Nie masz jeszcze planu, do którego można dodać przepis.</p>
+                <a class="secondary-action" href="/planning">Utwórz plan</a>
+            }
+            else
+            {
+                <form class="add-to-plan-form" @onsubmit="RequestAddAsync" @onsubmit:preventDefault="true">
+                    <label for="@PlanSelectId">Plan</label>
+                    <select
+                        id="@PlanSelectId"
+                        class="input"
+                        value="@SelectedPlanId"
+                        disabled="@(IsSaving || IsLoadingPlan || IsRegenerationConfirmationOpen)"
+                        @onchange="OnPlanChangedAsync">
+                        @foreach (var plan in Plans)
+                        {
+                            <option value="@plan.Id">@plan.Name (@FormatDateRange(plan.DateFrom, plan.DateTo))</option>
+                        }
+                    </select>
+
+                    @if (IsLoadingPlan)
+                    {
+                        <p class="muted" aria-busy="true">Ładowanie dni planu...</p>
+                    }
+                    else if (CurrentPlan is not null)
+                    {
+                        <label for="@DaySelectId">Dzień</label>
+                        <select
+                            id="@DaySelectId"
+                            class="input"
+                            value="@SelectedDay.ToString("yyyy-MM-dd")"
+                            disabled="@(IsSaving || IsRegenerationConfirmationOpen)"
+                            @onchange="OnDayChanged">
+                            @foreach (var day in EnumerateDays(CurrentPlan.DateFrom, CurrentPlan.DateTo))
+                            {
+                                <option value="@day.ToString("yyyy-MM-dd")">@ToDayLabel(day)</option>
+                            }
+                        </select>
+
+                        <label for="@SlotSelectId">Pora dnia</label>
+                        <select id="@SlotSelectId" class="input" value="@SelectedSlot" disabled="@(IsSaving || IsRegenerationConfirmationOpen)" @onchange="OnSlotChanged">
+                            @foreach (var slot in MealSlotOrdering.Slots)
+                            {
+                                <option value="@slot.Slot">@slot.Label (@slot.TimeRange)</option>
+                            }
+                        </select>
+
+                        <button type="submit" class="primary-action" disabled="@(IsSaving || IsRegenerationConfirmationOpen)">
+                            @(IsSaving ? "Dodawanie..." : "Dodaj do wybranego dnia")
+                        </button>
+                    }
+                </form>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    private static readonly CultureInfo PolishCulture = CultureInfo.GetCultureInfo("pl-PL");
+
+    [Parameter, EditorRequired]
+    public Guid RecipeId { get; set; }
+
+    [Parameter, EditorRequired]
+    public string RecipeTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public string ButtonClass { get; set; } = "chip";
+
+    [Parameter]
+    public string ButtonLabel { get; set; } = "Dodaj do planu";
+
+    private string InstanceId { get; } = Guid.NewGuid().ToString("N");
+    private string PlanSelectId => $"add-to-plan-{InstanceId}-plan";
+    private string DaySelectId => $"add-to-plan-{InstanceId}-day";
+    private string SlotSelectId => $"add-to-plan-{InstanceId}-slot";
+    private List<MealPlanSummary> Plans { get; set; } = [];
+    private MealPlanDetails? CurrentPlan { get; set; }
+    private Guid? SelectedPlanId { get; set; }
+    private DateOnly SelectedDay { get; set; }
+    private MealSlot SelectedSlot { get; set; } = MealSlot.Dinner;
+    private bool IsOpen { get; set; }
+    private bool IsLoading { get; set; }
+    private bool IsLoadingPlan { get; set; }
+    private bool IsSaving { get; set; }
+    private bool IsRegenerationConfirmationOpen { get; set; }
+    private IReadOnlyList<MealPlanEntry>? PendingEntries { get; set; }
+    private string FeedbackMessage { get; set; } = string.Empty;
+    private string LoadErrorMessage { get; set; } = string.Empty;
+    private bool FeedbackIsError { get; set; }
+    private readonly CancellationTokenSource lifetimeCts = new();
+    public void Dispose()
+    {
+        lifetimeCts.Cancel();
+        lifetimeCts.Dispose();
+    }
+
+    private async Task ToggleAsync()
+    {
+        IsOpen = !IsOpen;
+        if (IsOpen && Plans.Count == 0 && string.IsNullOrWhiteSpace(LoadErrorMessage))
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        IsLoading = true;
+        LoadErrorMessage = string.Empty;
+        FeedbackMessage = string.Empty;
+        try
+        {
+            Plans = (await MealPlanService.GetPlansAsync(lifetimeCts.Token)).ToList();
+            if (Plans.Count > 0)
+            {
+                await SelectPlanAsync(Plans[0].Id);
+            }
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            LoadErrorMessage = "Nie udało się załadować planów. Sprawdź połączenie i spróbuj ponownie.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task OnPlanChangedAsync(ChangeEventArgs args)
+    {
+        if (Guid.TryParse(args.Value?.ToString(), out var planId))
+        {
+            await SelectPlanAsync(planId);
+        }
+    }
+
+    private async Task SelectPlanAsync(Guid planId)
+    {
+        SelectedPlanId = planId;
+        CurrentPlan = null;
+        FeedbackMessage = string.Empty;
+        PendingEntries = null;
+        IsRegenerationConfirmationOpen = false;
+        IsLoadingPlan = true;
+        try
+        {
+            CurrentPlan = await MealPlanService.GetPlanAsync(planId, lifetimeCts.Token);
+            if (CurrentPlan is null)
+            {
+                FeedbackMessage = "Nie udało się załadować wybranego planu.";
+                FeedbackIsError = true;
+                return;
+            }
+
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            SelectedDay = today >= CurrentPlan.DateFrom && today <= CurrentPlan.DateTo
+                ? today
+                : CurrentPlan.DateFrom;
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            FeedbackMessage = "Nie udało się załadować wybranego planu.";
+            FeedbackIsError = true;
+        }
+        finally
+        {
+            IsLoadingPlan = false;
+        }
+    }
+
+    private void OnDayChanged(ChangeEventArgs args)
+    {
+        if (DateOnly.TryParse(args.Value?.ToString(), out var day))
+        {
+            SelectedDay = day;
+            FeedbackMessage = string.Empty;
+        }
+    }
+
+    private void OnSlotChanged(ChangeEventArgs args)
+    {
+        if (Enum.TryParse<MealSlot>(args.Value?.ToString(), out var slot))
+        {
+            SelectedSlot = slot;
+        }
+    }
+
+    private async Task RequestAddAsync()
+    {
+        if (!CanAddToSelectedDay())
+        {
+            return;
+        }
+
+        if (CurrentPlan!.HasGeneratedShoppingList)
+        {
+            PendingEntries = BuildEntriesWithRecipe();
+            IsRegenerationConfirmationOpen = true;
+            return;
+        }
+
+        await SaveAsync(regenerateShoppingList: false);
+    }
+
+    private void CancelRegeneration()
+    {
+        IsRegenerationConfirmationOpen = false;
+        PendingEntries = null;
+    }
+
+    private async Task ConfirmRegenerationAsync()
+    {
+        if (IsSaving || CurrentPlan is null || PendingEntries is null)
+        {
+            return;
+        }
+
+        IsRegenerationConfirmationOpen = false;
+        await SaveAsync(regenerateShoppingList: true);
+    }
+
+    private bool CanAddToSelectedDay()
+    {
+        if (CurrentPlan is null || SelectedPlanId is null || IsSaving)
+        {
+            return false;
+        }
+
+        if (CurrentPlan.Entries.Any(x => x.PlannedDate == SelectedDay && x.RecipeId == RecipeId))
+        {
+            FeedbackMessage = "Ten przepis jest już zaplanowany na wybrany dzień. Wybierz inny dzień.";
+            FeedbackIsError = true;
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task SaveAsync(bool regenerateShoppingList)
+    {
+        if (CurrentPlan is null || SelectedPlanId is null || IsSaving)
+        {
+            return;
+        }
+
+        IsSaving = true;
+        FeedbackMessage = string.Empty;
+        try
+        {
+            var entries = PendingEntries ?? BuildEntriesWithRecipe();
+            var result = await MealPlanService.SavePlanAsync(
+                SelectedPlanId.Value,
+                new MealPlanSaveRequest(
+                    CurrentPlan.Name,
+                    CurrentPlan.DateFrom,
+                    CurrentPlan.DateTo,
+                    regenerateShoppingList,
+                    entries
+                ),
+                lifetimeCts.Token
+            );
+
+            if (result.RegenerationRequired)
+            {
+                PendingEntries = entries;
+                IsRegenerationConfirmationOpen = true;
+                return;
+            }
+
+            if (!result.IsSuccess || result.Plan is null)
+            {
+                FeedbackMessage = result.ErrorMessage ?? "Nie udało się dodać przepisu do planu.";
+                FeedbackIsError = true;
+                return;
+            }
+
+            IsRegenerationConfirmationOpen = false;
+            PendingEntries = null;
+            CurrentPlan = result.Plan;
+            FeedbackMessage = $"Dodano „{RecipeTitle}” do planu na {FormatDate(SelectedDay)}.";
+            FeedbackIsError = false;
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            FeedbackMessage = "Nie udało się dodać przepisu do planu. Spróbuj ponownie.";
+            FeedbackIsError = true;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private IReadOnlyList<MealPlanEntry> BuildEntriesWithRecipe()
+    {
+        var entries = CurrentPlan!.Entries.ToList();
+        var nextSlotPosition = entries.Count(x =>
+            x.PlannedDate == SelectedDay
+            && MealSlotOrdering.GetSlot(x.SortOrder) == SelectedSlot
+        );
+        entries.Add(
+            new MealPlanEntry(
+                null,
+                RecipeId,
+                RecipeTitle,
+                true,
+                SelectedDay,
+                1m,
+                MealSlotOrdering.Encode(SelectedSlot, nextSlotPosition)
+            )
+        );
+        return entries;
+    }
+
+    private static IEnumerable<DateOnly> EnumerateDays(DateOnly from, DateOnly to)
+    {
+        for (var day = from; day <= to; day = day.AddDays(1))
+        {
+            yield return day;
+        }
+    }
+
+    private static string ToDayLabel(DateOnly day) =>
+        day.ToString("dddd, d MMMM yyyy", PolishCulture);
+
+    private static string FormatDate(DateOnly day) => day.ToString("d MMMM yyyy", PolishCulture);
+
+    private static string FormatDateRange(DateOnly from, DateOnly to) =>
+        from.Year == to.Year && from.Month == to.Month
+            ? $"{from.Day}-{to.Day} {from.ToString("MMMM yyyy", PolishCulture)}"
+            : $"{FormatDate(from)} - {FormatDate(to)}";
+}

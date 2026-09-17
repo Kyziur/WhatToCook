@@ -1,0 +1,203 @@
+@page "/recipes/imports/{DraftId:guid}"
+
+<PageTitle>Szkic importu | WhatToCook</PageTitle>
+
+<section class="screen">
+    <header class="surface-card page-header">
+        <h1 class="screen-title">Szkic importu przepisu</h1>
+        <p class="screen-subtitle">Sprawdz pola, popraw blokery i sfinalizuj przepis.</p>
+    </header>
+
+    @if (IsLoading)
+    {
+        <section class="surface-card">
+            <p class="muted">Ladowanie szkicu importu...</p>
+        </section>
+    }
+    else if (LoadFailed)
+    {
+        <section class="surface-card inline-warning">
+            <h3>Nie znaleziono szkicu importu</h3>
+            <a class="chip" href="/recipes/import">Utworz nowy import</a>
+        </section>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(FeedbackMessage))
+        {
+            <section class="surface-card @(IsError ? "inline-warning" : "inline-message")">
+                <p>@FeedbackMessage</p>
+            </section>
+        }
+
+        <section class="surface-card section-card">
+            <h3 class="section-title">Status importu</h3>
+            <p class="muted">Status: @DraftStatusLabel</p>
+            @if (!string.IsNullOrWhiteSpace(SourceUrl))
+            {
+                <p class="muted">
+                    URL:
+                    <a href="@SourceUrl" target="_blank" rel="noreferrer">@SourceUrl</a>
+                </p>
+            }
+            @if (FinalizedRecipeId.HasValue)
+            {
+                <p>
+                    Przepis zostal juz zapisany.
+                    <a href="@GetRecipeLink(FinalizedRecipeId.Value)">Przejdz do przepisu</a>
+                </p>
+            }
+        </section>
+
+        @if (Issues.Count > 0)
+        {
+            <section class="surface-card inline-warning">
+                <h3>Rzeczy do sprawdzenia</h3>
+                <ul>
+                    @foreach (var issue in Issues)
+                    {
+                        <li>@issue.Message</li>
+                    }
+                </ul>
+            </section>
+        }
+
+        <section class="surface-card section-card">
+            <h3 class="section-title">Podstawy</h3>
+            <div class="field-grid">
+                <div class="field">
+                    <label for="import-title">Tytul przepisu</label>
+                    <input id="import-title" class="input" @bind="Title" @bind:event="oninput" />
+                </div>
+                <div class="field">
+                    <label for="import-servings">Liczba porcji</label>
+                    <input
+                        id="import-servings"
+                        class="input"
+                        type="number"
+                        @bind="ServingsText"
+                        @bind:event="oninput" />
+                </div>
+            </div>
+            <div class="field">
+                <label for="import-source">Zrodlo</label>
+                <input id="import-source" class="input" @bind="Source" @bind:event="oninput" />
+            </div>
+        </section>
+
+        <section class="surface-card section-card">
+            <div class="section-head-row">
+                <h3 class="section-title">Skladniki</h3>
+                <button type="button" class="chip" @onclick="AddIngredient">Dodaj skladnik</button>
+            </div>
+            <div class="list">
+                @foreach (var ingredient in Ingredients)
+                {
+                    <article class="inline-list-row" @key="ingredient.Id">
+                        <input
+                            class="input ingredient-name"
+                            value="@ingredient.Name"
+                            @oninput="args => ingredient.Name = args.Value?.ToString() ?? string.Empty"
+                            placeholder="np. pomidor" />
+                        <input
+                            class="input ingredient-qty"
+                            value="@ingredient.QuantityText"
+                            @oninput="args => ingredient.QuantityText = args.Value?.ToString()"
+                            placeholder="ilosc (opcjonalnie)" />
+                        <select class="input ingredient-unit" @bind="ingredient.Unit">
+                            @foreach (var unit in AllowedUnits)
+                            {
+                                <option value="@unit.Value">@unit.Label</option>
+                            }
+                        </select>
+                        <button
+                            type="button"
+                            class="chip danger-chip"
+                            @onclick="() => RemoveIngredient(ingredient.Id)">
+                            Usuń
+                        </button>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <section class="surface-card section-card">
+            <div class="section-head-row">
+                <h3 class="section-title">Kroki</h3>
+                <button type="button" class="chip" @onclick="AddStep">Dodaj krok</button>
+            </div>
+            <div class="list">
+                @foreach (var step in Steps)
+                {
+                    <article class="step-row" @key="step.Id">
+                        <label class="muted">Krok @(Steps.IndexOf(step) + 1)</label>
+                        <textarea
+                            class="input"
+                            rows="3"
+                            @bind="step.Text"
+                            @bind:event="oninput"></textarea>
+                        <div class="actions-row">
+                            @if (Steps.IndexOf(step) > 0)
+                            {
+                                <button
+                                    type="button"
+                                    class="chip"
+                                    @onclick="() => MergeStepWithPrevious(step.Id)">
+                                    Złącz z krokiem wyżej
+                                </button>
+                            }
+                            <button
+                                type="button"
+                                class="chip danger-chip"
+                                @onclick="() => RemoveStep(step.Id)">
+                                Usuń
+                            </button>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <section class="surface-card section-card">
+            <h3 class="section-title">Tagi</h3>
+            <div class="inline-tag-editor">
+                <input
+                    id="import-new-tag"
+                    class="input"
+                    @bind="NewTag"
+                    @bind:event="oninput"
+                    placeholder="np. obiad" />
+                <button type="button" class="chip" @onclick="AddTag">Dodaj tag</button>
+            </div>
+            @if (Tags.Count > 0)
+            {
+                <div class="chip-row">
+                    @foreach (var tag in Tags)
+                    {
+                        <button type="button" class="chip selected-chip" @onclick="() => RemoveTag(tag)">
+                            @tag x
+                        </button>
+                    }
+                </div>
+            }
+        </section>
+
+        <div class="actions-row">
+            <button
+                type="button"
+                class="primary-action"
+                disabled="@IsSaving"
+                @onclick="SaveDraftAsync">
+                @(IsSaving ? "Zapisywanie..." : "Zapisz szkic")
+            </button>
+            <button
+                type="button"
+                class="secondary-action"
+                disabled="@(!CanFinalize || IsSaving)"
+                @onclick="FinalizeAsync">
+                Finalizuj przepis
+            </button>
+            <a class="chip" href="/recipes/import">Nowy import</a>
+        </div>
+    }
+</section>

@@ -1,0 +1,22 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/TestResults/
+**/*.user
+**/*.suo
+**/*.rsuser
+tests/e2e/artifacts/
+.git/
+.playwright/
+node_modules/
+deploy/data/
+# Never send secret-bearing or operational artifacts to Docker build context
+**/.env
+**/.env.*
+!**/.env.example
+**/backups/
+**/*.tgz
+**/*.tar.gz
+**/.tmp/

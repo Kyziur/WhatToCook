@@ -1,0 +1,335 @@
+@page "/planning"
+@using WhatToCook.Web.Components.Features.Recipes.Shared
+@using WhatToCook.Web.Components.Shared
+
+<PageTitle>Plan posiłków | WhatToCook</PageTitle>
+
+<section class="planner-workspace">
+    @if (!string.IsNullOrWhiteSpace(ToastMessage))
+    {
+        <aside class="floating-alert shell-toast @(ToastIsError ? "floating-alert-error" : "floating-alert-success")"
+               role="@(ToastIsError ? "alert" : "status")"
+               aria-live="@(ToastIsError ? "assertive" : "polite")">
+            @ToastMessage
+        </aside>
+    }
+
+    @if (LoadState == PlannerLoadState.Loading)
+    {
+        <section class="surface-card state-empty planner-loading" aria-busy="true">
+            <h1>Ładowanie planu posiłków</h1>
+            <p class="muted">Pobieramy plany, przepisy i listę zakupów.</p>
+        </section>
+    }
+    else if (LoadState == PlannerLoadState.Error)
+    {
+        <section class="surface-card state-empty inline-warning" role="alert">
+            <h1>Nie można załadować planera</h1>
+            <p class="muted">@LoadErrorMessage</p>
+            <button type="button" class="primary-action" disabled="@(IsBusy || !IsInteractive)" @onclick="LoadAsync">Spróbuj ponownie</button>
+        </section>
+    }
+    else if (Plans.Count == 0)
+    {
+        <section class="planner-empty-layout">
+            <header class="planner-title-block">
+                <span class="planner-title-icon" aria-hidden="true">✓</span>
+                <div>
+                    <h1>Plan posiłków</h1>
+                    <p>Zaplanuj pierwszy tydzień i wygeneruj z niego listę zakupów.</p>
+                </div>
+            </header>
+            @CreatePlanForm()
+        </section>
+    }
+    else if (CurrentPlan is not null)
+    {
+        <header class="planner-period-toolbar">
+            <div class="planner-week-select-label">
+                <span class="planner-week-select-caption">Wybrany tydzień</span>
+                <div class="planner-period-switcher">
+                    <button type="button" class="planner-icon-button" aria-label="Poprzedni tydzień" disabled="@(!CanMoveWeek(-1) || IsBusy || !IsInteractive)" @onclick="() => MoveWeek(-1)">‹</button>
+                    <div class="planner-period-label">
+                        <svg class="planner-period-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <rect x="3.5" y="5.5" width="17" height="15" rx="2" />
+                            <path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01" />
+                        </svg>
+                        <strong>@FormatVisibleWeekRange()</strong>
+                    </div>
+                    <button type="button" class="planner-icon-button" aria-label="Następny tydzień" disabled="@(!CanMoveWeek(1) || IsBusy || !IsInteractive)" @onclick="() => MoveWeek(1)">›</button>
+                </div>
+            </div>
+            <button type="button" class="secondary-action planner-mobile-edit-plan" disabled="@(IsBusy || !IsInteractive)" @onclick="TogglePlanSettings">Edytuj</button>
+            <button type="button" class="secondary-action planner-mobile-new-plan" disabled="@(IsBusy || !IsInteractive)" @onclick="ToggleCreatePlan">Nowy plan</button>
+            <label class="planner-plan-select-label" for="plan-selector">
+                <span class="planner-plan-select-caption">Aktywny plan</span>
+                <select id="plan-selector" class="input planner-plan-select" value="@SelectedPlanId" disabled="@(IsBusy || !IsInteractive)" @onchange="OnPlanSelectorChangedAsync">
+                    @foreach (var plan in Plans)
+                    {
+                        <option value="@plan.Id">@plan.Name</option>
+                    }
+                </select>
+            </label>
+        </header>
+
+        <section class="planner-dashboard-header">
+            <div class="planner-title-block">
+                <span class="planner-title-icon" aria-hidden="true">✓</span>
+                <div>
+                    <p class="workspace-eyebrow">@CurrentPlan.Name</p>
+                    <h1>Plan posiłków</h1>
+                    <p>Posiłki w grupach, a lista zakupów aktualizowana z planu.</p>
+                </div>
+            </div>
+            <div class="planner-metrics" role="group" aria-label="Podsumowanie planu">
+                <article><strong>@CurrentPlan.Entries.Count</strong><span>posiłków<br />w planie</span></article>
+                <article><strong>@GetPlannedDayCount()</strong><span>z @GetPlanDayCount()<br />dni zaplanowanych</span></article>
+                <article><strong>@GetShoppingItemCount()</strong><span>produktów<br />na liście</span></article>
+            </div>
+            <div class="planner-header-actions">
+                <button type="button" class="secondary-action planner-save-action" disabled="@(IsBusy || !IsDirty || !IsInteractive)" @onclick="SavePlanAsync">@(CurrentOperation == PlannerOperation.Saving ? "Zapisywanie..." : "Zapisz plan")</button>
+                @if (!IsDirty)
+                {
+                    <span class="planner-save-hint">Brak niezapisanych zmian</span>
+                }
+                <button type="button" class="secondary-action" disabled="@(IsBusy || !IsInteractive)" @onclick="TogglePlanSettings">Edytuj plan</button>
+                <button type="button" class="primary-action" disabled="@(IsBusy || !IsInteractive)" @onclick="ToggleCreatePlan">Nowy plan</button>
+            </div>
+        </section>
+
+        @if (IsDirty)
+        {
+            <aside class="planner-dirty-banner" role="status">
+                <strong>Masz niezapisane zmiany</strong>
+                <span>Lista zakupów zostanie uaktualniona po zapisie planu.</span>
+            </aside>
+        }
+
+        @if (IsRegenerationConfirmationOpen)
+        {
+            <section class="surface-card inline-warning planner-regeneration-confirmation"
+                     role="alertdialog"
+                     aria-labelledby="planner-regeneration-title">
+                <h2 id="planner-regeneration-title">Lista zakupów wymaga regeneracji</h2>
+                <p>Zapisanie zmian uaktualni wygenerowaną listę zakupów, zachowując zaznaczenia i ręczne pozycje.</p>
+                <div class="planner-regeneration-actions">
+                    <button type="button" class="secondary-action" disabled="@IsBusy" @onclick="CancelRegeneration">Anuluj</button>
+                    <button type="button" class="primary-action" disabled="@IsBusy" @onclick="ConfirmRegenerationAsync">Potwierdź regenerację</button>
+                </div>
+            </section>
+        }
+
+        @if (IsCreatePlanExpanded)
+        {
+            <section class="surface-card planner-create-panel">
+                <div class="section-head-row">
+                    <div><p class="workspace-eyebrow">Nowy zakres</p><h2>Utwórz plan</h2></div>
+                    <button type="button" class="planner-icon-button" aria-label="Zamknij tworzenie planu" disabled="@(IsBusy || !IsInteractive)" @onclick="ToggleCreatePlan">×</button>
+                </div>
+                @CreatePlanForm()
+            </section>
+        }
+
+        @if (IsPlanSettingsOpen)
+        {
+            <section class="surface-card planner-create-panel">
+                <div class="section-head-row">
+                    <div><p class="workspace-eyebrow">Ustawienia</p><h2>Edytuj plan</h2></div>
+                    <button type="button" class="planner-icon-button" aria-label="Zamknij ustawienia planu" disabled="@(IsBusy || !IsInteractive)" @onclick="TogglePlanSettings">×</button>
+                </div>
+                <div class="planner-create-form">
+                    <label for="plan-name">Nazwa planu</label>
+                    <input id="plan-name" class="input" disabled="@(IsBusy || !IsInteractive)" value="@CurrentPlan.Name" @oninput="OnPlanNameInput" />
+                    <label for="date-from">Od</label>
+                    <input id="date-from" class="input" type="date" disabled="@(IsBusy || !IsInteractive)" value="@ToDateInput(CurrentPlan.DateFrom)" @onchange="OnPlanDateFromChanged" />
+                    <label for="date-to">Do</label>
+                    <input id="date-to" class="input" type="date" disabled="@(IsBusy || !IsInteractive)" value="@ToDateInput(CurrentPlan.DateTo)" @onchange="OnPlanDateToChanged" />
+                </div>
+            </section>
+        }
+
+        <div class="planner-dashboard-grid">
+            <section class="planner-board" aria-label="Tygodniowy plan posiłków">
+                <section class="planner-week-grid planner-desktop-week">
+                    <div class="planner-grid-corner"></div>
+                    @foreach (var day in GetVisibleDays())
+                    {
+                        <button type="button"
+                                class="planner-grid-day-header @(SelectedDay == day ? "planner-grid-day-active" : string.Empty)"
+                                data-day-target="@day.ToString("yyyy-MM-dd")"
+                                aria-pressed="@((SelectedDay == day).ToString().ToLowerInvariant())"
+                                disabled="@(IsBusy || !IsInteractive)"
+                                @onclick="() => SelectDay(day)">
+                            <strong>@GetDayShortLabel(day)</strong>
+                            <span>@day.ToString("d MMM", PolishCulture)</span>
+                            @if (day == DateOnly.FromDateTime(DateTime.Today))
+                            {
+                                <small>Dziś</small>
+                            }
+                        </button>
+                    }
+
+                    @foreach (var slot in MealSlotOrdering.Slots)
+                    {
+                        <div class="planner-slot-label">
+                            <span aria-hidden="true">@slot.Icon</span>
+                            <strong>@slot.Label</strong>
+                            <small>@slot.TimeRange</small>
+                        </div>
+                        @foreach (var day in GetVisibleDays())
+                        {
+                            var entries = GetEntriesForSlot(day, slot.Slot);
+                            <section class="planner-slot-cell @(entries.Count == 0 ? "planner-slot-empty" : string.Empty)" data-day="@day.ToString("yyyy-MM-dd")" data-slot="@slot.Slot">
+                                @foreach (var entry in entries)
+                                {
+                                    @EntryCard(entry, compact: true)
+                                }
+                                <button type="button" class="planner-add-slot" disabled="@(IsBusy || !IsInteractive)" @onclick="() => OpenRecipePicker(day, slot.Slot)">+ Dodaj<br />posiłek</button>
+                            </section>
+                        }
+                    }
+                </section>
+
+                <section class="planner-mobile-day">
+                    <nav class="planner-mobile-day-picker" aria-label="Dni planu">
+                        @foreach (var day in GetVisibleDays())
+                        {
+                            <button type="button"
+                                    data-day-target="@day.ToString("yyyy-MM-dd")"
+                                    class="@(SelectedDay == day ? "active" : string.Empty)"
+                                    aria-pressed="@((SelectedDay == day).ToString().ToLowerInvariant())"
+                                    disabled="@(IsBusy || !IsInteractive)"
+                                    @onclick="() => SelectDay(day)">
+                                <strong>@GetDayShortLabel(day)</strong><span>@day.Day</span>
+                            </button>
+                        }
+                    </nav>
+                    <div class="planner-mobile-day-heading">
+                        <div><span>Dzisiaj</span><h2>@ToDayLabel(SelectedDay)</h2></div>
+                        <button type="button" class="primary-action" disabled="@(IsBusy || !IsInteractive)" @onclick="() => OpenRecipePicker(SelectedDay, MealSlot.Dinner)">+ Dodaj</button>
+                    </div>
+                    <section class="planner-mobile-slots" data-day="@SelectedDay.ToString("yyyy-MM-dd")">
+                        @foreach (var slot in MealSlotOrdering.Slots)
+                        {
+                            var entries = GetEntriesForSlot(SelectedDay, slot.Slot);
+                            <article class="planner-mobile-slot @(entries.Count == 0 ? "planner-mobile-slot-empty" : string.Empty)">
+                                <header><span aria-hidden="true">@slot.Icon</span><div><strong>@slot.Label</strong><small>@slot.TimeRange</small></div></header>
+                                <div class="planner-mobile-slot-content">
+                                    @foreach (var entry in entries)
+                                    {
+                                        @EntryCard(entry, compact: false)
+                                    }
+                                    <button type="button" class="planner-add-slot" disabled="@(IsBusy || !IsInteractive)" @onclick="() => OpenRecipePicker(SelectedDay, slot.Slot)">+ Dodaj posiłek</button>
+                                </div>
+                            </article>
+                        }
+                    </section>
+                </section>
+
+            </section>
+
+            <section class="planner-context-panel" aria-label="Kontekst planera">
+                @if (IsRecipePickerOpen)
+                {
+                    <button type="button" class="planner-picker-backdrop" aria-label="Zamknij wybór przepisu" disabled="@(IsBusy || !IsInteractive)" @onclick="CloseRecipePicker"></button>
+                    <section class="planner-recipe-drawer" aria-label="Dodaj przepis">
+                        <header class="section-head-row">
+                            <div><p class="workspace-eyebrow">@ToDayLabel(SelectedDay)</p><h2>@MealSlotOrdering.GetDefinition(SelectedSlot).Label</h2></div>
+                            <button type="button" class="planner-icon-button" aria-label="Zamknij wybór przepisu" disabled="@(IsBusy || !IsInteractive)" @onclick="CloseRecipePicker">×</button>
+                        </header>
+                        <label class="planner-drawer-search" for="@GetDayRecipeSearchInputId(SelectedDay)">
+                            <span aria-hidden="true">⌕</span>
+                            <input id="@GetDayRecipeSearchInputId(SelectedDay)" disabled="@(IsBusy || !IsInteractive)" value="@GetDayRecipeSearchTerm(SelectedDay)" @oninput="args => SetDayRecipeSearchTerm(SelectedDay, args.Value?.ToString())" placeholder="Szukaj w przepisach..." />
+                        </label>
+                        <div class="planner-drawer-recipes">
+                            @foreach (var recipe in GetSelectableRecipesForDay(SelectedDay).Take(20))
+                            {
+                                <button type="button" class="planner-drawer-recipe" disabled="@(IsBusy || !IsInteractive)" @onclick="() => AddRecipeToSelectedSlot(recipe.Id)">
+                                    <span><strong>@recipe.Title</strong><small>Dodaj do: @MealSlotOrdering.GetDefinition(SelectedSlot).Label.ToLowerInvariant()</small></span>
+                                    <b aria-hidden="true">+</b>
+                                </button>
+                            }
+                        </div>
+                    </section>
+                }
+                else
+                {
+                    <section class="planner-shopping-panel">
+                        <header class="section-head-row">
+                            <div><p class="workspace-eyebrow">Lista zakupów</p><h2>@GetShoppingItemCount() produktów</h2></div>
+                            <a class="secondary-action" href="@GetShoppingLinkForCurrentPlan()">Otwórz</a>
+                        </header>
+                        @if (EmbeddedShoppingList is null)
+                        {
+                            <div class="state-empty planner-shopping-empty"><p>Wygeneruj listę z aktualnego planu.</p></div>
+                        }
+                        else
+                        {
+                            <div class="planner-shopping-items">
+                                @foreach (var item in EmbeddedShoppingList.Items.OrderBy(x => x.State == ShoppingChecklistState.NieMam ? 0 : 1).ThenBy(x => x.SortOrder))
+                                {
+                                    <button type="button" class="planner-shopping-item" aria-pressed="@((item.State == ShoppingChecklistState.Mam).ToString().ToLowerInvariant())" disabled="@(IsBusy || !IsInteractive)" @onclick="() => ToggleEmbeddedShoppingItemAsync(item)">
+<span class="planner-state-indicator @(item.State == ShoppingChecklistState.NieMam ? "niemam" : "mam")">@(item.State == ShoppingChecklistState.NieMam ? "❌ Nie mam" : "✅ Mam w domu")</span>
+                                        <span>@item.DisplayText</span>
+                                    </button>
+                                }
+                            </div>
+                        }
+                        <div class="planner-shopping-callout"><strong>Dodawaj przepisy do planu,</strong><span>aby lista zakupów aktualizowała się z tygodnia.</span></div>
+                    </section>
+                }
+            </section>
+        </div>
+
+    }
+</section>
+
+@code {
+    private RenderFragment CreatePlanForm() => @<form class="planner-create-form" @onsubmit="CreatePlanAsync" @onsubmit:preventDefault="true">
+        <label for="new-date-from">Od</label>
+        <input id="new-date-from" class="input" type="date" disabled="@(IsBusy || !IsInteractive)" value="@ToDateInput(NewPlanDateFrom)" @onchange="OnCreateDateFromChanged" />
+        <label for="new-date-to">Do</label>
+        <input id="new-date-to" class="input" type="date" disabled="@(IsBusy || !IsInteractive)" value="@ToDateInput(NewPlanDateTo)" @onchange="OnCreateDateToChanged" />
+        <label for="new-plan-name">Nazwa planu</label>
+        <input id="new-plan-name" class="input" disabled="@(IsBusy || !IsInteractive)" @bind="NewPlanName" @bind:event="oninput" />
+        <button type="submit" class="primary-action" data-interactive="@IsInteractive.ToString().ToLowerInvariant()" disabled="@(IsBusy || !IsInteractive)">
+            @(CurrentOperation == PlannerOperation.Creating ? "Tworzenie..." : "Utwórz plan")
+        </button>
+    </form>;
+
+    private RenderFragment EntryCard(EditableEntry entry, bool compact) => @<article class="planner-meal-card @(compact ? "planner-meal-card-compact" : "planner-meal-card-expanded")" @key="entry.RowId">
+        @if (!compact)
+        {
+            @if (GetRecipeForEntry(entry)?.MainPhotoPath is { Length: > 0 } photoPath)
+            {
+                <img src="@RecipeImageUrlBuilder.Build(photoPath)" alt="" />
+            }
+            else
+            {
+                <span class="planner-recipe-placeholder" aria-hidden="true">♨</span>
+            }
+        }
+        <div class="planner-meal-copy">
+            <strong title="@entry.RecipeTitle">@entry.RecipeTitle</strong>
+            <span>@FormatMultiplier(entry.Multiplier) × porcja</span>
+        </div>
+        <div class="planner-meal-actions @(IsMealActionMenuOpen(entry.RowId) ? "planner-meal-actions-active" : string.Empty)">
+            <button type="button"
+                    class="planner-meal-menu-toggle"
+                    aria-label="Opcje posiłku @entry.RecipeTitle"
+                    aria-expanded="@IsMealActionMenuOpen(entry.RowId).ToString().ToLowerInvariant()"
+                    disabled="@(IsBusy || !IsInteractive)"
+                    @onclick="() => ToggleMealActionMenu(entry.RowId)">
+                •••
+            </button>
+            @if (IsMealActionMenuOpen(entry.RowId))
+            {
+                <div class="planner-meal-actions-panel">
+                    <button type="button" aria-label="Zmniejsz mnożnik @entry.RecipeTitle" disabled="@(IsBusy || !IsInteractive)" @onclick="() => AdjustMultiplier(entry.RowId, -1m)">−</button>
+                    <button type="button" aria-label="Zwiększ mnożnik @entry.RecipeTitle" disabled="@(IsBusy || !IsInteractive)" @onclick="() => AdjustMultiplier(entry.RowId, 1m)">+</button>
+                    <button type="button" aria-label="Usuń @entry.RecipeTitle" disabled="@(IsBusy || !IsInteractive)" @onclick="() => RemoveEntry(entry.RowId)">×</button>
+                </div>
+            }
+        </div>
+    </article>;
+}

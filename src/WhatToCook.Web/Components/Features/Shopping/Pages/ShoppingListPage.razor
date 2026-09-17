@@ -1,0 +1,647 @@
+@page "/shopping"
+@using System.Globalization
+@implements IDisposable
+@inject IMealPlanService MealPlanService
+@inject IShoppingListService ShoppingListService
+@inject IJSRuntime JsRuntime
+
+<PageTitle>Lista zakupów | WhatToCook</PageTitle>
+
+<section class="screen shopping-screen">
+    <header class="shopping-page-header">
+        <div>
+            <p class="workspace-eyebrow">Zakupy z planu</p>
+            <h1 class="screen-title" tabindex="-1">Lista zakupów</h1>
+        </div>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(ToastMessage))
+    {
+        <aside
+            class="floating-alert shell-toast @(ToastIsError ? "floating-alert-error" : "floating-alert-success")"
+            role="@(ToastIsError ? "alert" : "status")"
+            aria-live="@(ToastIsError ? "assertive" : "polite")">
+            @ToastMessage
+        </aside>
+    }
+
+    @if (LoadState == ShoppingLoadState.Loading)
+    {
+        <section class="surface-card state-empty" aria-busy="true">
+            <h2>Ładowanie list zakupów</h2>
+            <p class="muted">Pobieramy plany i zapisany stan zakupów.</p>
+        </section>
+    }
+    else if (LoadState == ShoppingLoadState.Error)
+    {
+        <section class="surface-card state-empty inline-warning" role="alert">
+            <h2>Nie można załadować list zakupów</h2>
+            <p class="muted">@LoadErrorMessage</p>
+            <button type="button" class="primary-action" @onclick="LoadAsync">Spróbuj ponownie</button>
+        </section>
+    }
+    else if (Plans.Count == 0)
+    {
+        <section class="surface-card state-empty">
+            <h2>Brak planów posiłków</h2>
+            <p class="muted">Najpierw utwórz plan, a potem wygeneruj z niego listę zakupów.</p>
+            <a class="chip" href="/planning">Przejdź do planera</a>
+        </section>
+    }
+    else
+    {
+        <section class="shopping-plan-strip">
+            <div class="chip-row planner-plan-chips">
+                @foreach (var plan in Plans)
+                {
+                    <button
+                        type="button"
+                        class="chip @(SelectedPlanId == plan.Id ? "selected-chip" : string.Empty)"
+                        title="@GetPlanChipLabel(plan)"
+                        aria-pressed="@(SelectedPlanId == plan.Id ? "true" : "false")"
+                        disabled="@(IsBusy || IsLoadingList)"
+                        @onclick="() => SelectPlanAsync(plan.Id)">
+                        @GetPlanChipLabel(plan)
+                    </button>
+                }
+            </div>
+        </section>
+
+        @if (SelectedPlan is null)
+        {
+            <section class="surface-card state-empty">
+                <h3>Wybierz plan, aby przeglądać zakupy</h3>
+                <p class="muted">Po wskazaniu planu zobaczysz jego listę zakupów i opcję generowania.</p>
+            </section>
+        }
+        else if (IsLoadingList)
+        {
+            <section class="surface-card state-empty" aria-busy="true">
+                <h3>Ładowanie listy dla planu</h3>
+                <p class="muted">Pobieramy aktualny stan checklisty.</p>
+            </section>
+        }
+        else
+        {
+            <section class="shopping-summary-card">
+                <div>
+                    <p class="workspace-eyebrow">@FormatPlanDateRange(SelectedPlan.DateFrom, SelectedPlan.DateTo)</p>
+                    <h2>@SelectedPlan.Name</h2>
+                </div>
+                <div class="actions-row">
+                    <button
+                        @ref="generationButton"
+                        type="button"
+                        class="secondary-action"
+                        disabled="@IsBusy"
+                        @onclick="RequestGenerationAsync">
+                        @GenerationButtonLabel
+                    </button>
+                    <button
+                        type="button"
+                        class="secondary-action"
+                        @onclick="CopyAsync"
+                        disabled="@(CurrentList is null || IsBusy)">
+                        @(CurrentOperation == ShoppingOperation.Copying ? "Kopiowanie..." : "Kopiuj jako tekst")
+                    </button>
+                </div>
+            </section>
+
+            @if (!string.IsNullOrWhiteSpace(ListLoadErrorMessage))
+            {
+                <section class="surface-card state-empty inline-warning" role="alert">
+                    <h3>Nie można załadować wybranej listy</h3>
+                    <p class="muted">@ListLoadErrorMessage</p>
+                    <button
+                        type="button"
+                        class="secondary-action"
+                        disabled="@IsBusy"
+                        @onclick="() => SelectPlanAsync(SelectedPlan.Id)">
+                        Spróbuj ponownie
+                    </button>
+                </section>
+            }
+
+            @if (string.IsNullOrWhiteSpace(ListLoadErrorMessage) && CurrentList is null)
+            {
+                <section class="surface-card state-empty">
+                    <h3>Lista nie jest jeszcze wygenerowana</h3>
+                    <p class="muted">Kliknij „Generuj listę zakupów”, aby utworzyć pozycje dla wybranego planu.</p>
+                </section>
+            }
+            else if (CurrentList is not null)
+            {
+                <div class="shopping-workspace">
+                    <div class="shopping-list-column">
+                        <section class="surface-card shopping-list-card">
+                            @ShoppingItemList()
+                        </section>
+
+                        <details class="shopping-manual-bar">
+                            <summary>Dodaj własny produkt</summary>
+                            <form class="inline-tag-editor" @onsubmit="AddManualItemAsync" @onsubmit:preventDefault="true">
+                                <label class="visually-hidden" for="manual-item-input">Nazwa ręcznej pozycji</label>
+                                <input id="manual-item-input" class="input" placeholder="np. papier do pieczenia" disabled="@IsBusy" @bind="ManualItemText" @bind:event="oninput" />
+                                <button type="submit" class="primary-action" disabled="@(IsBusy || string.IsNullOrWhiteSpace(ManualItemText))">
+                                    @(CurrentOperation == ShoppingOperation.AddingManualItem ? "Dodawanie..." : "Dodaj")
+                                </button>
+                            </form>
+                        </details>
+                    </div>
+
+                    <aside class="surface-card shopping-recommendations" aria-labelledby="shopping-recommendations-heading">
+                        <p class="workspace-eyebrow">Z posiadanych składników</p>
+                        <h3 id="shopping-recommendations-heading">Propozycje przepisów</h3>
+                        <p class="shopping-recommendation-hint">Minimum 30% składników. Dopasowanie po nazwach, nie ilościach.</p>
+                        @if (RecommendationLoadState == RecommendationsLoadState.Loading)
+                        {
+                            <p class="muted" aria-busy="true">Szukamy przepisów pasujących do zaznaczonych produktów.</p>
+                        }
+                        else if (RecommendationLoadState == RecommendationsLoadState.Error)
+                        {
+                            <p class="muted">Nie udało się przygotować propozycji.</p>
+                            <button type="button" class="text-action" disabled="@IsBusy" @onclick="LoadRecommendationsAsync">Spróbuj ponownie</button>
+                        }
+                        else if (Recommendations.Count == 0)
+                        {
+                            if (!CurrentList.Items.Any(item => !item.IsManual && item.State == ShoppingChecklistState.Mam))
+                            {
+                                <p class="muted">Zaznacz wygenerowane składniki, które masz w domu, aby znaleźć pasujące przepisy.</p>
+                            }
+                            else
+                            {
+                                <p class="muted">Nie znaleziono przepisu, którego masz co najmniej 30% różnych składników. Zaznacz więcej posiadanych produktów lub sprawdź inną listę.</p>
+                            }
+                        }
+                        else
+                        {
+                            <div class="shopping-recommendation-list">
+                                @foreach (var recommendation in Recommendations)
+                                {
+                                    var missingIngredientCount = Math.Max(0, recommendation.TotalIngredientCount - recommendation.MatchedIngredientCount);
+
+                                    <article @key="recommendation.RecipeId" class="shopping-recommendation">
+                                        <a href="/recipes/@recommendation.RecipeId">@recommendation.Title</a>
+                                        <small class="shopping-recommendation-coverage">
+                                            @FormatRecommendationCoverage(recommendation)
+                                        </small>
+                                        <p class="shopping-recommendation-ingredients">Masz: @FormatMatchedIngredients(recommendation)</p>
+                                        @if (missingIngredientCount == 0)
+                                        {
+                                            <p class="shopping-recommendation-ingredients">Masz wszystkie składniki.</p>
+                                        }
+                                        else
+                                        {
+                                            <p class="shopping-recommendation-ingredients">Brakujące składniki: @missingIngredientCount.</p>
+                                        }
+                                        <AddToPlanPicker RecipeId="@recommendation.RecipeId" RecipeTitle="@recommendation.Title" ButtonLabel="+ Dodaj do planu" />
+                                    </article>
+                                }
+                            </div>
+                        }
+                    </aside>
+                </div>
+            }
+        }
+    }
+
+    @if (!string.IsNullOrWhiteSpace(CopyPreview))
+    {
+        <section class="surface-card section-card">
+            <h3 class="section-title">Podgląd kopiowania</h3>
+            <label class="visually-hidden" for="copy-preview-input">Podgląd listy zakupów do skopiowania</label>
+            <textarea id="copy-preview-input" class="input" rows="8" readonly>@CopyPreview</textarea>
+        </section>
+    }
+</section>
+
+@code {
+    private static readonly CultureInfo PolishCulture = CultureInfo.GetCultureInfo("pl-PL");
+
+    [SupplyParameterFromQuery(Name = "planId")]
+    public Guid? PlanId { get; set; }
+
+    private List<MealPlanSummary> Plans { get; set; } = [];
+    private Guid? SelectedPlanId { get; set; }
+    private MealPlanSummary? SelectedPlan =>
+        SelectedPlanId is null ? null : Plans.SingleOrDefault(x => x.Id == SelectedPlanId.Value);
+    private ShoppingListDetails? CurrentList { get; set; }
+    private ShoppingLoadState LoadState { get; set; } = ShoppingLoadState.Loading;
+    private ShoppingOperation CurrentOperation { get; set; }
+    private bool IsBusy => CurrentOperation != ShoppingOperation.None;
+    private bool IsLoadingList { get; set; }
+    private string ManualItemText { get; set; } = string.Empty;
+    private string CopyPreview { get; set; } = string.Empty;
+    private string ToastMessage { get; set; } = string.Empty;
+    private string LoadErrorMessage { get; set; } = string.Empty;
+    private string ListLoadErrorMessage { get; set; } = string.Empty;
+    private bool ToastIsError { get; set; }
+    private IReadOnlyList<RecipeRecommendation> Recommendations { get; set; } = [];
+    private RecommendationsLoadState RecommendationLoadState { get; set; }
+    private ElementReference generationButton;
+    private CancellationTokenSource? toastCts;
+    private readonly CancellationTokenSource lifetimeCts = new();
+    private string GenerationButtonLabel =>
+        CurrentOperation == ShoppingOperation.Generating
+            ? CurrentList is null
+                ? "Generowanie..."
+                : "Regenerowanie..."
+            : CurrentList is null
+                ? "Generuj listę zakupów"
+                : "Regeneruj listę zakupów";
+
+    public void Dispose()
+    {
+        toastCts?.Cancel();
+        toastCts?.Dispose();
+        lifetimeCts.Cancel();
+        lifetimeCts.Dispose();
+    }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await Task.CompletedTask;
+    }
+
+    private async Task LoadAsync()
+    {
+        LoadState = ShoppingLoadState.Loading;
+        LoadErrorMessage = string.Empty;
+        ListLoadErrorMessage = string.Empty;
+        Plans = [];
+        SelectedPlanId = null;
+        CurrentList = null;
+
+        try
+        {
+            Plans = (await MealPlanService.GetPlansAsync(lifetimeCts.Token)).ToList();
+            LoadState = ShoppingLoadState.Loaded;
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            LoadErrorMessage = "Sprawdź połączenie i spróbuj ponownie.";
+            LoadState = ShoppingLoadState.Error;
+            return;
+        }
+
+        if (Plans.Count == 0)
+        {
+            return;
+        }
+
+        var selectedPlanId = PlanId.HasValue && Plans.Any(x => x.Id == PlanId.Value)
+            ? PlanId.Value
+            : Plans[0].Id;
+        await SelectPlanAsync(selectedPlanId);
+    }
+
+    private async Task SelectPlanAsync(Guid planId)
+    {
+        if (IsBusy || IsLoadingList)
+        {
+            return;
+        }
+
+        SelectedPlanId = planId;
+        CurrentList = null;
+        CopyPreview = string.Empty;
+        ListLoadErrorMessage = string.Empty;
+        IsLoadingList = true;
+
+        try
+        {
+            CurrentList = await ShoppingListService.GetForPlanAsync(planId, lifetimeCts.Token);
+            await LoadRecommendationsAsync();
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            ListLoadErrorMessage = "Sprawdź połączenie i spróbuj ponownie.";
+        }
+        finally
+        {
+            IsLoadingList = false;
+        }
+    }
+
+    private async Task RequestGenerationAsync()
+    {
+        if (IsBusy || SelectedPlanId is null)
+        {
+            return;
+        }
+
+        await GenerateAsync(isRegeneration: CurrentList is not null);
+    }
+
+    private async Task GenerateAsync(bool isRegeneration)
+    {
+        if (SelectedPlanId is null || IsBusy)
+        {
+            return;
+        }
+
+        CurrentOperation = ShoppingOperation.Generating;
+        try
+        {
+            var generated = await MealPlanService.MarkShoppingGeneratedAsync(
+                SelectedPlanId.Value,
+                lifetimeCts.Token
+            );
+            if (!generated)
+            {
+                ShowToast("Nie udało się wygenerować listy zakupów.", isError: true);
+                return;
+            }
+
+            CurrentList = await ShoppingListService.GetForPlanAsync(
+                SelectedPlanId.Value,
+                lifetimeCts.Token
+            );
+            await LoadRecommendationsAsync();
+            Plans =
+            [
+                .. Plans.Select(plan =>
+                    plan.Id == SelectedPlanId.Value
+                        ? plan with { HasGeneratedShoppingList = true }
+                        : plan
+                ),
+            ];
+            ShowToast(
+                isRegeneration
+                    ? "Lista zakupów została zregenerowana."
+                    : "Lista zakupów została wygenerowana.",
+                isError: false
+            );
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            ShowToast("Nie udało się wygenerować listy zakupów.", isError: true);
+        }
+        finally
+        {
+            CurrentOperation = ShoppingOperation.None;
+        }
+    }
+
+    private async Task ToggleStateAsync(ShoppingListItem item)
+    {
+        if (SelectedPlanId is null || IsBusy)
+        {
+            return;
+        }
+
+        CurrentOperation = ShoppingOperation.TogglingItem;
+        try
+        {
+            var nextState = item.State == ShoppingChecklistState.Mam
+                ? ShoppingChecklistState.NieMam
+                : ShoppingChecklistState.Mam;
+            var updated = await ShoppingListService.SetItemStateAsync(
+                SelectedPlanId.Value,
+                item.Id,
+                nextState,
+                lifetimeCts.Token
+            );
+            if (updated is null)
+            {
+                ShowToast("Nie udało się zmienić stanu pozycji.", isError: true);
+                return;
+            }
+
+            CurrentList = updated;
+            await LoadRecommendationsAsync();
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            ShowToast("Nie udało się zmienić stanu pozycji.", isError: true);
+        }
+        finally
+        {
+            CurrentOperation = ShoppingOperation.None;
+        }
+    }
+
+    private async Task LoadRecommendationsAsync()
+    {
+        if (SelectedPlanId is null || CurrentList is null)
+        {
+            Recommendations = [];
+            RecommendationLoadState = RecommendationsLoadState.Loaded;
+            return;
+        }
+
+        RecommendationLoadState = RecommendationsLoadState.Loading;
+        try
+        {
+            var recommendations = await ShoppingListService.GetRecipeRecommendationsAsync(
+                SelectedPlanId.Value,
+                lifetimeCts.Token
+            );
+            if (recommendations is null)
+            {
+                RecommendationLoadState = RecommendationsLoadState.Error;
+                return;
+            }
+
+            Recommendations = recommendations;
+            RecommendationLoadState = RecommendationsLoadState.Loaded;
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            RecommendationLoadState = RecommendationsLoadState.Error;
+        }
+    }
+
+    private async Task AddManualItemAsync()
+    {
+        if (SelectedPlanId is null || string.IsNullOrWhiteSpace(ManualItemText) || IsBusy)
+        {
+            return;
+        }
+
+        CurrentOperation = ShoppingOperation.AddingManualItem;
+        try
+        {
+            var updated = await ShoppingListService.AddManualItemAsync(
+                SelectedPlanId.Value,
+                ManualItemText.Trim(),
+                lifetimeCts.Token
+            );
+            if (updated is null)
+            {
+                ShowToast("Nie udało się dodać ręcznej pozycji.", isError: true);
+                return;
+            }
+
+            CurrentList = updated;
+            ManualItemText = string.Empty;
+            ShowToast("Dodano ręczną pozycję.", isError: false);
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            ShowToast("Nie udało się dodać ręcznej pozycji.", isError: true);
+        }
+        finally
+        {
+            CurrentOperation = ShoppingOperation.None;
+        }
+    }
+
+    private async Task CopyAsync()
+    {
+        if (SelectedPlanId is null || IsBusy)
+        {
+            return;
+        }
+
+        CurrentOperation = ShoppingOperation.Copying;
+        try
+        {
+            var text = await ShoppingListService.GetCopyTextAsync(
+                SelectedPlanId.Value,
+                lifetimeCts.Token
+            );
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                ShowToast("Brak danych do skopiowania.", isError: true);
+                return;
+            }
+
+            CopyPreview = text;
+            try
+            {
+                await JsRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+                ShowToast("Skopiowano listę do schowka.", isError: false);
+            }
+            catch (JSException)
+            {
+                ShowToast(
+                    "Schowek niedostępny. Użyj podglądu kopiowania poniżej.",
+                    isError: true
+                );
+            }
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            ShowToast("Nie udało się przygotować listy do skopiowania.", isError: true);
+        }
+        finally
+        {
+            CurrentOperation = ShoppingOperation.None;
+        }
+    }
+
+    private static string FormatRecommendationCoverage(RecipeRecommendation recommendation)
+    {
+        var percentage = recommendation.TotalIngredientCount > 0
+            ? (decimal)recommendation.MatchedIngredientCount / recommendation.TotalIngredientCount * 100
+            : 0;
+        return $"{percentage.ToString("0", PolishCulture)}% · masz {recommendation.MatchedIngredientCount} z {recommendation.TotalIngredientCount} składników";
+    }
+
+    private static string FormatMatchedIngredients(RecipeRecommendation recommendation)
+    {
+        var names = string.Join(", ", recommendation.MatchedIngredients.Take(4));
+        var remainingCount = recommendation.MatchedIngredients.Count - 4;
+        return remainingCount > 0 ? $"{names} (+{remainingCount})" : names;
+    }
+
+    private static string GetToggleLabel(ShoppingListItem item) =>
+        item.State == ShoppingChecklistState.Mam
+            ? $"Oznacz {item.DisplayText} jako Nie mam"
+            : $"Oznacz {item.DisplayText} jako Mam";
+
+    private RenderFragment ShoppingItemList() => @<div class="list shopping-items">
+        @foreach (var item in CurrentList!.Items
+            .OrderBy(x => x.State == ShoppingChecklistState.NieMam ? 0 : 1)
+            .ThenBy(x => x.SortOrder))
+        {
+            <button type="button" class="shopping-item @(item.State == ShoppingChecklistState.Mam ? "shopping-item-mam" : "shopping-item-niemam")" aria-pressed="@(item.State == ShoppingChecklistState.Mam ? "true" : "false")" aria-label="@GetToggleLabel(item)" disabled="@IsBusy" @onclick="() => ToggleStateAsync(item)">
+                <span class="planner-state-indicator @(item.State == ShoppingChecklistState.NieMam ? "niemam" : "mam")">@(item.State == ShoppingChecklistState.NieMam ? "❌ Nie mam" : "✅ Mam w domu")</span>
+                <span class="shopping-item-copy"><strong>@item.Name</strong>@if (item.IsManual) { <small>pozycja ręczna</small> }</span>
+                <span class="shopping-item-quantity">@FormatItemQuantity(item)</span>
+            </button>
+        }
+    </div>;
+
+    private static string FormatItemQuantity(ShoppingListItem item) =>
+        string.Join(" ", new[] { item.QuantityText, item.Unit }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
+    private static string GetPlanChipLabel(MealPlanSummary plan) =>
+        $"{plan.Name} ({FormatPlanDateRange(plan.DateFrom, plan.DateTo)})";
+
+    private static string FormatPlanDateRange(DateOnly from, DateOnly to)
+    {
+        if (from.Year == to.Year && from.Month == to.Month)
+        {
+            return $"{from.Day}-{to.Day} {from.ToString("MMMM yyyy", PolishCulture)}";
+        }
+
+        if (from.Year == to.Year)
+        {
+            return $"{from.ToString("d MMM", PolishCulture)} - {to.ToString("d MMM yyyy", PolishCulture)}";
+        }
+
+        return $"{from.ToString("d MMM yyyy", PolishCulture)} - {to.ToString("d MMM yyyy", PolishCulture)}";
+    }
+
+    private void ShowToast(string message, bool isError)
+    {
+        ToastMessage = message;
+        ToastIsError = isError;
+
+        toastCts?.Cancel();
+        toastCts?.Dispose();
+        toastCts = new CancellationTokenSource();
+        _ = ClearToastAfterDelayAsync(toastCts.Token);
+    }
+
+    private async Task ClearToastAfterDelayAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            ToastMessage = string.Empty;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (TaskCanceledException) { }
+    }
+
+    private enum ShoppingLoadState
+    {
+        Loading,
+        Loaded,
+        Error,
+    }
+
+
+    private enum ShoppingOperation
+    {
+        None,
+        Generating,
+        TogglingItem,
+        AddingManualItem,
+        Copying,
+    }
+
+    private enum RecommendationsLoadState
+    {
+        Loading,
+        Loaded,
+        Error,
+    }
+}

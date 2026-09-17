@@ -1,0 +1,678 @@
+@page "/"
+@using System.Globalization
+@using WhatToCook.Web.Components.Shared
+@implements IDisposable
+@inject IRecipeCatalogService RecipeCatalog
+
+<PageTitle>Biblioteka przepisów | WhatToCook</PageTitle>
+
+<section id="library-top" class="screen library-screen">
+    <header class="library-workspace-header">
+        <div class="library-heading-group">
+            <p class="workspace-eyebrow">Moja książka przepisów</p>
+            <h1 class="screen-title">Biblioteka przepisów</h1>
+            <p class="screen-subtitle">Przeglądaj, filtruj i dodawaj przepisy prosto do planu.</p>
+        </div>
+        <p class="library-count-badge library-results-summary" aria-live="polite">@GetResultsSummary()</p>
+        @if (SelectedFilterCount > 0)
+        {
+            <div class="selected-filter-summary library-selected-filters" aria-label="Aktywne filtry">
+                <strong>Aktywne:</strong>
+                @foreach (var tag in SelectedTags.OrderBy(x => x, PolishIgnoreCaseComparer))
+                {
+                    <button type="button" class="chip selected-chip" aria-label="Usuń filtr tagu @tag" @onclick="() => ToggleTag(tag)">
+                        @tag <span aria-hidden="true">×</span>
+                    </button>
+                }
+                @foreach (var ingredient in SelectedIngredients.OrderBy(x => x, PolishIgnoreCaseComparer))
+                {
+                    <button type="button" class="chip selected-chip" aria-label="Usuń filtr składnika @ingredient" @onclick="() => ToggleIngredient(ingredient)">
+                        @ingredient <span aria-hidden="true">×</span>
+                    </button>
+                }
+                <button type="button" class="chip ghost-chip" @onclick="ClearAdvancedFilters">Wyczyść filtry</button>
+            </div>
+        }
+    </header>
+
+    <section class="library-primary-search" aria-label="Wyszukiwanie przepisów">
+        <label class="visually-hidden" for="library-search">Szukaj po tytule</label>
+        <input
+            id="library-search"
+            class="input"
+            value="@SearchTerm"
+            data-interactive="@IsInteractive.ToString().ToLowerInvariant()"
+            disabled="@(LoadState == CatalogLoadState.Loading || !IsInteractive)"
+            @oninput="OnSearchTermInput"
+            placeholder="Szukaj przepisu..." />
+    </section>
+
+    @if (LoadState == CatalogLoadState.Loading)
+    {
+        <section class="surface-card state-empty" aria-busy="true">
+            <h2>Ładowanie biblioteki</h2>
+            <p class="muted">Pobieramy przepisy i przygotowujemy filtry.</p>
+        </section>
+    }
+    else if (LoadState == CatalogLoadState.Error)
+    {
+        <section class="surface-card inline-warning state-empty" role="alert">
+            <h2>Nie można załadować biblioteki</h2>
+            <p>@ErrorMessage</p>
+            <button type="button" class="primary-action" @onclick="LoadAsync">Spróbuj ponownie</button>
+        </section>
+    }
+    else if (AllRecipes.Count == 0)
+    {
+        <section class="surface-card state-empty">
+            <h2>Biblioteka jest pusta</h2>
+            <p class="muted">Dodaj pierwszy przepis, aby zacząć planowanie.</p>
+            <a class="primary-action" href="/recipes/new">Dodaj pierwszy przepis</a>
+        </section>
+    }
+    else
+    {
+        <div class="library-layout">
+            <aside class="surface-card library-filters @(FiltersExpanded ? "filters-open" : string.Empty)">
+                <div class="library-filter-toolbar">
+                    <button
+                        id="library-filter-toggle"
+                        type="button"
+                        class="secondary-action library-filter-toggle"
+                        aria-expanded="@FiltersExpanded.ToString().ToLowerInvariant()"
+                        aria-controls="library-filter-panel"
+                        @onclick="ToggleFilters">
+                        Filtry (@SelectedFilterCount)
+                        <span class="library-filter-toggle-icon" aria-hidden="true">@(FiltersExpanded ? "⌃" : "⌄")</span>
+                    </button>
+                    @if (SelectedFilterCount > 0)
+                    {
+                        <button type="button" class="chip ghost-chip" @onclick="ClearAdvancedFilters">Wyczyść</button>
+                    }
+                </div>
+
+                <div id="library-filter-panel" class="library-filters-content">
+                    <div class="library-desktop-search">
+                        <label class="visually-hidden" for="library-sidebar-search">Szukaj po tytule</label>
+                        <input
+                            id="library-sidebar-search"
+                            class="input"
+                            value="@SearchTerm"
+                            data-interactive="@IsInteractive.ToString().ToLowerInvariant()"
+                            disabled="@(LoadState == CatalogLoadState.Loading || !IsInteractive)"
+                            @oninput="OnSearchTermInput"
+                            placeholder="Szukaj przepisów..." />
+                    </div>
+                    <div class="library-sidebar-title">
+                        <div>
+                            <p class="workspace-eyebrow">Ogranicz wyniki</p>
+                            <h2>Filtry</h2>
+                        </div>
+                        @if (SelectedFilterCount > 0)
+                        {
+                            <button type="button" class="text-action" @onclick="ClearAdvancedFilters">Wyczyść</button>
+                        }
+                    </div>
+                    <fieldset class="filter-group">
+                        <legend class="filter-legend">Tagi</legend>
+                        <input
+                            id="tag-filter-search"
+                            class="input filter-search"
+                            value="@TagFilterTerm"
+                            @oninput="OnTagFilterTermInput"
+                            placeholder="Szukaj tagów..." />
+                        <div class="chip-row filter-chip-panel">
+                            @foreach (var tag in VisibleTags)
+                            {
+                                <button
+                                    type="button"
+                                    class="chip @(SelectedTags.Contains(tag) ? "selected-chip" : string.Empty)"
+                                    aria-pressed="@SelectedTags.Contains(tag)"
+                                    @onclick="() => ToggleTag(tag)">
+                                    @tag <span class="filter-usage-count">@GetTagUsageCount(tag)</span>
+                                </button>
+                            }
+                        </div>
+                        @if (VisibleTags.Count == 0)
+                        {
+                            <p class="muted">Brak tagów dla podanej frazy.</p>
+                        }
+                        @if (CanExpandTags)
+                        {
+                            <button type="button" class="chip ghost-chip filter-expand-action" @onclick="ToggleTagExpansion">
+                                @GetTagExpansionLabel()
+                            </button>
+                        }
+                    </fieldset>
+
+                    <fieldset class="filter-group">
+                        <legend class="filter-legend">Składniki</legend>
+                        <div class="ingredient-match-mode" role="group" aria-label="Sposób łączenia składników">
+                            <button
+                                type="button"
+                                class="@(MatchAllIngredients ? "ingredient-mode-active" : string.Empty)"
+                                aria-pressed="@(MatchAllIngredients ? "true" : "false")"
+                                @onclick="() => SetIngredientMatchMode(true)">
+                                Wszystkie
+                            </button>
+                            <button
+                                type="button"
+                                class="@(!MatchAllIngredients ? "ingredient-mode-active" : string.Empty)"
+                                aria-pressed="@(!MatchAllIngredients ? "true" : "false")"
+                                @onclick="() => SetIngredientMatchMode(false)">
+                                Dowolny
+                            </button>
+                        </div>
+                        <p class="ingredient-match-hint">
+                            @(MatchAllIngredients
+                                ? "Przepis zawiera wszystkie wybrane składniki."
+                                : "Przepis zawiera przynajmniej jeden wybrany składnik.")
+                        </p>
+                        <input
+                            id="ingredient-filter-search"
+                            class="input filter-search"
+                            value="@IngredientFilterTerm"
+                            @oninput="OnIngredientFilterTermInput"
+                            placeholder="Szukaj składników..." />
+                        <div class="chip-row filter-chip-panel">
+                            @foreach (var ingredient in VisibleIngredients)
+                            {
+                                <label class="ingredient-filter-option">
+                                    <input
+                                        type="checkbox"
+                                        checked="@SelectedIngredients.Contains(ingredient)"
+                                        @onchange="() => ToggleIngredient(ingredient)" />
+                                    <span>@ingredient</span>
+                                </label>
+                            }
+                        </div>
+                        @if (VisibleIngredients.Count == 0)
+                        {
+                            <p class="muted">Brak składników dla podanej frazy.</p>
+                        }
+                        @if (CanExpandIngredients)
+                        {
+                            <button type="button" class="chip ghost-chip filter-expand-action" @onclick="ToggleIngredientExpansion">
+                                @GetIngredientExpansionLabel()
+                            </button>
+                        }
+                    </fieldset>
+                </div>
+            </aside>
+
+            <section class="library-results" aria-labelledby="library-results-heading">
+                <div class="library-results-toolbar">
+                    <div>
+                        <p class="workspace-eyebrow">Wyniki</p>
+                        <h2 id="library-results-heading">@GetResultsSummary()</h2>
+                    </div>
+                    <label class="library-sort-control" for="recipe-sort">
+                        <span>Sortowanie</span>
+                        <select id="recipe-sort" class="input" value="@SortOrder" @onchange="OnSortOrderChanged">
+                            <option value="@RecipeSortOrder.TitleAscending">Alfabetycznie: A–Z</option>
+                            <option value="@RecipeSortOrder.TitleDescending">Alfabetycznie: Z–A</option>
+                            <option value="@RecipeSortOrder.ServingsAscending">Porcje: rosnąco</option>
+                            <option value="@RecipeSortOrder.ServingsDescending">Porcje: malejąco</option>
+                        </select>
+                    </label>
+                </div>
+                @if (FilteredRecipes.Count == 0)
+                {
+                    <div class="surface-card state-empty">
+                        <h3>Brak wyników</h3>
+                        <p class="muted">Zmień frazę lub wyczyść filtry składników i tagów.</p>
+                        <button type="button" class="primary-action" @onclick="ClearFilters">Wyczyść filtry</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="recipe-card-grid">
+                        @foreach (var recipe in FilteredRecipes)
+                        {
+                            <article class="surface-card recipe-card recipe-card-modern" @key="recipe.Id">
+                                <a class="recipe-card-primary-link" href="@GetDetailsLink(recipe.Id)" aria-label="@recipe.Title">
+                                    @if (!string.IsNullOrWhiteSpace(recipe.MainPhotoPath))
+                                    {
+                                        <span class="recipe-card-media">
+                                            <img src="@RecipeImageUrlBuilder.Build(recipe.MainPhotoPath)" alt="" loading="lazy" />
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="recipe-card-media recipe-card-media-placeholder" aria-hidden="true"></span>
+                                    }
+                                    <span class="recipe-title-link"><strong>@recipe.Title</strong></span>
+                                </a>
+                                <div class="recipe-card-content">
+                                    <div class="chip-row">
+                                        @foreach (var tag in recipe.Tags)
+                                        {
+                                            <span class="chip recipe-chip">@tag</span>
+                                        }
+                                    </div>
+                                    <p class="muted">Porcje: @recipe.Servings</p>
+                                    <div class="actions-row">
+                                        <AddToPlanPicker RecipeId="@recipe.Id" RecipeTitle="@recipe.Title" ButtonLabel="+ Dodaj do planu" />
+                                        <a class="chip" href="@GetEditLink(recipe.Id)">Edytuj</a>
+                                    </div>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+        </div>
+    }
+
+</section>
+
+@code {
+    private static readonly StringComparer PolishIgnoreCaseComparer = StringComparer.Create(
+        CultureInfo.GetCultureInfo("pl-PL"),
+        ignoreCase: true
+    );
+
+    private const int CollapsedTagCount = 6;
+    private const int CollapsedIngredientCount = 7;
+    private readonly HashSet<string> SelectedIngredients = [];
+    private readonly HashSet<string> SelectedTags = [];
+
+    private List<RecipeCatalogItem> AllRecipes { get; set; } = [];
+    private IReadOnlyList<string> AvailableIngredients { get; set; } = [];
+    private IReadOnlyList<string> AvailableTags { get; set; } = [];
+    private List<string> FilteredTags { get; set; } = [];
+    private List<string> VisibleTags { get; set; } = [];
+    private bool CanExpandTags { get; set; }
+    private List<string> FilteredIngredients { get; set; } = [];
+    private List<string> VisibleIngredients { get; set; } = [];
+    private bool CanExpandIngredients { get; set; }
+    private List<RecipeCatalogItem> FilteredRecipes { get; set; } = [];
+    private CatalogLoadState LoadState { get; set; } = CatalogLoadState.Loading;
+    private bool FiltersExpanded { get; set; }
+    private bool IsInteractive { get; set; }
+    private bool ShowAllTags { get; set; }
+    private bool ShowAllIngredients { get; set; }
+    private bool MatchAllIngredients { get; set; } = true;
+    private string TagFilterTerm { get; set; } = string.Empty;
+    private string IngredientFilterTerm { get; set; } = string.Empty;
+    private string SearchTerm { get; set; } = string.Empty;
+    private RecipeSortOrder SortOrder { get; set; } = RecipeSortOrder.TitleAscending;
+    private bool QueryInitialized { get; set; }
+    private string ErrorMessage { get; set; } = string.Empty;
+    private readonly CancellationTokenSource lifetimeCts = new();
+    private int SelectedFilterCount => SelectedTags.Count + SelectedIngredients.Count;
+
+    [SupplyParameterFromQuery(Name = "q")]
+    private string? Query { get; set; }
+
+    [SupplyParameterFromQuery(Name = "tags")]
+    private string? TagsQuery { get; set; }
+
+    [SupplyParameterFromQuery(Name = "ingredients")]
+    private string? IngredientsQuery { get; set; }
+
+    public void Dispose()
+    {
+        lifetimeCts.Cancel();
+        lifetimeCts.Dispose();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        IsInteractive = true;
+        StateHasChanged();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!QueryInitialized)
+        {
+            SearchTerm = Query ?? string.Empty;
+            RestoreSelections(TagsQuery, SelectedTags);
+            RestoreSelections(IngredientsQuery, SelectedIngredients);
+            QueryInitialized = true;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        LoadState = CatalogLoadState.Loading;
+        ErrorMessage = string.Empty;
+
+        try
+        {
+            AllRecipes = (await RecipeCatalog.GetActiveRecipesAsync(lifetimeCts.Token)).ToList();
+            RebuildCatalogIndex();
+            RecomputeFilters();
+            LoadState = CatalogLoadState.Loaded;
+        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
+        catch
+        {
+            AllRecipes = [];
+            FilteredRecipes = [];
+            ErrorMessage = "Spróbuj ponownie. Jeśli problem się powtarza, sprawdź połączenie.";
+            LoadState = CatalogLoadState.Error;
+        }
+    }
+
+    private static bool MatchesTitle(string title, string query) =>
+        SearchTextNormalizer.Normalize(title).Contains(
+            SearchTextNormalizer.Normalize(query),
+            StringComparison.Ordinal
+        );
+
+    private string GetDetailsLink(Guid recipeId)
+    {
+        var returnUrl = Uri.EscapeDataString(GetReturnUrl());
+        return $"/recipes/{recipeId}?returnUrl={returnUrl}";
+    }
+
+    private string GetEditLink(Guid recipeId)
+    {
+        var encodedReturnUrl = Uri.EscapeDataString(GetReturnUrl());
+        return $"/recipes/{recipeId}/edit?returnUrl={encodedReturnUrl}";
+    }
+
+    private string GetReturnUrl()
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(SearchTerm))
+        {
+            query.Add($"q={Uri.EscapeDataString(SearchTerm)}");
+        }
+
+        AddSelectionQuery(query, "tags", SelectedTags);
+        AddSelectionQuery(query, "ingredients", SelectedIngredients);
+        return query.Count == 0 ? "/" : $"/?{string.Join("&", query)}";
+    }
+
+    private static void AddSelectionQuery(List<string> query, string name, IEnumerable<string> values)
+    {
+        var selected = values.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToArray();
+        if (selected.Length > 0)
+        {
+            query.Add($"{name}={Uri.EscapeDataString(string.Join("|", selected))}");
+        }
+    }
+
+    private static void RestoreSelections(string? value, HashSet<string> target)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        foreach (var item in value.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            target.Add(item);
+        }
+    }
+
+    private void ToggleIngredient(string ingredient)
+    {
+        if (!SelectedIngredients.Add(ingredient))
+        {
+            SelectedIngredients.Remove(ingredient);
+        }
+
+        RecomputeFilters();
+    }
+
+    private void ToggleTag(string tag)
+    {
+        if (!SelectedTags.Add(tag))
+        {
+            SelectedTags.Remove(tag);
+        }
+
+        RecomputeFilters();
+    }
+
+    private void ClearTagFilters()
+    {
+        SelectedTags.Clear();
+        RecomputeFilters();
+    }
+
+    private void ClearIngredientFilters()
+    {
+        SelectedIngredients.Clear();
+        RecomputeFilters();
+    }
+
+    private void ClearAdvancedFilters()
+    {
+        TagFilterTerm = string.Empty;
+        IngredientFilterTerm = string.Empty;
+        ShowAllTags = false;
+        ShowAllIngredients = false;
+        SelectedTags.Clear();
+        SelectedIngredients.Clear();
+        RecomputeFilters();
+    }
+
+    private void ToggleFilters() => FiltersExpanded = !FiltersExpanded;
+
+    private void SetIngredientMatchMode(bool matchAll)
+    {
+        MatchAllIngredients = matchAll;
+        RecomputeFilters();
+    }
+
+    private void ToggleTagExpansion()
+    {
+        ShowAllTags = !ShowAllTags;
+        RecomputeFilters();
+    }
+
+    private string GetTagExpansionLabel() =>
+        ShowAllTags
+            ? "Pokaż mniej tagów"
+            : $"Pokaż wszystkie tagi ({FilteredTags.Count})";
+
+    private void ToggleIngredientExpansion()
+    {
+        ShowAllIngredients = !ShowAllIngredients;
+        RecomputeFilters();
+    }
+
+    private string GetIngredientExpansionLabel() =>
+        ShowAllIngredients
+            ? "Pokaż mniej składników"
+            : $"Pokaż wszystkie składniki ({FilteredIngredients.Count})";
+
+    private void ClearFilters()
+    {
+        SearchTerm = string.Empty;
+        TagFilterTerm = string.Empty;
+        IngredientFilterTerm = string.Empty;
+        ShowAllTags = false;
+        ShowAllIngredients = false;
+        SelectedIngredients.Clear();
+        SelectedTags.Clear();
+        RecomputeFilters();
+    }
+
+    private void OnSearchTermInput(ChangeEventArgs args)
+    {
+        SearchTerm = args.Value?.ToString() ?? string.Empty;
+        RecomputeFilters();
+    }
+    private void OnSortOrderChanged(ChangeEventArgs args)
+    {
+        if (Enum.TryParse<RecipeSortOrder>(args.Value?.ToString(), out var sortOrder))
+        {
+            SortOrder = sortOrder;
+            RecomputeFilters();
+        }
+    }
+
+
+    private void OnTagFilterTermInput(ChangeEventArgs args)
+    {
+        TagFilterTerm = args.Value?.ToString() ?? string.Empty;
+        RecomputeFilters();
+    }
+
+    private void OnIngredientFilterTermInput(ChangeEventArgs args)
+    {
+        IngredientFilterTerm = args.Value?.ToString() ?? string.Empty;
+        RecomputeFilters();
+    }
+
+    private string GetResultsSummary()
+    {
+        if (LoadState == CatalogLoadState.Loading)
+        {
+            return "Ładowanie wyników...";
+        }
+
+        if (LoadState == CatalogLoadState.Error)
+        {
+            return "Wyniki są chwilowo niedostępne";
+        }
+
+        var count = FilteredRecipes.Count;
+        if (count == 0)
+        {
+            return "Brak pasujących przepisów";
+        }
+
+        if (count == 1)
+        {
+            return "1 przepis";
+        }
+
+        var lastTwoDigits = count % 100;
+        var lastDigit = count % 10;
+        return lastTwoDigits is >= 12 and <= 14 || lastDigit is < 2 or > 4
+            ? $"{count} przepisów"
+            : $"{count} przepisy";
+    }
+
+    private int GetTagUsageCount(string tag) =>
+        AllRecipes.Count(recipe =>
+            recipe.Tags.Any(recipeTag =>
+                string.Equals(recipeTag, tag, StringComparison.OrdinalIgnoreCase)
+            )
+        );
+
+
+    private void RebuildCatalogIndex()
+    {
+        AvailableIngredients = AllRecipes
+            .SelectMany(x => x.Ingredients)
+            .Select(x => IngredientFilterNameNormalizer.Normalize(x.Name))
+            .Where(x => x.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, PolishIgnoreCaseComparer)
+            .ToArray();
+
+        AvailableTags = AllRecipes
+            .SelectMany(x => x.Tags)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, PolishIgnoreCaseComparer)
+            .ToArray();
+    }
+
+    private void RecomputeFilters()
+    {
+        FilteredTags = FilterByTerm(AvailableTags, TagFilterTerm);
+        VisibleTags =
+            ShowAllTags || !string.IsNullOrWhiteSpace(TagFilterTerm)
+                ? FilteredTags
+                : FilteredTags.Take(CollapsedTagCount).ToList();
+        CanExpandTags = string.IsNullOrWhiteSpace(TagFilterTerm) && FilteredTags.Count > CollapsedTagCount;
+
+        FilteredIngredients = FilterByTerm(AvailableIngredients, IngredientFilterTerm);
+        VisibleIngredients =
+            ShowAllIngredients || !string.IsNullOrWhiteSpace(IngredientFilterTerm)
+                ? FilteredIngredients
+                : FilteredIngredients.Take(CollapsedIngredientCount).ToList();
+        CanExpandIngredients =
+            string.IsNullOrWhiteSpace(IngredientFilterTerm)
+            && FilteredIngredients.Count > CollapsedIngredientCount;
+
+        var matchingRecipes = AllRecipes
+            .Where(x => MatchesTitle(x.Title, SearchTerm))
+            .Where(x =>
+                SelectedTags.Count == 0
+                || SelectedTags.All(selected =>
+                    x.Tags.Any(tag => string.Equals(tag, selected, StringComparison.OrdinalIgnoreCase))
+                )
+            )
+            .Where(MatchesSelectedIngredients);
+
+        FilteredRecipes = (SortOrder switch
+        {
+            RecipeSortOrder.TitleDescending => matchingRecipes
+                .OrderByDescending(x => x.Title, PolishIgnoreCaseComparer),
+            RecipeSortOrder.ServingsAscending => matchingRecipes
+                .OrderBy(x => x.Servings)
+                .ThenBy(x => x.Title, PolishIgnoreCaseComparer),
+            RecipeSortOrder.ServingsDescending => matchingRecipes
+                .OrderByDescending(x => x.Servings)
+                .ThenBy(x => x.Title, PolishIgnoreCaseComparer),
+            _ => matchingRecipes.OrderBy(x => x.Title, PolishIgnoreCaseComparer),
+        }).ToList();
+    }
+
+    private bool MatchesSelectedIngredients(RecipeCatalogItem recipe)
+    {
+        if (SelectedIngredients.Count == 0)
+        {
+            return true;
+        }
+
+        bool HasIngredient(string selected) =>
+            recipe.Ingredients.Any(ingredient =>
+                string.Equals(
+                    IngredientFilterNameNormalizer.Normalize(ingredient.Name),
+                    selected,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            );
+
+        return MatchAllIngredients
+            ? SelectedIngredients.All(HasIngredient)
+            : SelectedIngredients.Any(HasIngredient);
+    }
+
+    private static List<string> FilterByTerm(IEnumerable<string> source, string term)
+    {
+        var normalizedTerm = SearchTextNormalizer.Normalize(term);
+        if (normalizedTerm.Length == 0)
+        {
+            return source.ToList();
+        }
+
+        return source
+            .Where(x =>
+                SearchTextNormalizer.Normalize(x).Contains(normalizedTerm, StringComparison.Ordinal)
+            )
+            .ToList();
+    }
+
+    private enum RecipeSortOrder
+    {
+        TitleAscending,
+        TitleDescending,
+        ServingsAscending,
+        ServingsDescending,
+    }
+
+    private enum CatalogLoadState
+    {
+        Loading,
+        Loaded,
+        Error,
+    }
+}

@@ -1,0 +1,61 @@
+schema: spec-driven
+context: |
+  This repository is a reusable application template.
+
+  Primary stack:
+  - .NET applications
+  - ASP.NET Core Web API and Minimal API
+  - .NET MAUI
+  - sometimes React or Angular as the frontend
+
+  Repository intent:
+  - Prefer pragmatic, repeatable patterns over architecture astronautics.
+  - Optimize for cloning this repo and turning it into a real product quickly.
+  - Favor conventions that work across multiple future apps, not only one project.
+
+  Delivery model:
+  - Most work should be completed by one main implementation worker.
+  - Use an independent review pass only for substantial or risky changes.
+  - Use discovery before coding only when scope, architecture, or OpenSpec needs clarification.
+
+  Engineering conventions:
+  - Tests are part of implementation, not a separate late phase.
+  - Keep solutions easy to bootstrap, rename, and extend after copying the template.
+  - Prefer small, focused changes with clear ownership.
+  - Default to production-friendly patterns: validation, logging, health checks, configuration hygiene, and safe defaults.
+  - Avoid introducing unnecessary complexity, extra layers, or speculative abstractions.
+
+  .NET conventions:
+  - Prefer clear project structure, shared build settings, and centralized package management where useful.
+  - Prefer vertical slices or similarly pragmatic feature organization over excessive generic infrastructure.
+  - Include unit and integration testing strategy when backend behavior changes.
+  - Treat EF Core, auth, and configuration as high-risk areas that deserve explicit verification.
+
+  Client conventions:
+  - For Blazor, favor clean DI, navigation, theming, safe-area handling, and testable view-model boundaries.
+  - For React or Angular, prefer straightforward integration with backend contracts and minimal setup friction.
+
+rules:
+  proposal:
+    - Keep the proposal short and practical.
+    - State the user-facing or maintainer-facing outcome clearly.
+    - Always include scope boundaries or non-goals when relevant.
+    - Call out template-wide impact explicitly if the change affects future cloned projects.
+
+  design:
+    - Create design detail only when there is real architectural choice, cross-cutting impact, or risk.
+    - Prefer concrete structure and tradeoffs over long narrative text.
+    - Explicitly mention implications for ASP.NET Core, MAUI, or frontend layers when the change crosses them.
+    - If the change affects agent workflow, testing strategy, bootstrap flow, or repository conventions, document that clearly.
+
+  tasks:
+    - Break work into small, verifiable tasks.
+    - Each task should describe a concrete outcome, not just an area to think about.
+    - Include tests whenever behavior changes.
+    - Keep task ordering implementation-friendly so a single implementation worker can usually execute them end-to-end.
+    - Only split tasks by backend, client, or platform when the ownership boundary is genuinely clear.
+
+  archive:
+    - Archive only changes whose required artifacts and tasks are complete; incomplete work stays active.
+    - Synchronize and validate every delta spec against main specs before moving a change to archive.
+    - Never archive with unsynchronized deltas or by bypassing the required specification sync.

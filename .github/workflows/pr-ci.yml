@@ -1,0 +1,51 @@
+name: PR CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Restore .NET tools and packages
+        run: dotnet tool restore; dotnet restore WhatToCook.slnx
+        shell: pwsh
+
+      - name: Build
+        run: dotnet build WhatToCook.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test WhatToCook.slnx --no-build --configuration Release
+
+      - name: Install Playwright dependencies
+        run: npm ci; npx playwright install --with-deps chromium
+        shell: bash
+
+      - name: Playwright smoke suite
+        run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts
+        shell: bash
+
+      - name: Audit dependencies
+        run: dotnet list WhatToCook.slnx package --vulnerable --include-transitive; npm audit --audit-level=high
+        shell: pwsh
+
+      - name: Check formatting
+        run: dotnet csharpier check .

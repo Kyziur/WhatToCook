@@ -1,0 +1,39 @@
+.app-nav {
+    width: min(100%, 30rem);
+    margin: 0 auto;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.app-nav ::deep .app-nav-link {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 3rem;
+    border-radius: 0.75rem;
+    text-decoration: none;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.app-nav ::deep .app-nav-link.active {
+    color: var(--color-primary-hover);
+    background: color-mix(in srgb, var(--color-primary-soft) 72%, var(--color-surface));
+    border-color: transparent;
+    box-shadow: inset 0 -2px 0 var(--color-primary);
+}
+
+@media (min-width: 900px) {
+    .app-nav {
+        max-width: 25rem;
+        grid-template-columns: repeat(3, minmax(5.8rem, 1fr));
+    }
+
+    .app-nav ::deep .app-nav-link {
+        min-height: 2.45rem;
+        padding: 0 0.6rem;
+        font-size: 0.9rem;
+    }
+}

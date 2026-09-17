@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WhatToCook.Api/WhatToCook.Api.csproj" />
+    <Project Path="src/WhatToCook.AppHost/WhatToCook.AppHost.csproj" />
+    <Project Path="src/WhatToCook.ServiceDefaults/WhatToCook.ServiceDefaults.csproj" />
+    <Project Path="src/WhatToCook.Web/WhatToCook.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WhatToCook.Api.IntegrationTests/WhatToCook.Api.IntegrationTests.csproj" />
+    <Project Path="tests/WhatToCook.Web.ComponentTests/WhatToCook.Web.ComponentTests.csproj" />
+  </Folder>
+</Solution>

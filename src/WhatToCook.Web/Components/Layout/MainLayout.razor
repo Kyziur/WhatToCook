@@ -1,0 +1,88 @@
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<div class="app-shell">
+    <header class="shell-header">
+        <div class="shell-brand-lockup">
+            <a class="shell-logo-mark" href="/" aria-label="What to Cook? — biblioteka przepisów">
+                <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+                    <path d="M12 22h24v5.5A10.5 10.5 0 0 1 25.5 38h-3A10.5 10.5 0 0 1 12 27.5Z" />
+                    <path d="M10 25h2M36 25h2M18 17c0-2.4 1.7-3.1 1.7-5.2M24 17c0-2.4 1.7-3.1 1.7-5.2M30 17c0-2.4 1.7-3.1 1.7-5.2" />
+                    <path d="M15 22V19h18v3" />
+                </svg>
+            </a>
+            <a class="shell-brand-wordmark" href="/" aria-label="What to Cook?">
+                <span>What to Cook?</span>
+                <small>Twoja kuchnia, bez zgadywania</small>
+            </a>
+        </div>
+        <div class="shell-desktop-nav">
+            <NavMenu />
+        </div>
+        <div class="shell-desktop-actions">
+            <a class="secondary-action" href="/recipes/import">Importuj URL</a>
+            <a class="primary-action" href="/recipes/new">Dodaj przepis</a>
+        </div>
+        <div class="shell-mobile-actions">
+            <button type="button"
+                    class="shell-mobile-actions-toggle"
+                    aria-label="Dodaj lub importuj przepis"
+                    aria-expanded="@MobileActionsOpen.ToString().ToLowerInvariant()"
+                    @onclick="ToggleMobileActions">
+                +
+            </button>
+            @if (MobileActionsOpen)
+            {
+                <div class="shell-mobile-actions-panel">
+                    <a class="primary-action" href="/recipes/new" @onclick="NavigateFromMobileActions">Dodaj przepis</a>
+                    <a class="secondary-action" href="/recipes/import" @onclick="NavigateFromMobileActions">Importuj URL</a>
+                </div>
+            }
+        </div>
+    </header>
+
+    <main class="shell-main">
+        @Body
+    </main>
+
+    <footer class="shell-footer">
+        <NavMenu />
+    </footer>
+</div>
+
+@code {
+    private bool MobileActionsOpen { get; set; }
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void ToggleMobileActions()
+    {
+        MobileActionsOpen = !MobileActionsOpen;
+    }
+
+    private void NavigateFromMobileActions(MouseEventArgs args)
+    {
+        MobileActionsOpen = false;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        MobileActionsOpen = false;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}
+
+<div id="blazor-error-ui" data-nosnippet>
+    Wystąpił nieoczekiwany błąd.
+    <a href="." class="reload">Odśwież</a>
+    <button type="button" class="dismiss" aria-label="Zamknij komunikat o błędzie">×</button>
+</div>

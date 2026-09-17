@@ -1,0 +1,43 @@
+@page "/recipes/import"
+
+<PageTitle>Import przepisu | WhatToCook</PageTitle>
+
+<section class="screen">
+    <header class="surface-card page-header">
+        <h1 class="screen-title">Import przepisu z URL</h1>
+        <p class="screen-subtitle">Wklej adres przepisu, a aplikacja utworzy szkic do weryfikacji.</p>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(FeedbackMessage))
+    {
+        <section
+            class="surface-card @(IsError ? "inline-warning" : "inline-message")"
+            role="@(IsError ? "alert" : "status")">
+            <p>@FeedbackMessage</p>
+        </section>
+    }
+
+    <section class="surface-card section-card">
+        <form class="list" @onsubmit="CreateDraftAsync" @onsubmit:preventDefault="true">
+            <label for="recipe-import-url">Adres przepisu</label>
+            <input
+                id="recipe-import-url"
+                class="input"
+                disabled="@IsSubmitting"
+                @bind="ImportUrl"
+                @bind:event="oninput"
+                placeholder="https://..." />
+            <p class="muted">Na start obsługiwany jest import URL do szkicu przepisu.</p>
+            <div class="actions-row">
+                <button
+                    type="submit"
+                    class="primary-action"
+                    data-interactive="@IsInteractive.ToString().ToLowerInvariant()"
+                    disabled="@(IsSubmitting || !IsInteractive || string.IsNullOrWhiteSpace(ImportUrl))">
+                    @(IsSubmitting ? "Tworzenie szkicu..." : "Utwórz szkic importu")
+                </button>
+                <a class="secondary-action" href="/">Powrót do biblioteki</a>
+            </div>
+        </form>
+    </section>
+</section>

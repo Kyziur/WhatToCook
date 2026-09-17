@@ -1,0 +1,46 @@
+@page "/Error"
+@using System.Diagnostics
+
+<PageTitle>Błąd aplikacji</PageTitle>
+
+<section class="screen">
+    <header class="surface-card state-empty">
+        <h1 class="screen-title">Coś poszło nie tak</h1>
+        <p class="muted">
+            Nie udało się poprawnie wyświetlić tej części aplikacji. Spróbuj odświeżyć stronę
+            albo wrócić do biblioteki przepisów.
+        </p>
+
+        <div class="actions-row">
+            <a class="primary-action" href="/">Przejdź do biblioteki</a>
+            <a class="secondary-action" href=".">Odśwież stronę</a>
+        </div>
+    </header>
+
+    @if (ShowRequestId)
+    {
+        <section class="surface-card">
+            <p class="muted">Identyfikator żądania</p>
+            <code>@RequestId</code>
+        </section>
+    }
+
+    <section class="surface-card inline-warning">
+        <h2 class="section-title">Tryb developerski</h2>
+        <p class="muted">
+            Szczegóły wyjątku są ukryte poza środowiskiem <strong>Development</strong>, aby nie
+            wyświetlać użytkownikowi wrażliwych informacji.
+        </p>
+    </section>
+</section>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? RequestId { get; set; }
+    private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+
+    protected override void OnInitialized() =>
+        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+}

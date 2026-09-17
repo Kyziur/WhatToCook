@@ -1,0 +1,143 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    platform: ${DOCKER_PLATFORM:-linux/arm64/v8}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - FOWNER
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+      - /run
+      - /run/postgresql
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 768M
+          pids: 256
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-whattocook}
+      POSTGRES_USER: ${POSTGRES_USER:-whattocook}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be provided}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-whattocook} -d ${POSTGRES_DB:-whattocook}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  api:
+    build:
+      context: ..
+      dockerfile: src/WhatToCook.Api/Dockerfile
+    platform: ${DOCKER_PLATFORM:-linux/arm64/v8}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+          pids: 128
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__whattocook-db: Host=postgres;Port=5432;Database=${POSTGRES_DB:-whattocook};Username=${POSTGRES_USER:-whattocook};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be provided}
+      Storage__RecipeImagesPath: /data/recipe-images
+      SeedData__Enabled: ${SEED_DATA_ENABLED:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
+      HTTP_PROXY: ${HTTP_PROXY:-http://http-proxy:8888}
+      HTTPS_PROXY: ${HTTPS_PROXY:-http://http-proxy:8888}
+      NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,api,postgres,*.home.arpa,192.168.0.0/16}
+    volumes:
+      - ${DATA_ROOT:?DATA_ROOT must be provided}/recipe-images:/data/recipe-images
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks:
+      - default
+      - observability
+      - egress
+
+  web:
+    build:
+      context: ..
+      dockerfile: src/WhatToCook.Web/Dockerfile
+    platform: ${DOCKER_PLATFORM:-linux/arm64/v8}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+          pids: 128
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      Api__BaseUrl: http://api:8080
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks:
+      default:
+      edge:
+        aliases:
+          - what-to-cook-web
+      observability:
+
+networks:
+  default:
+    internal: true
+  edge:
+    external: true
+    name: edge
+  observability:
+    external: true
+    name: observability
+  egress:
+    external: true
+    name: egress
+
+volumes:
+  postgres-data:
