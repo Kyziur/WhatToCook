@@ -20,5 +20,5 @@ RUN apt-get update \
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080
 COPY --from=build /app/publish .
-USER $APP_UID
+USER 1654:1654
 ENTRYPOINT ["dotnet", "WhatToCook.Api.dll"]

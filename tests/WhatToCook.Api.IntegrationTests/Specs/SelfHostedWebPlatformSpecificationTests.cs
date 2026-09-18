@@ -204,6 +204,16 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         Assert.Contains("Bitwarden", document, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("DATA_ROOT", document, StringComparison.Ordinal);
         Assert.Contains("POSTGRES_PASSWORD", document, StringComparison.Ordinal);
+        Assert.Contains("BWS workload secret", document, StringComparison.Ordinal);
+        Assert.Contains("homelab-workloads", document, StringComparison.Ordinal);
+        Assert.Contains(
+            "The application contract does not require `BWS_ACCESS_TOKEN`.",
+            document,
+            StringComparison.Ordinal
+        );
+        Assert.Contains("Compose-owned internals", document, StringComparison.Ordinal);
+        Assert.Contains("POSTGRES_DB=whattocook", document, StringComparison.Ordinal);
+        Assert.Contains("1654:1654", document, StringComparison.Ordinal);
         Assert.Contains("Interactive Server", document, StringComparison.OrdinalIgnoreCase);
     }
 
