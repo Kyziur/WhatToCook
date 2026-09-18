@@ -1,54 +1,23 @@
 # Raspberry Pi deployment
 
-Production deployment of WhatToCook is owned by the homelab repository and Komodo. This repository provides the application Compose contract at `deploy/docker-compose.yml`; it no longer owns the SSH deployment controller.
+Production deployment is owned by the homelab repository and Komodo. This repository provides the passive application Compose contract at `deploy/docker-compose.yml`; it does not own SSH deployment, BWS, Periphery, host preparation, routing, or backup automation.
 
-## Komodo contract
+## Canonical contract
 
-Configure the Komodo Stack or Action in the homelab repository with:
+See [self-hosted deployment](self-hosted-deployment.md) for the canonical variable-ownership table. The homelab Resource Sync Stack supplies only the documented non-secret variables. Its approved Periphery wrapper supplies `POSTGRES_PASSWORD` from the existing `homelab-workloads` BWS scope.
 
-- this GitHub repository and the deployment branch;
-- a Periphery server running on the Raspberry Pi;
-- `deploy/docker-compose.yml` as the Compose file;
-- a stable Compose project name matching the existing PostgreSQL deployment;
-- a stable `DATA_ROOT` for recipe images; PostgreSQL persists in the named `postgres-data` volume;
-- all external Docker networks declared by the Compose contract: `edge`, `observability`, and `egress`;
-- the reverse proxy route to `what-to-cook-web:8080`.
+Do not commit `POSTGRES_PASSWORD`, BWS tokens or project IDs, a production `deploy/.env`, or a local deployment wrapper to this repository. The application contract does not require `BWS_ACCESS_TOKEN`; it is owned by the homelab Periphery configuration. Compose-owned internal values are derived by `deploy/docker-compose.yml`, not supplied by BWS or Stack configuration.
 
-The Web service is the only application service that should be exposed through the homelab reverse proxy. PostgreSQL and the API remain internal Docker services.
+## Deployment boundary
 
-## Bitwarden Secrets Manager
+The Stack must reuse the verified existing Compose project name, PostgreSQL volume, and `DATA_ROOT`. Homelab prepares `${DATA_ROOT}/recipe-images` as owner `1654:1654` with mode `0750` before deployment.
 
-The homelab deployment must provide `POSTGRES_PASSWORD` at deployment time from Bitwarden Secrets Manager. Do not commit it to GitHub or put its value in the Komodo Stack environment, because Komodo writes that environment to a host `.env` file.
+The Web service is the only service routed through the shared edge at `what-to-cook-web:8080`. PostgreSQL and API stay internal. Preserve forwarded headers and WebSocket upgrades for Blazor SignalR.
 
-Use a dedicated Bitwarden project and a read-only machine account. Keep the `BWS_ACCESS_TOKEN` in a protected Periphery/host configuration and run the trusted deployment wrapper through Komodo Action/Procedure:
+## Local development
+
+Use Aspire locally:
 
 ```bash
-bws run --project-id <bitwarden-project-id> -- docker compose -f /opt/stacks/whattocook/deploy/docker-compose.yml up -d --wait
+dotnet run --project src/WhatToCook.AppHost
 ```
-
-The wrapper must fail when Bitwarden or a required secret is unavailable and must not print the environment or secret values. Komodo currently has no documented native Bitwarden provider, so the homelab repository must verify the Action/Procedure integration for the installed Komodo version.
-
-## First migration
-
-Before creating or deploying the Komodo Stack:
-
-1. Back up PostgreSQL and recipe images.
-2. Record `docker compose ls` and `docker volume ls` on the Raspberry Pi.
-3. Configure Komodo with the existing Compose project name, or perform an explicit volume migration.
-4. Pre-create `DATA_ROOT/recipe-images` with write access for the API container UID.
-5. Verify the required external Docker networks.
-6. Deploy without removing the old PostgreSQL volume.
-7. Verify `/health`, a database-backed recipe request, image upload, restart persistence, and rollback behavior.
-
-The logical volume is `postgres-data`, but Docker prefixes it with the Compose project name. A changed Komodo Stack name can silently create a new empty database.
-
-## Data operations
-
-Backup and restore are data operations owned by the homelab repository, not by this codebase. The homelab backup procedure must provide them under the same contract:
-
-- produce database backups with `pg_dump` through the protected BWS wrapper; direct `docker compose` execution cannot evaluate this Compose contract without `POSTGRES_PASSWORD`;
-- cover the database and the `${DATA_ROOT}/recipe-images` directory;
-- keep archives outside GitHub, access-controlled or encrypted, with retention per homelab policy;
-- validate the archive with a restore drill against a throwaway PostgreSQL container before it is trusted.
-
-See [`docs/self-hosted-deployment.md`](self-hosted-deployment.md) for the complete application contract and verification checklist.
