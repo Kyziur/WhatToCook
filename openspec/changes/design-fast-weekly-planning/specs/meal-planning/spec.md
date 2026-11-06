@@ -70,7 +70,7 @@ The system SHALL let users replace one specific planned recipe, retaining its da
 - **THEN** the established regenerate-or-cancel decision flow applies before changes are persisted
 
 ### Requirement: WP-04 — User can move or swap meals between dates and slots
-The system SHALL move individual entries between dates and meal slots. Multiple recipes **may coexist within the same slot**, so moving into an occupied slot does not imply replacement. Drag-and-drop is optional.
+The system SHALL move cooked recipe or leftover entries between dates and meal slots while preserving plan invariants. Multiple recipes **may coexist within the same slot**, so moving into an occupied slot does not imply replacement. A No cooking annotation is managed through the WP-05 workflow and cannot be silently moved, replaced or displaced through a meal move/swap. Drag-and-drop is optional.
 
 #### Scenario: WP-04 — Move into an empty destination
 - **WHEN** a planner moves an entry to an empty day or slot
@@ -79,6 +79,10 @@ The system SHALL move individual entries between dates and meal slots. Multiple 
 #### Scenario: WP-04 — Append to a slot containing other meals
 - **WHEN** a planner moves a recipe into a slot that already contains one or more different recipes
 - **THEN** the moved recipe is appended at a valid position without deleting or replacing other entries, provided same-day recipe uniqueness is preserved
+
+#### Scenario: WP-04 — Reject an exclusive no-cooking destination
+- **WHEN** a planner tries to move or swap a cooked recipe or leftover into a date-and-slot marked No cooking, or select a No cooking annotation as a swap entry
+- **THEN** the operation is blocked without changing any entries, and the UI offers an explicit action to clear or change the No cooking annotation before retrying
 
 #### Scenario: WP-04 — Swap two explicitly selected entries
 - **WHEN** a planner chooses Swap and explicitly selects a source entry and one destination entry
