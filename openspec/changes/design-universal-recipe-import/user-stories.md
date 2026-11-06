@@ -99,7 +99,7 @@ WhatToCook currently offers a URL-based import draft, review and correction, fin
 - **AC2:** When the imported normalized title conflicts with a catalog title, the review screen identifies the conflict and offers a path to inspect the existing recipe or change the new title.
 - **AC3:** A source-URL match is treated as a helpful signal; distinct recipes with the same site or different pages are not automatically merged.
 - **AC4:** I may explicitly continue working on a draft when its source overlaps an existing recipe, but standard unique-title validation still applies at finalization.
-- **AC5:** URL normalization ignores host case, default ports, fragments and known tracking keys (`utm_*`, `fbclid`, `gclid`), but preserves the scheme and meaningful path/query differences, so two different recipes are not silently conflated.
+- **AC5:** URL normalization ignores host case, default ports and known tracking keys (`utm_*`, `fbclid`, `gclid`), but preserves scheme, meaningful path/query differences and fragments by default (which may identify hash-routed recipes). Only explicitly recognized non-identifying presentation anchors may be removed, so distinct recipes are never silently conflated.
 
 ### URI-06 — Recover gracefully when a website cannot be parsed
 
