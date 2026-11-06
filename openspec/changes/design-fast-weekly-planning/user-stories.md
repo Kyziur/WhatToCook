@@ -74,6 +74,7 @@ WhatToCook already supports named date-range meal plans, assignment of recipes t
 - **AC4:** Moving or swapping cannot create a duplicate recipe on the same day.
 - **AC5:** Canceling a move or swap leaves both assignments unchanged.
 - **AC6:** Saving uses the existing plan validation and does not bypass shopping-list regeneration rules.
+- **AC7:** A move or swap cannot silently displace a **No cooking** annotation or place a recipe/leftovers in that exclusive slot. The operation is rejected with a clear option to edit or clear the annotation; the plan remains unchanged.
 
 ### WP-05 — Mark a meal as leftovers or eating out
 
