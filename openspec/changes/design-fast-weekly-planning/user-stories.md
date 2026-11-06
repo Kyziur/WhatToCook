@@ -98,7 +98,7 @@ WhatToCook already supports named date-range meal plans, assignment of recipes t
 - **AC1:** If there is no generated shopping list, saving a revised plan succeeds without forcing generation.
 - **AC2:** If an existing shopping list would change, the user sees the established choice to regenerate or cancel before the plan and list are changed.
 - **AC3:** Cancel leaves the persisted plan and shopping list unchanged.
-- **AC4:** Confirming regeneration updates plan and list together and preserves applicable manual items and checklist states under existing list reconciliation rules.
+- **AC4:** Confirming regeneration atomically updates plan and list, preserves all manual items, and applies the shopping-list-management contract current at implementation (including resetting `MAM`/Bought after a required-amount change if Shopping List 2.0 is adopted).
 - **AC5:** The UI exposes pending, success, and failure states; repeated clicks do not save duplicate changes.
 
 ## Deferred future candidate — outside this OpenSpec delta
