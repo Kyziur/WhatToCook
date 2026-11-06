@@ -39,7 +39,7 @@ export default defineConfig({
       },
     },
     {
-      command: "dotnet run --project src/WhatToCook.Web --no-build --urls http://127.0.0.1:5180",
+      command: `dotnet run --project src/WhatToCook.Web --no-build --configuration ${process.env.PLAYWRIGHT_DOTNET_CONFIGURATION ?? "Debug"} --urls http://127.0.0.1:5180`,
       url: "http://127.0.0.1:5180",
       timeout: 120_000,
       reuseExistingServer,
