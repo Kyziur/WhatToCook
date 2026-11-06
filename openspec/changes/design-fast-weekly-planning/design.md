@@ -12,11 +12,11 @@ Meal plans are separate named `DateOnly` ranges, can overlap, and have multiple 
 
 ### Copy produces an independent target plan
 
-Copy preserves relative `DateOnly` offsets, encoded meal slots/positions and positive multipliers, but not the source shopping list or its `MAM`/Bought status. The new plan defaults to the source's duration; source remains unchanged. Archived/inactive recipe entries appear in preview as unresolved. The user must replace or omit each archived recipe before committing a valid new plan. A new user command may create another target, but retrying the same accepted command (via stable operation identity/idempotency key) may not create duplicates.
+Copy preserves relative `DateOnly` offsets, encoded meal slots/positions, positive multipliers and all supported entry types, but not the source shopping list or its `MAM`/Bought status. When No cooking / Leftovers entries are implemented, new target entries receive fresh IDs, and each leftover reference must be remapped to the corresponding copied cooked entry within the target. If archive resolution omits or replaces a cooked source, affected leftovers must be explicitly rebound or removed before copy confirmation; original-plan IDs must never leak into target references. The new plan defaults to the source's duration; source remains unchanged. Archived/inactive recipe entries appear in preview as unresolved. The user must replace or omit each archived recipe before committing a valid new plan. A new user command may create another target, but retrying the same accepted command (via stable operation identity/idempotency key) may not create duplicates.
 
 ### Multiple entries per slot remain valid
 
-Moving an entry to a nonempty slot **appends at a valid position**; it never overwrites an existing meal. Swapping requires selection of **two specific entries** and exchanges their dates/slots only, retaining each entry's multiplier and avoiding same-day recipe duplicates. Replacing one specific entry preserves its slot, relative position and multiplier by default. UI must be keyboard/touch accessible and must not require drag-and-drop.
+Moving an entry to a nonempty slot **appends at a valid position**; it never overwrites an existing meal. Swapping requires selection of **two specific entries** and exchanges their complete placements (date, slot and within-slot position), retaining each entry's multiplier and avoiding same-day recipe duplicates. Other entries retain their relative ordering, while slot sort indices may be normalized. Replacing one specific entry preserves its slot, relative position and multiplier by default. UI must be keyboard/touch accessible and must not require drag-and-drop.
 
 ### Leftovers and no-cooking need genuine plan-entry semantics
 
