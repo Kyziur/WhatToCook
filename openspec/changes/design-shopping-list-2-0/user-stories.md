@@ -19,7 +19,7 @@ Today WhatToCook builds a shopping list from a meal plan, aggregates ingredients
 - **Need to buy**: `NIE MAM` means this item should appear among products to purchase.
 - **Bought**: a purchase indicator on an item still marked `NIE MAM`. It is not yet available at home. On **Finish shopping**, all bought items atomically become `MAM` (clearing Bought), so the recommendation service considers them owned.
 - **Manual item**: any free-text product entered by the user, including identical repeated entries when intentionally added.
-- **Grocery grouping**: an optional, editable department/category label (for example Produce, Dairy, Bakery, Pantry, Frozen, Other). It is not an inventory count.
+- **Grocery grouping**: a fixed set of departments selected **per list item**, not an editable category taxonomy or stock count. Display labels may be localized (e.g., Polish UI); stable identifiers are persisted.
 - **Shopping trip**: actions against the currently generated plan-linked checklist. No separate trip entity, Start button, or history in MVP; **Finish shopping** converts Bought items to `MAM` and leaves unmet needs outstanding.
 
 ## MVP user stories and acceptance criteria
@@ -116,7 +116,7 @@ This story is retained solely for later prioritization. It is **not a current SH
 
 **As a** shopper, **I want** to keep using a previously opened list when mobile connectivity drops **so that** I am not blocked in the store.
 
-This is a **separately approved MVP gate** if real supermarket use is required at launch. It is not safely provided by the existing Blazor Interactive Server setup.
+This is **not** an MVP gate for the current change. Only a separately approved future OpenSpec change may introduce offline shopping, because Blazor Interactive Server does not provide durable offline storage or queued writes.
 
 **Acceptance criteria**
 
@@ -127,7 +127,7 @@ This is a **separately approved MVP gate** if real supermarket use is required a
 - **AC5:** The app never suggests that a new or unvisited list is available offline unless it was stored locally.
 - **AC6:** Browser refresh, app suspension, and temporary network failures are tested under realistic mobile conditions.
 
-**Release constraint:** If offline operation is not implemented, label this as a connected-only release and do not market it as reliable offline shopping.
+**Current release constraint:** Connected-only operation is a deliberate MVP limit. Do not market this change as offline-capable.
 
 ## Out of scope for first release
 
