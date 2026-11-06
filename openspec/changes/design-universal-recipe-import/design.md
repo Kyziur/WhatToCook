@@ -20,7 +20,7 @@ Retain source-specific adapters, with generic parsing for other supported public
 
 ### Exactly one candidate becomes one persisted editable draft
 
-If extraction returns one plausible recipe, persist the ordinary draft. Multiple candidates produce a **temporary persisted import attempt** with bounded candidate summaries/IDs and a `selection required` response. Selecting one yields the single normal draft. Repeating selection for the same attempt/candidate returns the same draft; unrelated candidates cannot silently overwrite it. Unselected attempts expire after **24 hours** and cannot be selected afterward. Cancel/expire creates no trusted recipe; expired candidate data may be cleaned. This is separate from the trusted recipe tables and preserves existing finalization validation.
+If extraction returns one plausible recipe, persist the ordinary draft. Multiple candidates produce a **temporary persisted import attempt** with bounded candidate summaries/IDs and a `selection required` response. Selecting one yields the single normal draft. Repeating selection for the same attempt/candidate returns the same draft; choosing a different candidate from the already selected attempt returns an explicit conflict and the selected draft, without creating or overwriting another. Unselected attempts expire after **24 hours** and cannot be selected afterward. Cancel/expire creates no trusted recipe; expired candidate data may be cleaned. This is separate from the trusted recipe tables and preserves existing finalization validation.
 
 ### Network security is a release gate
 
