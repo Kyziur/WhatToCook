@@ -1,23 +1,23 @@
-## 1. Design and Dependency Resolution — No Implementation Yet
+## 1. Design Baseline and Contract — No Implementation Yet
 
-- [ ] 1.1 Complete and sync the existing `add-recipe-import` base capability before treating this delta as sync-ready
-- [ ] 1.2 Confirm JSON-LD object selection, fields, `HowToStep` / `HowToSection` handling and multiple-recipe UX (URI-01, URI-02)
-- [ ] 1.3 Review arbitrary-host threat model, DNS rebinding, redirect policy and parser resource bounds (URI-03)
-- [ ] 1.4 Validate mobile share-target prerequisites and paste fallback (URI-04)
-- [ ] 1.5 Agree duplicate source/title normalization and user-friendly error categories (URI-05, URI-06)
+- [ ] 1.1 Establish the canonical working URL/draft import baseline separately from pending photo/OCR work before syncing this delta
+- [ ] 1.2 Confirm parser/candidate selection lifecycle, 24-hour expiry and draft conversion (URI-01, URI-02)
+- [ ] 1.3 Confirm actual-connected-IP SSRF checks, disabled redirects and parser bounds (URI-03)
+- [ ] 1.4 Validate mobile share-target prerequisites and URL paste fallback (URI-04)
+- [ ] 1.5 Agree conservative source URL equivalence and recoverable errors (URI-05, URI-06)
 
-## 2. Future Implementation Packages
+## 2. Future Implementation — Not in This PR
 
-- [ ] 2.1 Implement hardened fetcher, connection destination enforcement and bounded parsing before generic-host rollout (URI-03)
-- [ ] 2.2 Add Schema.org Recipe JSON-LD extraction behind existing source adapters and map into import drafts (URI-01)
-- [ ] 2.3 Support multiple-recipe choice, safe draft review, persistence and idempotent finalization (URI-02)
-- [ ] 2.4 Provide mobile share-to-import entry and URL paste fallback (URI-04)
-- [ ] 2.5 Add source/title duplicate guidance and recoverable errors (URI-05, URI-06)
+- [ ] 2.1 Harden fetching, destination checks and bounded processing before generic-domain rollout (URI-03)
+- [ ] 2.2 Add generic JSON-LD recipe extraction and single-candidate draft creation (URI-01)
+- [ ] 2.3 Implement temporary candidate attempts, selection/expiry and repeat-safe draft conversion (URI-02)
+- [ ] 2.4 Add mobile share-to-import with manual paste fallback (URI-04)
+- [ ] 2.5 Add source/title duplicate guidance and honest recoverable error outcomes (URI-05, URI-06)
 
-## 3. Future Tests and OpenSpec Sync
+## 3. Future Tests and Canonical Sync
 
-- [ ] 3.1 Add parser fixture tests for JSON-LD roots, `@graph`, arrays, nested steps, Unicode and malformed input
-- [ ] 3.2 Add controlled SSRF/security tests covering DNS rebinding, private destinations, redirects, payload limits and HTML sanitization
-- [ ] 3.3 Add PostgreSQL-backed draft/finalization tests and component/E2E tests for review, duplicate handling and manual fallback
-- [ ] 3.4 Validate mobile share behavior on supported devices/origins and record unsupported-browser fallback coverage
-- [ ] 3.5 Replace PENDING traceability rows with real tests, validate against the base canonical capability, then sync before archive
+- [ ] 3.1 Add parser fixtures for JSON-LD root/graph/arrays, steps, Unicode and malformed content
+- [ ] 3.2 Add controlled fake-network SSRF, DNS-rebinding, redirect-block and parser-bound tests
+- [ ] 3.3 Add PostgreSQL tests for candidate selection, 24-hour expiry and idempotent finalization; component/E2E review tests
+- [ ] 3.4 Test share/paste UX on supported devices and unsupported browser fallback
+- [ ] 3.5 Replace PENDING rows with real tests and sync only once the base canonical import spec is available
