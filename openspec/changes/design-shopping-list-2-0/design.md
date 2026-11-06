@@ -24,7 +24,7 @@ The current canonical requirement `Regenerating a shopping list preserves matchi
 
 ### Regeneration is conservative and deterministic
 
-Match only generated items by normalized ingredient and normalized unit; preserve identity and item-level category. If the normalized amount/descriptor is unchanged, retain availability/purchase state. If the amount increases, decreases or changes text, reset to `NIE MAM` and clear Bought, with a visible explanation. An altered unit is a different item and cannot inherit buying state. Manual duplicates retain separate IDs and all their state. Both direct regeneration and plan-save-with-regeneration remain atomic.
+Match only generated items by normalized ingredient and normalized unit; preserve identity and item-level category. If the normalized amount/descriptor is unchanged, retain availability/purchase state. If the amount increases, decreases or changes text, reset to `NIE MAM` and clear Bought, with a visible explanation. An altered unit is a different item and cannot inherit buying state. Multiple generated entries with the same ingredient/unit but ambiguous descriptive quantities must not be paired by arbitrary queue order: reset affected states to `NIE MAM` rather than inferring a prior purchase. Manual duplicates retain separate IDs and all their state. Both direct regeneration and plan-save-with-regeneration remain atomic.
 
 ### Fixed MVP categories
 
@@ -32,7 +32,7 @@ Produce, Dairy, Bakery, Meat & Fish, Pantry, Frozen, Household, Other. Item-leve
 
 ### Trusted connected-only single-household deployment
 
-No new app accounts, `Household` table or multi-tenant roles in MVP. The single household shares the deployment through a trusted LAN or an authenticated private tunnel/VPN; the unauthenticated app/API must never be exposed publicly. Two connected devices receive updates automatically (target <= 5 seconds on healthy connectivity). Server-side item versions detect stale writes and require explicit user retry; different-item updates coexist. A disconnected client reports lack of sync and does not pretend offline changes are queued.
+No new app accounts, `Household` table or multi-tenant roles in MVP. The single household shares the deployment through a trusted LAN or an authenticated private tunnel/VPN; the unauthenticated app/API must never be exposed publicly. Two connected devices receive updates automatically (target <= 5 seconds on healthy connectivity). Server-side item versions detect stale writes and require explicit user retry; different-item updates coexist. Finish shopping also checks a **list-level version** before atomically converting Bought to `MAM` to avoid racing another device's changes. A disconnected client reports lack of sync and does not pretend offline changes are queued.
 
 ### Offline remains a separate future change
 
