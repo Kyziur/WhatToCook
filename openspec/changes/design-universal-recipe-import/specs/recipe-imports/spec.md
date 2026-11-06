@@ -104,8 +104,8 @@ The system SHALL offer a phone-friendly path from a shared recipe URL into the e
 The system SHALL warn about matching sources and normalized recipe titles while leaving the user in control of draft review.
 
 #### Scenario: URI-05 — Normalize source URLs without erasing recipe identity
-- **WHEN** URLs differ only by fragment, default port, host casing, or known tracking query keys (e.g. utm_*, fbclid, gclid)
-- **THEN** they may be treated as the same source; scheme, meaningful path differences, and unknown or meaningful query parameters are retained when comparing sources
+- **WHEN** URLs differ only by host casing, default port, or known tracking query keys (e.g. `utm_*`, `fbclid`, `gclid`)
+- **THEN** they may be treated as the same source; scheme, meaningful path and query differences, and URL fragments are preserved by default because fragments may encode distinct client-side recipe routes. Removing an explicitly known non-identifying presentation fragment requires a source-specific rule
 
 #### Scenario: URI-05 — Offer a soft source-match warning
 - **WHEN** the normalized submitted source URL matches an existing trusted recipe
