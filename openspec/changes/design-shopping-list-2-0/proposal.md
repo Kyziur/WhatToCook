@@ -1,15 +1,14 @@
 ## Why
 
-The existing shopping flow is useful for generating ingredient needs, but it does not model the act of **buying** an item, categorize items for a store trip, or guarantee safe shared use on multiple phones. Users need a trustworthy list they can use while physically shopping.
+The existing shopping list shows what is at home or still needed, but not what is already bought in the store. It lacks mobile-first purchase progress, useful product grouping and automatic updates between connected devices.
 
 ## What Changes
 
-- Add a separate **Bought** state to the current `MAM` / `NIE MAM` model, with undo, persistence, and shopping progress.
-- Add a focused mobile shopping view, store departments, and editable categories for generated and manual items.
-- Define shared-household synchronization and conflict handling, including authorization requirements.
-- Preserve manual items and correctly handle quantity changes when a shopping list is regenerated.
-- Define a separately gated offline experience; explicitly avoid assuming Blazor Interactive Server works offline.
-- Record detailed user stories and pending test-traceability for future implementation.
+- Add a persisted Bought indicator distinct from `MAM`/`NIE MAM`, undo and `Finish shopping` to make purchased items available to recommendations.
+- Add mobile views with accurate progress, fixed store departments and editing of manual products on existing plan-linked lists.
+- Add server-authoritative automatic syncing for one connected, trusted household deployment, using per-item version checks to reject stale edits.
+- Reconcile list regeneration atomically, resetting `MAM`/Bought when a matched item's amount changes.
+- Record offline shopping only as a **separate potential future change**, not a normative requirement here.
 
 ## Capabilities
 
@@ -17,19 +16,18 @@ The existing shopping flow is useful for generating ingredient needs, but it doe
 None.
 
 ### Modified Capabilities
-- `shopping-list-management`: proposed shopping-trip, category, collaboration, and optional offline requirements.
+- `shopping-list-management`: buying lifecycle, connected shopping usability, categories, safe synchronization and regeneration.
 
 ## Impact
 
-Future work may affect shopping domain and persistence, API item state/merge operations, Blazor shopping screens, identity and synchronization, deployment access, and the relevant PostgreSQL integration and browser tests.
+Later changes touch shopping item persistence/versioning, API, recommendation semantics, list regeneration, mobile Blazor components, PostgreSQL and multi-device tests. Access outside LAN requires authenticated private network connectivity, never public exposure of the unauthenticated API.
 
 ## Non-Goals
 
-- No application code, schema migrations, runtime behavior, or tests are implemented by this change.
-- No full inventory tracking, store pricing, receipts, barcode scanning, or automated order placement.
-- No implicit internet exposure or unauthenticated sharing of household lists.
-- No declaration of offline support until a feasible architecture and release decision are approved.
+- **No implementation yet**, schema changes or test execution in this design-only change.
+- No offline mode, custom category administration, shopping history or standalone lists.
+- No user accounts, multiple households or unauthenticated public access.
 
 ## Product outcome
 
-A household can use a single accurate list during a shopping trip, see what remains, and avoid repeated purchases. See [user-stories.md](user-stories.md) for full user narratives and acceptance criteria.
+Two connected household devices can coordinate a real shopping trip without lost progress or duplicate purchases. Detailed acceptance criteria live in [user-stories.md](user-stories.md).
