@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: WP-01 — User can copy an existing meal plan into new dates
-The system SHALL allow creating a separate plan from an existing plan while preserving its recipe assignments, dates as relative offsets, meal slots, order, and positive multipliers.
+The system SHALL allow creating a separate plan from an existing plan while preserving all supported entry types, relative calendar dates, meal slots, order, and positive recipe multipliers. If the source contains leftovers, their links SHALL be remapped to the corresponding entries in the new plan.
 
 #### Scenario: WP-01 — Choose a source plan and target dates
 - **WHEN** a planner chooses `Copy existing plan`, selects any available source, and enters a new start date and name
@@ -10,6 +10,10 @@ The system SHALL allow creating a separate plan from an existing plan while pres
 #### Scenario: WP-01 — Create an independent copy
 - **WHEN** the planner confirms a valid copy of a meal plan
 - **THEN** the system creates a new plan ID, maps scheduled entries by day offset, preserves each active recipe's slot (encoded in SortOrder), relative position and multiplier, and never mutates the source
+
+#### Scenario: WP-01 — Copy no-cooking entries and rebind leftovers
+- **WHEN** a source plan includes No cooking and Leftovers entries, and the user copies it after those entry types are supported
+- **THEN** the new plan retains their day/slot placement, allocates fresh entry IDs and maps each leftover reference to its corresponding copied cooked entry, never to an entry ID in the source plan; if its source was omitted or replaced during archive resolution, the copy is not committed until the leftover is explicitly rebound or removed
 
 #### Scenario: WP-01 — Resolve archived source recipes
 - **WHEN** the selected source plan contains recipes that have since been archived or are otherwise inactive
@@ -78,7 +82,7 @@ The system SHALL move individual entries between dates and meal slots. Multiple 
 
 #### Scenario: WP-04 — Swap two explicitly selected entries
 - **WHEN** a planner chooses Swap and explicitly selects a source entry and one destination entry
-- **THEN** only those two entries exchange dates and slots, preserving their own multipliers and leaving all other entries untouched, provided both resulting days satisfy uniqueness
+- **THEN** the two entries exchange their complete placements (date, meal slot and relative position within that slot), preserving each entry's own multiplier; unrelated entries remain in their original relative order (even if sort indices are renumbered), and both resulting days satisfy recipe uniqueness
 
 #### Scenario: WP-04 — Reject duplicate recipes after a move
 - **WHEN** moving, appending or swapping results in the same recipe appearing twice on one date
