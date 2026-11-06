@@ -16,7 +16,7 @@ Copy preserves relative `DateOnly` offsets, encoded meal slots/positions, positi
 
 ### Multiple entries per slot remain valid
 
-Moving an entry to a nonempty slot **appends at a valid position**; it never overwrites an existing meal. Swapping requires selection of **two specific entries** and exchanges their complete placements (date, slot and within-slot position), retaining each entry's multiplier and avoiding same-day recipe duplicates. Other entries retain their relative ordering, while slot sort indices may be normalized. Replacing one specific entry preserves its slot, relative position and multiplier by default. UI must be keyboard/touch accessible and must not require drag-and-drop.
+Moving an entry to a nonempty slot **appends at a valid position**; it never overwrites an existing meal. Swapping requires selection of **two specific entries** and exchanges their complete placements (date, slot and within-slot position), retaining each entry's multiplier and avoiding same-day recipe duplicates. Other entries retain their relative ordering, while slot sort indices may be normalized. The WP-04 actions operate on cooked recipe/leftover entries; they block attempts to displace, swap or move into an exclusive `No cooking` slot. Editing or relocating that annotation uses the explicit WP-05 flow. Replacing one specific entry preserves its slot, relative position and multiplier by default. UI must be keyboard/touch accessible and must not require drag-and-drop.
 
 ### Leftovers and no-cooking need genuine plan-entry semantics
 
