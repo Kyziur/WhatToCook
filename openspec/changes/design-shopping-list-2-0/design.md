@@ -18,6 +18,10 @@ No separate shopping-session record or Start action. Marking a `NIE MAM` item as
 
 Do not redefine the existing `ChecklistState` values or historical rows. Bought applies only when `NieMam`; setting `Mam` clears Bought. Implementation selects the precise persisted representation, keeping this transition table invariant.
 
+### Regeneration explicitly MODIFIES the canonical checklist contract
+
+The current canonical requirement `Regenerating a shopping list preserves matching generated state and manual items` and its existing integration test `Regeneration_ShouldPreserveMatchingStateAndManualDuplicates` preserve `MAM` even when quantity changes. The new conservative policy changes that behavior. Therefore this delta uses **MODIFIED Requirements**, repeating the canonical scenarios and amending the quantity-related result; the future implementation must update that test, not leave contradictory contracts.
+
 ### Regeneration is conservative and deterministic
 
 Match only generated items by normalized ingredient and normalized unit; preserve identity and item-level category. If the normalized amount/descriptor is unchanged, retain availability/purchase state. If the amount increases, decreases or changes text, reset to `NIE MAM` and clear Bought, with a visible explanation. An altered unit is a different item and cannot inherit buying state. Manual duplicates retain separate IDs and all their state. Both direct regeneration and plan-save-with-regeneration remain atomic.
