@@ -120,7 +120,7 @@ The system SHALL preserve the existing explicit regeneration decision and preven
 
 #### Scenario: WP-06 — Reconcile generated requirements safely
 - **WHEN** the planner confirms a plan edit and regeneration
-- **THEN** the plan and generated list are updated atomically while applicable manual items and checklist states are preserved
+- **THEN** the plan and list are updated atomically, manual items remain intact, and generated state follows the current canonical shopping-list-management reconciliation rules (including any later adopted quantity-change reset)
 
 #### Scenario: WP-06 — Report save state and avoid duplicate requests
 - **WHEN** a save is pending or fails and the planner retries or navigates
