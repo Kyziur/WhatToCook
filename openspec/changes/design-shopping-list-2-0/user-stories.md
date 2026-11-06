@@ -17,10 +17,10 @@ Today WhatToCook builds a shopping list from a meal plan, aggregates ingredients
 
 - **Have at home**: `MAM` means this ingredient is already available and need not be purchased.
 - **Need to buy**: `NIE MAM` means this item should appear among products to purchase.
-- **Bought**: a new, separate purchasing state for the current shopping trip. Bought items must remain distinguishable from items already at home.
+- **Bought**: a purchase indicator on an item still marked `NIE MAM`. It is not yet available at home. On **Finish shopping**, all bought items atomically become `MAM` (clearing Bought), so the recommendation service considers them owned.
 - **Manual item**: any free-text product entered by the user, including identical repeated entries when intentionally added.
 - **Grocery grouping**: an optional, editable department/category label (for example Produce, Dairy, Bakery, Pantry, Frozen, Other). It is not an inventory count.
-- **Shopping session**: a user's active purchasing progress against a shopping list. The precise schema and whether a new session is explicit are implementation decisions; the user-visible semantics are mandatory.
+- **Shopping trip**: actions against the currently generated plan-linked checklist. No separate trip entity, Start button, or history in MVP; **Finish shopping** converts Bought items to `MAM` and leaves unmet needs outstanding.
 
 ## MVP user stories and acceptance criteria
 
@@ -36,6 +36,7 @@ Today WhatToCook builds a shopping list from a meal plan, aggregates ingredients
 - **AC4:** When I navigate away or reopen the app, the purchase state is preserved in persistent data.
 - **AC5:** When a state update fails, the UI explains the failure and does not falsely display it as saved.
 - **AC6:** The action is usable with touch and keyboard, with an accessible state announcement and a sufficiently large tap target.
+- **AC7:** Finish shopping atomically converts Bought items to `MAM`, while unpurchased `NIE MAM` items remain outstanding. Recommendations then recognize the newly owned ingredients.
 
 ### SL2-02 — Shop from a focused mobile view
 
@@ -44,7 +45,7 @@ Today WhatToCook builds a shopping list from a meal plan, aggregates ingredients
 **Acceptance criteria**
 
 - **AC1:** The shopping screen defaults to **Still to buy** items, with an explicit way to show **Bought** and **Already at home** items.
-- **AC2:** A visible progress summary shows bought items against all shopping-trip items, excluding `MAM` items from the shopping-trip denominator.
+- **AC2:** A visible progress summary shows bought items divided by Bought plus outstanding `NIE MAM` items, excluding `MAM`. After finishing, the counter reflects unmet needs, not a historical trip percentage.
 - **AC3:** An empty list, completed trip, loading state, and error state each have a clear explanation and next action.
 - **AC4:** On a narrow phone screen, product name, amount, unit, category, and action are legible without horizontal scrolling.
 - **AC5:** Users can navigate directly to the active list from the main app navigation; the current list is retained after returning from another screen.
@@ -55,12 +56,12 @@ Today WhatToCook builds a shopping list from a meal plan, aggregates ingredients
 
 **Acceptance criteria**
 
-- **AC1:** Each list item can have one category, chosen from a small user-editable list; items without a known category appear under **Other / Uncategorised**.
+- **AC1:** Each item uses the fixed categories Produce, Dairy, Bakery, Meat & Fish, Pantry, Frozen, Household or Other; uncategorized items appear in **Other**. Creating, renaming, deleting and reordering categories is outside MVP.
 - **AC2:** The shopping screen groups items by category and preserves a consistent category order.
 - **AC3:** I can move an item to a different category without changing its name, quantity, or purchase state.
-- **AC4:** The category selection persists for that item and is retained where the same stable ingredient is used in a regenerated list, subject to the explicitly defined category inheritance rule.
+- **AC4:** An item's category survives refresh and regeneration when a generated item matches the same normalized ingredient and unit, including when quantity changes.
 - **AC5:** Manually entered items can be categorised too; free-text entries are not required to match an existing ingredient.
-- **AC6:** The screen still works if categories are disabled or not configured.
+- **AC6:** An ungrouped view displays all items regardless of category.
 
 **Product note:** Automatic category suggestions are optional. They must be editable rather than treated as authoritative.
 
@@ -70,14 +71,14 @@ Today WhatToCook builds a shopping list from a meal plan, aggregates ingredients
 
 **Acceptance criteria**
 
-- **AC1:** Two devices with access to the **same authorised household** open the same list and can see item additions, purchase changes, and reversals.
-- **AC2:** When device A marks an item bought, device B sees the change without manually exporting/importing the list; if a live connection is unavailable, B can refresh when connectivity returns.
+- **AC1:** Two connected devices on the **same trusted single-household installation** display the shared list and can see additions, purchases and reversals.
+- **AC2:** After device A's write succeeds, connected device B sees the saved change automatically without refresh (target within five seconds on a healthy connection); disconnected devices display that they are out of sync.
 - **AC3:** Concurrent changes to **different** items are all preserved.
-- **AC4:** Concurrent, conflicting changes to the **same** item resolve according to a documented and tested policy; no update silently destroys unrelated item data.
-- **AC5:** Pending, successful, and failed saves are distinguishable in the UI; the app must not claim successful sync while disconnected.
-- **AC6:** A household member must not be able to access another household's list if multi-household or identity support is introduced.
+- **AC4:** Same-item concurrent edits use optimistic item versioning. A stale write is rejected and the current state displayed, allowing deliberate retry; no unrelated data is overwritten.
+- **AC5:** Pending, successful, stale-conflict, and disconnected states are distinct. This connected-only client never claims that offline mutations were queued.
+- **AC6:** Only devices granted access to the trusted LAN or authenticated private tunnel can reach the list. No multi-household tenancy, app user accounts, or public unauthenticated endpoints are included in MVP.
 
-**Dependency:** This story requires a deliberate identity/access model and synchronization contract. A LAN deployment does not, by itself, provide safe remote access.
+**Security boundary:** one trusted household installation. Shopping outside LAN requires a separately configured authenticated private tunnel/VPN; the current unauthenticated API must never be opened publicly.
 
 ### SL2-05 — Add and manage non-recipe items
 
@@ -85,7 +86,7 @@ Today WhatToCook builds a shopping list from a meal plan, aggregates ingredients
 
 **Acceptance criteria**
 
-- **AC1:** I can add a manual item with a required, non-blank name; category and amount are optional.
+- **AC1:** On an **already generated plan-linked** shopping list, I can add a manual item with a required, nonblank name; amount and fixed-list category are optional. Standalone manual-only lists are outside MVP.
 - **AC2:** I can edit or remove a manual item, with safe handling of accidental removal (confirmation or undo).
 - **AC3:** Manually added items can be marked **Bought** and return to the correct view after refreshing.
 - **AC4:** Two intentionally identical manual entries remain distinct until a user explicitly removes or merges them.
@@ -98,16 +99,18 @@ Today WhatToCook builds a shopping list from a meal plan, aggregates ingredients
 
 **Acceptance criteria**
 
-- **AC1:** When the meal plan changes and I choose to regenerate its list, matching items retain **Already at home**, **Bought**, and category state as applicable.
+- **AC1:** When a generated item has unchanged normalized ingredient, unit and amount, it retains its home/purchase state and category after regeneration.
 - **AC2:** New items start in **Need to buy** unless the user explicitly sets another state.
 - **AC3:** Removed recipe-derived items do not unexpectedly remain as active shopping requirements; manually added items remain.
-- **AC4:** Quantity changes retain the stable matching item's purchase state **but** make a changed required quantity visible, so the user can decide whether additional buying is necessary; the app must not silently imply the increased quantity was purchased.
+- **AC4:** If a matched generated item's normalized amount changes in any way, both `MAM` and Bought are reset to `NIE MAM`; its category remains and the user sees an explanation.
 - **AC5:** Regeneration is atomic from the user's perspective: on failure, the previous list and progress remain intact.
 - **AC6:** Both the direct regeneration action and plan-save-with-regeneration have consistent behavior.
 
-**Open decision:** For changed quantities on bought items, the MVP may reset the item to **Need to buy** with an explanation, instead of tracking partial purchasing. This choice must be explicit and covered by tests.
+**MVP decision:** conservative amount changes always reset the confirmation to `NIE MAM`; partial purchase tracking is deferred.
 
-## Connectivity acceptance gate
+## Deferred future candidate (not part of this OpenSpec delta)
+
+This story is retained solely for later prioritization. It is **not a current SHALL requirement**, is not in the delta spec and must be delivered in a separate future OpenSpec change.
 
 ### SL2-07 — Maintain a useful shopping experience after temporary disconnection
 
@@ -136,9 +139,9 @@ This is a **separately approved MVP gate** if real supermarket use is required a
 
 ## Quality, test scenarios, and non-functional requirements
 
-- Integration tests cover **Bought vs MAM** distinction, manual duplicates, regeneration, conflicts, and persistence across sessions.
+- Integration tests cover Bought-to-`MAM` checkout, downstream recommendations, manual duplicates, changed-quantity resets, regeneration and stale-item conflict handling.
 - End-to-end tests cover mobile grouping, progress, undo, error and empty states.
-- Two-device tests verify cross-device consistency; offline testing is mandatory **only if SL2-07 is approved**.
+- Two-device tests verify automatic connected propagation and rejected stale writes; offline tests belong to a separate future OpenSpec change.
 - Purchase and undo actions should feel immediate; measure p95 update time with real devices before setting a release threshold.
 - The system should remain readable and accessible even with hundreds of list entries.
 - Avoid logging sensitive user-entered manual product text by default.
@@ -154,5 +157,5 @@ This is a **separately approved MVP gate** if real supermarket use is required a
 
 - Existing [shopping-list-management](../../../openspec/specs/shopping-list-management/spec.md) requirements and aggregation semantics.
 - Need an explicit purchase-state model, persistence and migration plan, sync contract, category semantics, and UI flow.
-- Resolve access to the app outside the LAN before promising an in-store shared experience.
+- Remote shopping requires an authenticated private network/tunnel; the unauthenticated app/API must not be publicly exposed.
 - Create OpenSpec change and test traceability on implementation approval; do not replace current `MAM`/`NIE MAM` semantics.
