@@ -1,56 +1,46 @@
 ## Context
 
-WhatToCook can already create overlapping named date-range plans, assign recipes to days, preserve entry order and positive decimal multipliers, and generate shopping lists explicitly. The same recipe may be used on different days but not twice on one day. Archived recipes remain in old plans but are excluded from new selection.
+Meal plans are separate named `DateOnly` ranges, can overlap, and have multiple planned recipes per day. Each planned recipe stores `PlannedDate`, `Multiplier` and `SortOrder`; the Blazor planner **encodes meal slot and intra-slot position in SortOrder**. A slot may contain multiple recipes. A recipe may occur on different dates but not twice on the same date. Inactive recipes remain readable in historical plans but cannot be added to new ones.
 
 ## Goals / Non-Goals
 
-**Goals**
-- Make repeat planning fast without weakening current plan invariants.
-- Keep copied plans independent and shopping progress fresh.
-- Provide small edits through accessible controls rather than drag-and-drop as the only input path.
-- Define clear semantics for leftover and no-cooking slots and their impact on ingredients.
-- Prevent silent shopping-list regeneration.
+**Goals:** copy an existing week safely, preview before confirmation, quick replacement/move/explicit swap, real no-cooking and leftover entries, safe regeneration.
 
-**Non-Goals**
-- No implementation now or new nutrition, calendar or inventory subsystem.
-- Do not impose saved-combination functionality as a blocker for the first release.
+**Non-Goals:** no implementation yet, no redesign to single-entry slots, no generative meal plans, no automatic leftover portion forecasting, no saved combination templates (WP-07 deferred).
 
-## Decisions for this proposal
+## Decisions
 
-### 1. Copy as new plan with relative date offsets
-A copy creates a new plan and does not modify its source. It preserves slot, ordering, recipe references, and multipliers. Default destination duration equals the source duration; arbitrary duration changes are deferred until truncation semantics are explicitly agreed. Mapping should use `DateOnly` calendar arithmetic to avoid timezone errors.
+### Copy produces an independent target plan
 
-### 2. Shopping states are not copied
-Shopping-list generation remains explicit. A new plan must not inherit old checked or bought states, even if recipes are identical. Existing regeneration rules still apply to later edits.
+Copy preserves relative `DateOnly` offsets, encoded meal slots/positions and positive multipliers, but not the source shopping list or its `MAM`/Bought status. The new plan defaults to the source's duration; source remains unchanged. Archived/inactive recipe entries appear in preview as unresolved. The user must replace or omit each archived recipe before committing a valid new plan. A new user command may create another target, but retrying the same accepted command (via stable operation identity/idempotency key) may not create duplicates.
 
-### 3. Accessible move/replace first; drag-and-drop optional
-Use focused pickers and explicit move/swap actions, with source-state retention on cancel. Do not rely on a complex drag-and-drop calendar for primary mobile interaction. All writes must be server-validated.
+### Multiple entries per slot remain valid
 
-### 4. Non-recipe planner entries as a real domain concept
-`Eating out` and `Leftovers` are plan entries with distinct semantics, not fake `Recipe` entities. Leftovers must reference a valid earlier cooked entry; they contribute no extra ingredient requirement. The original cooked meal multiplier is the only direct quantity signal in MVP.
+Moving an entry to a nonempty slot **appends at a valid position**; it never overwrites an existing meal. Swapping requires selection of **two specific entries** and exchanges their dates/slots only, retaining each entry's multiplier and avoiding same-day recipe duplicates. Replacing one specific entry preserves its slot, relative position and multiplier by default. UI must be keyboard/touch accessible and must not require drag-and-drop.
 
-### 5. Handle concurrent plan editing deliberately
-If multiple household members can edit a plan, use versioning or conditional updates so the final save does not silently erase another person's work.
+### Leftovers and no-cooking need genuine plan-entry semantics
 
-## Risks / Trade-offs
+Current storage only models `PlannedRecipe`. Future implementation will introduce distinguishable plan entries/annotations without fake recipe IDs. `No cooking` is exclusive in a date/slot, so an occupied slot must be explicitly cleared before applying it. A leftover references a **stable cooked entry ID**, from an earlier date or strictly earlier meal slot on that date. It adds no ingredients; only the source recipe's multiplier generates shopping requirements. Missing, later or non-cooking sources block save until resolved; no guarantee is made that enough portions exist.
 
-- Relative date mapping may break around month boundaries: test `DateOnly` offsets and leap days.
-- Invalid leftovers after moves or deletion: maintain referential validation with helpful remediation.
-- Shopping-list changes during copy or edit: preserve atomic regeneration, explicitly gated by the planner.
-- Larger planner UI complexity: prioritize a small mobile-first workflow rather than a complete calendar redesign.
-- Saved reusable groups may become a second plan model: defer until after actual reuse behavior is observed.
+### Keep existing regeneration and concurrency invariants
+
+New plans require explicit shopping generation and never inherit source purchase states. Editing an already generated plan preserves regenerate-or-cancel and transactional list updates. Concurrent plan saves need a version/conditional update rather than a silent last-write-wins overwrite.
+
+## Risks and trade-offs
+
+- `SortOrder` encoding must survive copies and moves; normalize ordering per slot rather than assuming one recipe per slot.
+- Copying archived recipes contradicts canonical rules unless resolved before new plan persistence.
+- A retry after timeout must not create another plan; a separate intentional copy must remain possible.
+- Leftover references can break after moves/deletes; perform server-side validation.
+- Versioning and changed-quantity shopping reconciliation must align with Shopping List 2.0 if both features are implemented.
 
 ## Future delivery sequence
 
-1. Approve copy semantics, date mapping, meal-slot preservation and constraints.
-2. Implement copy, preview, and focused replacement/move/swap in one end-to-end vertical slice with Testcontainers and UI tests.
-3. Introduce explicit non-recipe entry semantics and shopping-list calculation.
-4. Verify regeneration, rollback/failure cases, concurrency, and mobile accessibility.
-5. Implement saved combinations only after a separate prioritization decision.
+1. Confirm copy + archived preview + idempotency contract.
+2. Implement copy/preview, replace, move/append, explicit pairwise swap with PostgreSQL and mobile tests.
+3. Add no-cooking/leftover entry model, validation and shopping calculations.
+4. Verify regeneration, concurrency and existing invariants, then sync this delta when complete.
 
-## Open Questions
+## Deferred product opportunity
 
-- Should copy default to the latest plan by calendar date or last edited plan?
-- Should "leftovers" reference a specific earlier entry and serving intention, or only mark a slot as leftovers?
-- When a move hits an occupied destination, is swapping the default offered action or should it always require an extra confirmation?
-- Are saved meal combinations needed in MVP, or only later?
+WP-07 saved combinations remain in `user-stories.md` as **non-normative** backlog only. If prioritized, create a separate design-only OpenSpec change.
