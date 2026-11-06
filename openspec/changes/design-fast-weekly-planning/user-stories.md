@@ -33,6 +33,8 @@ WhatToCook already supports named date-range meal plans, assignment of recipes t
 
 - **AC8:** Inactive/archived recipes in the source are identified in preview and must be replaced or explicitly omitted before saving the new plan; the source is not modified.
 
+- **AC9:** If a source plan contains **No cooking** or **Leftovers** entries after those features are available, the copy preserves their placements using fresh entry IDs; each leftover points to its corresponding copied cooked entry, never back to the source plan. If that cooked entry was omitted or replaced, the leftover must be resolved before saving.
+
 **Scope decision:** For MVP, default to copying the source plan's entire date range length. Changing the duration is a separate refinement and must define how out-of-range entries are handled.
 
 ### WP-02 — Review the copied week at a glance
@@ -68,7 +70,7 @@ WhatToCook already supports named date-range meal plans, assignment of recipes t
 
 - **AC1:** I can choose **Move to another day/slot** using a tap- and keyboard-friendly control; drag-and-drop is optional, not required.
 - **AC2:** Moving to an empty date/slot preserves the recipe and multiplier; moving into a slot with other recipes **appends without overwriting them** when the recipe is not already scheduled that day.
-- **AC3:** **Swap** explicitly exchanges **two selected entries**, each retaining its own multiplier. Other meals already in either slot are untouched; merely moving into an occupied slot does not require a swap.
+- **AC3:** **Swap** explicitly exchanges the full placement (day, slot and intra-slot position) of **two selected entries**, each retaining its own multiplier. Other meals remain in their relative order (their numeric sort indices may be renumbered); moving into an occupied slot does not require a swap.
 - **AC4:** Moving or swapping cannot create a duplicate recipe on the same day.
 - **AC5:** Canceling a move or swap leaves both assignments unchanged.
 - **AC6:** Saving uses the existing plan validation and does not bypass shopping-list regeneration rules.
