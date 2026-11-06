@@ -15,7 +15,7 @@
 
 ## 3. Future Verification and Sync
 
-- [ ] 3.1 Add PostgreSQL tests for item states, checkout, recommendations, categories, manual duplicates and quantity changes
+- [ ] 3.1 Add PostgreSQL tests for item states, checkout, recommendations, categories, manual duplicates and quantity changes; update the existing `Regeneration_ShouldPreserveMatchingStateAndManualDuplicates` expectation (it currently preserves `MAM` across a quantity change)
 - [ ] 3.2 Add mobile component/E2E tests for list views, progress, undo, editing and error states
 - [ ] 3.3 Add two-device tests for push propagation and stale writes; verify private network access restrictions
 - [ ] 3.4 Map implemented scenarios to concrete tests, validate delta and sync canonicals before archive
