@@ -132,7 +132,7 @@ WP-07 is a product idea for future prioritization. It is **not** part of the cur
 
 - Copy and move operations honor the existing rule: the same recipe can appear on different days but **not twice on one day**.
 - Archived recipes stay visible in historical plans but cannot be newly scheduled.
-- A plan may include multiple entries/slots per day and positive decimal multipliers; no data is dropped when copying.
+- A plan may contain multiple entries per slot and positive decimal multipliers; active entries are preserved with their relative order, while archived entries must be explicitly omitted or replaced before committing a copied plan.
 - Date mapping works across month/year boundaries and daylight saving transitions; use calendar dates rather than naive timestamp arithmetic.
 - Saving updates uses concurrency protection so one member's changes do not silently destroy another member's changes. Conflict UX must be explicitly designed if multiple editors are supported.
 - Integration and component tests cover copying, source immutability, slot conflicts, leftover shopping semantics, cancelled regeneration, and mobile navigation.
