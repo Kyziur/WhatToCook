@@ -9,11 +9,19 @@ The system SHALL allow creating a separate plan from an existing plan while pres
 
 #### Scenario: WP-01 — Create an independent copy
 - **WHEN** the planner confirms a valid copy of a meal plan
-- **THEN** the system creates a new plan ID, maps planned recipes to corresponding target-day offsets, and preserves each entry's slot, order, and multiplier without changing the source
+- **THEN** the system creates a new plan ID, maps scheduled entries by day offset, preserves each active recipe's slot (encoded in SortOrder), relative position and multiplier, and never mutates the source
 
-#### Scenario: WP-01 — Preserve uniqueness and independence
-- **WHEN** copying would produce an invalid same-day duplicate or the user copies the same source repeatedly
-- **THEN** the system rejects invalid assignments and creates independent copies for valid repeated requests rather than modifying existing plans
+#### Scenario: WP-01 — Resolve archived source recipes
+- **WHEN** the selected source plan contains recipes that have since been archived or are otherwise inactive
+- **THEN** the preview identifies the unavailable entries and requires the planner to replace or omit each one before the new plan can be saved; the source remains unchanged
+
+#### Scenario: WP-01 — Handle a deliberate second copy and a network retry
+- **WHEN** the user deliberately starts a second copy of the same source
+- **THEN** a distinct valid plan may be created; retrying an already accepted confirmation with the same operation identity does not create another plan
+
+#### Scenario: WP-01 — Reject invalid assignments
+- **WHEN** the copied target would violate same-day recipe uniqueness or other current plan validation
+- **THEN** the copy is rejected with an actionable explanation and no partial target is persisted
 
 #### Scenario: WP-01 — Keep shopping progress out of a fresh plan
 - **WHEN** a previous plan with a generated shopping list is copied
@@ -39,11 +47,11 @@ The system SHALL make the new target plan immediately reviewable on desktop and 
 - **THEN** the source remains intact and no partially created target is exposed as a valid plan
 
 ### Requirement: WP-03 — User can replace a planned recipe in place
-The system SHALL provide a focused way to replace one recipe assignment without deleting unrelated meals.
+The system SHALL let users replace one specific planned recipe, retaining its date, encoded meal slot, intra-slot position and existing positive multiplier by default, without changing other entries.
 
 #### Scenario: WP-03 — Replace an assigned recipe
 - **WHEN** a planner chooses `Replace` for a planned recipe and selects another active recipe
-- **THEN** the assignment changes to the chosen recipe while retaining its target date and meal slot
+- **THEN** the selected assignment changes to the chosen recipe while retaining its date, meal slot, relative intra-slot order and positive multiplier; the planner may explicitly change the multiplier afterwards
 
 #### Scenario: WP-03 — Enforce same-day uniqueness
 - **WHEN** the selected replacement recipe is already present on that date
@@ -58,42 +66,46 @@ The system SHALL provide a focused way to replace one recipe assignment without 
 - **THEN** the established regenerate-or-cancel decision flow applies before changes are persisted
 
 ### Requirement: WP-04 — User can move or swap meals between dates and slots
-The system SHALL support rearranging meal assignments without requiring drag-and-drop.
+The system SHALL move individual entries between dates and meal slots. Multiple recipes **may coexist within the same slot**, so moving into an occupied slot does not imply replacement. Drag-and-drop is optional.
 
 #### Scenario: WP-04 — Move into an empty destination
-- **WHEN** a planner moves an entry to an empty day or meal slot
-- **THEN** its recipe and positive multiplier are retained and the source assignment is removed
+- **WHEN** a planner moves an entry to an empty day or slot
+- **THEN** its recipe, multiplier, and relative ordering are retained where possible, and the source assignment is removed
 
-#### Scenario: WP-04 — Swap occupied assignments explicitly
-- **WHEN** the destination already has an assigned meal
-- **THEN** the planner can explicitly choose a swap or cancel rather than silently overwriting the destination
+#### Scenario: WP-04 — Append to a slot containing other meals
+- **WHEN** a planner moves a recipe into a slot that already contains one or more different recipes
+- **THEN** the moved recipe is appended at a valid position without deleting or replacing other entries, provided same-day recipe uniqueness is preserved
+
+#### Scenario: WP-04 — Swap two explicitly selected entries
+- **WHEN** a planner chooses Swap and explicitly selects a source entry and one destination entry
+- **THEN** only those two entries exchange dates and slots, preserving their own multipliers and leaving all other entries untouched, provided both resulting days satisfy uniqueness
 
 #### Scenario: WP-04 — Reject duplicate recipes after a move
-- **WHEN** moving or swapping would result in the same recipe appearing twice on the same day
-- **THEN** the operation is rejected without changing either assignment
+- **WHEN** moving, appending or swapping results in the same recipe appearing twice on one date
+- **THEN** the operation is rejected without changing the source or destination assignments
 
 #### Scenario: WP-04 — Save move consistently
 - **WHEN** a planner confirms a valid move or swap
 - **THEN** the normal plan validation, dirty/saved feedback, and existing shopping-regeneration contract remain in effect
 
 ### Requirement: WP-05 — User can plan leftovers or a no-cooking meal
-The system SHALL support non-recipe planning annotations without requiring fake recipes in the trusted catalog.
+The system SHALL support no-cooking and leftover **planning entries** distinct from saved recipes. A No cooking entry excludes other recipe/leftover entries in the same date-and-slot; a leftover references an earlier cooked recipe entry by stable entry ID.
 
 #### Scenario: WP-05 — Mark an eating-out slot
-- **WHEN** a planner marks a meal slot as `Eating out / No cooking`
-- **THEN** the plan displays that state clearly and no recipe-derived ingredients are added for it
+- **WHEN** a planner marks an empty date-and-slot as `Eating out / No cooking`
+- **THEN** the plan displays that annotation, adds no recipe ingredients, and prevents other meal entries from being silently retained in that slot; the planner must explicitly clear/replace an occupied slot
 
 #### Scenario: WP-05 — Mark leftovers from an earlier meal
-- **WHEN** the planner links a target meal slot to leftovers from an earlier recipe assignment in the same plan
-- **THEN** the target is identified as leftovers and no duplicate ingredient quantity is added to the shopping list for the leftover slot
+- **WHEN** the planner links a leftover entry to a cooked recipe entry from an earlier date or strictly earlier meal slot in the same plan
+- **THEN** the leftover is linked by stable entry ID and adds no extra ingredient quantities beyond the source recipe's multiplier
 
 #### Scenario: WP-05 — Explain how many portions must be cooked
 - **WHEN** a leftover slot references a meal whose multiplier may not produce enough food
 - **THEN** the system does not pretend to calculate guaranteed remaining servings and allows the planner to adjust the source multiplier
 
 #### Scenario: WP-05 — Validate leftover dependencies
-- **WHEN** the original cooked meal is deleted, moved to a later time, or replaced with an incompatible assignment
-- **THEN** the planner is prompted to resolve the leftover link rather than retaining an invalid reference
+- **WHEN** the source cooked entry is deleted, archived from a new copy, moved after its leftover, or changed into a non-cooking entry
+- **THEN** the save is blocked until the leftover reference is removed or reassigned to a valid earlier cooked recipe entry
 
 ### Requirement: WP-06 — User can save planning changes without losing shopping-list integrity
 The system SHALL preserve the existing explicit regeneration decision and prevent partial or accidental list changes during rapid editing.
@@ -114,21 +126,3 @@ The system SHALL preserve the existing explicit regeneration decision and preven
 - **WHEN** a save is pending or fails and the planner retries or navigates
 - **THEN** the UI accurately indicates the result and avoids duplicate mutations from repeated actions
 
-### Requirement: WP-07 — User can reuse a saved combination of meals
-The system SHALL support named reusable sets of planned meals as a **stretch scope**, independently of the primary copy-and-edit release.
-
-#### Scenario: WP-07 — Save and reuse a named combination
-- **WHEN** a planner saves selected meal entries as a named combination and inserts them into another plan
-- **THEN** recipe references, relative offsets, meal slots, ordering, and multipliers are retained without changing the original source plan
-
-#### Scenario: WP-07 — Preview destination conflicts
-- **WHEN** inserting a saved combination overlaps existing assignments or creates same-day recipe duplicates
-- **THEN** the planner sees the conflicts and confirms replacements or cancels; nothing is silently overwritten
-
-#### Scenario: WP-07 — Handle archived recipe references
-- **WHEN** a saved combination references a recipe that has become inactive
-- **THEN** the unavailable recipe is identified and cannot be added as a new assignment until replaced or excluded
-
-#### Scenario: WP-07 — Manage combination lifecycle
-- **WHEN** a planner renames or deletes a saved combination
-- **THEN** existing meal plans and recipes remain unaffected
