@@ -1,7 +1,7 @@
 ## 1. Contract Sign-off — Design Only
 
-- [ ] 1.1 Confirm copy offsets, archived entry resolution, operation idempotency and preview (WP-01, WP-02)
-- [ ] 1.2 Confirm multi-entry slot moves/appends, pairwise swap, replacement multiplier and order (WP-03, WP-04)
+- [ ] 1.1 Confirm copy offsets, archived entry resolution, fresh entry IDs/leftover reference rebinding, operation idempotency and preview (WP-01, WP-02)
+- [ ] 1.2 Confirm multi-entry slot moves/appends, pairwise placement swaps (including intra-slot position), replacement multiplier and order (WP-03, WP-04)
 - [ ] 1.3 Confirm no-cooking exclusivity, leftover source IDs and earlier-entry validation (WP-05)
 - [ ] 1.4 Confirm shopping regeneration and concurrent plan save behavior (WP-06)
 
@@ -14,7 +14,7 @@
 
 ## 3. Future Verification and Sync
 
-- [ ] 3.1 Add PostgreSQL tests for copying, source immutability, inactive recipes, retries, slot ordering and leftovers
+- [ ] 3.1 Add PostgreSQL tests for copying, fresh target IDs and leftover remapping (including archived source omission), source immutability, inactive recipes, retries, slot ordering and leftovers
 - [ ] 3.2 Add Blazor component and E2E tests for preview, replace, append, swap, invalid targets, and cancellation
 - [ ] 3.3 Add shopping regeneration rollback and concurrent editor conflict tests
 - [ ] 3.4 Replace PENDING rows with automated test names, validate delta and sync canonical spec before archive
