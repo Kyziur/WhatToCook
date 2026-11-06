@@ -111,8 +111,26 @@ The system SHALL let users add, change, remove, and purchase manual items **on a
 - **WHEN** a meal plan and its generated list are updated
 - **THEN** manual items, their categories and their purchasing states remain intact
 
-### Requirement: SL2-06 — Regeneration preserves only still-valid shopping decisions
-The system SHALL reconcile generated items by normalized ingredient and unit, preserving identities, categories, and unchanged quantities without falsely carrying buying/owning state across quantity changes.
+## MODIFIED Requirements
+
+### Requirement: Regenerating a shopping list preserves matching generated state and manual items
+The system SHALL require an explicit regeneration decision before saving meal-plan changes that affect an existing shopping list and SHALL atomically update generated items by stable ingredient-and-unit keys without removing manual items, including duplicates. Checklist and purchase state SHALL be preserved only for matching generated items whose normalized amount is unchanged; changed amounts SHALL reset them to `NIE MAM` with Bought cleared, retaining category and a visible reason.
+
+#### Scenario: Attempt to save changed plan with existing shopping list
+- **WHEN** the user edits a meal plan that already has a generated shopping list and tries to save the plan
+- **THEN** the system receives an explicit choice to confirm regeneration or cancel, and does not save the plan until that choice is made
+
+#### Scenario: Cancel shopping list regeneration
+- **WHEN** the user cancels the regeneration choice while saving meal plan changes
+- **THEN** the plan changes remain unsaved and the existing shopping list remains unchanged
+
+#### Scenario: Confirm shopping list regeneration
+- **WHEN** the user confirms regeneration while saving meal plan changes
+- **THEN** the backend atomically merges generated items, preserves matching `MAM`/`NIE MAM` and Bought only for unchanged normalized amounts, resets changed amounts to `NIE MAM` with Bought cleared, preserves all manual items including duplicates, and removes stale generated items
+
+#### Scenario: Regenerate a shopping list directly
+- **WHEN** the user explicitly regenerates an existing shopping list
+- **THEN** the system applies the same quantity-aware, transactional reconciliation and preserves all manual items without requiring client-side restore
 
 #### Scenario: SL2-06 — Preserve state for unchanged ingredient and quantity
 - **WHEN** a matched generated item has the same normalized ingredient, unit, and normalized amount after regeneration
@@ -133,4 +151,3 @@ The system SHALL reconcile generated items by normalized ingredient and unit, pr
 #### Scenario: SL2-06 — Regeneration is atomic in both update paths
 - **WHEN** direct regeneration or plan-save-with-regeneration fails
 - **THEN** the last committed plan, generated list, manual items and states remain consistent without partial changes
-
