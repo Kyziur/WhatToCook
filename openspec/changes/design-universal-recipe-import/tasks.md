@@ -4,7 +4,7 @@
 - [ ] 1.2 Confirm parser/candidate selection lifecycle, 24-hour expiry and draft conversion (URI-01, URI-02)
 - [ ] 1.3 Confirm actual-connected-IP SSRF checks, disabled redirects and parser bounds (URI-03)
 - [ ] 1.4 Validate mobile share-target prerequisites and URL paste fallback (URI-04)
-- [ ] 1.5 Agree conservative source URL equivalence and recoverable errors (URI-05, URI-06)
+- [ ] 1.5 Agree conservative source URL equivalence (including fragments/hash routes and tracking keys) and recoverable errors (URI-05, URI-06)
 
 ## 2. Future Implementation — Not in This PR
 
