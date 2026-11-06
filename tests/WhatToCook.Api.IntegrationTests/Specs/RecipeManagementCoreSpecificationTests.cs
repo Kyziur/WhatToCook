@@ -198,10 +198,7 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
         using var multipart = new MultipartFormDataContent();
         multipart.Add(new ByteArrayContent(encoded.ToArray()), "file", $"photo{extension}");
 
-        var uploadResponse = await client.PostAsync(
-            $"/api/recipes/{created.Id}/photo",
-            multipart
-        );
+        var uploadResponse = await client.PostAsync($"/api/recipes/{created.Id}/photo", multipart);
         Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
 
         var uploadJson = await uploadResponse.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
