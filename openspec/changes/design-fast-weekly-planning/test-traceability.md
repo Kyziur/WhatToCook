@@ -21,6 +21,7 @@ All in-scope scenarios are PENDING for this design-only change; WP-07 saved comb
 | WP-03 — Keep shopping-list changes explicit | Not implemented | PENDING | 2.2, 3.2 |
 | WP-04 — Move into an empty destination | Not implemented | PENDING | 2.2, 3.2 |
 | WP-04 — Append to a slot containing other meals | Not implemented | PENDING | 2.2, 3.2 |
+| WP-04 — Reject an exclusive no-cooking destination | Not implemented | PENDING | 2.2, 3.2 |
 | WP-04 — Swap two explicitly selected entries | Not implemented | PENDING | 2.2, 3.2 |
 | WP-04 — Reject duplicate recipes after a move | Not implemented | PENDING | 2.2, 3.2 |
 | WP-04 — Save move consistently | Not implemented | PENDING | 2.2, 3.2 |
