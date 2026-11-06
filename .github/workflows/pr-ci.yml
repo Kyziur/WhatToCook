@@ -38,7 +38,7 @@ jobs:
         run: dotnet test WhatToCook.slnx --no-build --configuration Release
 
       - name: Install Playwright dependencies
-        run: npm ci; npx playwright install --with-deps chromium
+        run: npm ci && npx playwright install --with-deps chromium
         shell: bash
 
       - name: Playwright smoke suite
