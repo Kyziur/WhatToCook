@@ -29,7 +29,7 @@ WhatToCook currently offers a URL-based import draft, review and correction, fin
 
 **Acceptance criteria**
 
-- **AC1:** Given a publicly reachable HTTP(S) page that contains a valid Schema.org `Recipe` JSON-LD object, submitting its URL creates a persisted import draft containing supported recipe fields.
+- **AC1:** Given a safe public HTTP(S) page with **one unambiguous** Schema.org `Recipe` candidate, submitting its URL creates a draft. Multiple candidates require explicit selection before draft creation.
 - **AC2:** The import can find a `Recipe` object nested in a `@graph`, an array of JSON-LD objects, or a single root object, without assuming one fixed placement.
 - **AC3:** A `@type` value represented as a string or array can be recognized; unrelated structured objects are not imported as recipes.
 - **AC4:** Extracted title, recipe yield/servings when unambiguous, ingredients, preparation instructions, source URL, and available supported metadata are mapped to the existing draft model.
@@ -51,8 +51,9 @@ WhatToCook currently offers a URL-based import draft, review and correction, fin
 - **AC3:** Editing a draft and reopening it later preserves corrections.
 - **AC4:** Duplicate normalized titles are detected and explained without discarding the draft.
 - **AC5:** The user can remove accidental instructions, reorder instructions, and merge split steps using the existing draft-review behavior.
-- **AC6:** If the source contains multiple plausible recipe objects, the user is asked to choose an identified recipe rather than having the server silently pick the wrong one.
+- **AC6:** Multiple plausible recipe objects create a **temporary untrusted import attempt** with candidate summaries. I choose one before a persisted editable draft is created; choosing the same candidate twice returns the same draft.
 - **AC7:** Finalization is atomic and repeat-safe: retries must not create duplicate trusted recipes from the same finalized draft.
+- **AC8:** An unselected import attempt expires after 24 hours; cancellation or expiry creates no trusted recipe and prevents later selection.
 
 ### URI-03 — Import safely from arbitrary recipe websites
 
@@ -93,11 +94,11 @@ WhatToCook currently offers a URL-based import draft, review and correction, fin
 
 **Acceptance criteria**
 
-- **AC1:** When an exact normalized source URL matches an existing recipe, the system shows that recipe and lets me open it instead of starting another import.
+- **AC1:** When an equivalent normalized URL matches an existing recipe, I am **offered** a link to it but can still review a new draft. Source matching alone never blocks importing.
 - **AC2:** When the imported normalized title conflicts with a catalog title, the review screen identifies the conflict and offers a path to inspect the existing recipe or change the new title.
 - **AC3:** A source-URL match is treated as a helpful signal; distinct recipes with the same site or different pages are not automatically merged.
 - **AC4:** I may explicitly continue working on a draft when its source overlaps an existing recipe, but standard unique-title validation still applies at finalization.
-- **AC5:** URL normalization does not discard meaningful path or query components used to identify the recipe.
+- **AC5:** URL normalization ignores host case, default ports, fragments and known tracking keys (`utm_*`, `fbclid`, `gclid`), but preserves the scheme and meaningful path/query differences, so two different recipes are not silently conflated.
 
 ### URI-06 — Recover gracefully when a website cannot be parsed
 
