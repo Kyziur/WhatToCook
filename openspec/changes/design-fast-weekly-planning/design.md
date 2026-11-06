@@ -24,7 +24,7 @@ Current storage only models `PlannedRecipe`. Future implementation will introduc
 
 ### Keep existing regeneration and concurrency invariants
 
-New plans require explicit shopping generation and never inherit source purchase states. Editing an already generated plan preserves regenerate-or-cancel and transactional list updates. Concurrent plan saves need a version/conditional update rather than a silent last-write-wins overwrite.
+New plans require explicit shopping generation and never inherit source purchase states. Editing an already generated plan preserves regenerate-or-cancel and transactional list updates. The shopping-list-management canonical contract is authoritative for item state reconciliation: if the Shopping List 2.0 delta is implemented, quantity changes reset `MAM`/Bought as defined there, rather than unconditionally preserving checked state. Concurrent plan saves need a version/conditional update rather than a silent last-write-wins overwrite.
 
 ## Risks and trade-offs
 
