@@ -16,7 +16,7 @@ WhatToCook currently offers a URL-based import draft, review and correction, fin
 ## Existing functionality to retain
 
 - A source URL is submitted and inspected **only** by the server's import service.
-- The result is a persisted, untrusted import draft, not an automatic trusted recipe.
+- A single unambiguous source becomes a persisted, untrusted import draft; pages containing several candidates create a temporary selection attempt first. Neither path automatically creates a trusted recipe.
 - The user reviews/corrects title, servings, ingredients, steps, source, and tags before finalization.
 - Normal recipe validation and unique normalized title rules apply on finalization.
 - Existing source-specific adapters remain available for sites with useful dedicated parsing.
@@ -64,7 +64,7 @@ WhatToCook currently offers a URL-based import draft, review and correction, fin
 - **AC1:** Only HTTP and HTTPS are supported; non-web schemes and invalid URLs are rejected before fetching.
 - **AC2:** The fetcher does not access loopback, link-local, private, metadata-service, Docker/internal service or otherwise disallowed addresses, including IPv4-mapped IPv6 and other ambiguous address representations.
 - **AC3:** The actual connection target is checked as well as DNS resolution, so DNS rebinding cannot bypass the internal-address restriction.
-- **AC4:** Redirects, if followed, are bounded and must pass the same target checks at each hop. Disabling redirects entirely is also acceptable for MVP if communicated.
+- **AC4:** MVP **does not follow redirects**. The UI reports when a URL redirects; any later support must separately validate every hop and actual connection target.
 - **AC5:** Requests apply strict time, response-size, and content-type limits; malicious HTML and excessively nested JSON-LD do not cause unbounded processing or memory use.
 - **AC6:** Retrieved scripts and active content are never executed as part of extraction; extracted HTML cannot inject executable markup into the review UI.
 - **AC7:** Fetch failures, unsupported pages, and extraction errors are reported without exposing sensitive infrastructure addresses or credentials.
@@ -86,7 +86,7 @@ WhatToCook currently offers a URL-based import draft, review and correction, fin
 - **AC6:** Repeated shares of the same URL do not silently overwrite an existing draft or recipe.
 - **AC7:** The share integration must work with the deployed app's actual origin and security requirements; device-specific PWA/share-target limitations must be validated before claiming support.
 
-**Delivery option:** URI-04 may follow URI-01/02 as a second vertical slice if OS/browser integration is not reliably available in the first release.
+**Delivery order:** URI-04 can follow the parser as a second vertical implementation slice; it remains in scope for the complete epic and requires compatibility tests before closing this OpenSpec change.
 
 ### URI-05 — Avoid duplicate work when importing a previously saved recipe
 
