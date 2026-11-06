@@ -37,6 +37,7 @@ Today WhatToCook builds a shopping list from a meal plan, aggregates ingredients
 - **AC5:** When a state update fails, the UI explains the failure and does not falsely display it as saved.
 - **AC6:** The action is usable with touch and keyboard, with an accessible state announcement and a sufficiently large tap target.
 - **AC7:** Finish shopping atomically converts Bought items to `MAM`, while unpurchased `NIE MAM` items remain outstanding. Recommendations then recognize the newly owned ingredients.
+- **AC8:** If another device changed the list since my last synchronized version, Finish shopping rejects stale confirmation, shows the current items, and lets me confirm again without partial changes.
 
 ### SL2-02 — Shop from a focused mobile view
 
@@ -106,7 +107,7 @@ Today WhatToCook builds a shopping list from a meal plan, aggregates ingredients
 - **AC5:** Regeneration is atomic from the user's perspective: on failure, the previous list and progress remain intact.
 - **AC6:** Both the direct regeneration action and plan-save-with-regeneration have consistent behavior.
 
-**MVP decision:** conservative amount changes always reset the confirmation to `NIE MAM`; partial purchase tracking is deferred.
+**MVP decision:** conservative amount changes always reset the confirmation to `NIE MAM`; partial purchase tracking is deferred. When generated items with the same normalized name and unit have ambiguous descriptive quantities, buying/owning state is not inherited from an arbitrary old item.
 
 ## Deferred future candidate (not part of this OpenSpec delta)
 
