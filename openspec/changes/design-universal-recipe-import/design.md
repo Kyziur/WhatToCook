@@ -1,60 +1,51 @@
 ## Context
 
-The repository has a draft-first recipe import workflow with URL adapters and shared finalization rules. The existing `add-recipe-import` OpenSpec change remains active, with photo import intentionally pending. Generic URL extraction can increase usability substantially, but also broadens the SSRF and untrusted-content threat model.
-
-**Dependency:** `recipe-imports` is not yet a canonical capability file. This change uses **ADDED Requirements** named uniquely so its delta can be synchronized after `add-recipe-import` supplies the base canonical spec. Do not mark either change archived prematurely.
+The current `add-recipe-import` change implements URL drafts, source adapters and finalization but still tracks unfinished photo/OCR tasks. This proposal needs the **implemented URL/draft baseline**, not OCR. A canonical `recipe-imports` file is not yet available.
 
 ## Goals / Non-Goals
 
-**Goals**
-- Prefer deterministic Schema.org/JSON-LD parsing from public recipe pages.
-- Continue using reviewable import drafts and existing recipe validation rather than bypassing trust boundaries.
-- Handle common structured-data layouts and honest partial/unsupported outcomes.
-- Maintain or improve outbound-fetch SSRF defenses, bounded parsing and markup sanitization.
-- Provide a convenient URL share/paste entry point on phones.
+**Goals:** deterministic Schema.org `Recipe` imports, multiple-candidate selection, draft review, safe arbitrary-domain fetching, phone share/paste, conservative duplicate detection.
 
-**Non-Goals**
-- No implementation or schema changes now.
-- No universal success claim for websites that block automation or omit structured recipe metadata.
-- No automatic OCR, AI, social-video imports, or arbitrary site crawling.
+**Non-Goals:** no runtime implementation in this design change, OCR, LLM extraction, bulk crawling, remote script execution, automatic trusted recipe creation, or automatic image downloads.
 
-## Proposed decisions and trade-offs
+## Decisions
 
-### 1. Add generic structured-data extraction behind existing adapter boundary
-Try an appropriate source-specific adapter where supported; otherwise detect valid Schema.org `Recipe` objects in JSON-LD. Keep the result mapped to the existing draft data model and issue/blocker approach. Multiple `Recipe` objects require an explicit choice rather than silent first-match selection.
+### Do not block generic URL import on unfinished OCR
 
-### 2. Keep one trusted finalization pathway
-Draft review persists corrections independently of recipe tables. Finalization reuses the shared recipe writer's validation and normalized title uniqueness. Concurrent/repeated finalization must be idempotent, e.g. through draft state and transaction constraints.
+This proposal may be merged as **design-only backlog**. Before implementation/sync, the implemented URL/draft portion of the original `add-recipe-import` change must become canonical; move its remaining photo/OCR tasks into a separate future change (or an equivalent approved scope split). Do not archive an incomplete change or sync this delta before the base canonical capability exists. Photo OCR is not a dependency of generic JSON-LD extraction.
 
-### 3. Treat arbitrary outbound fetch as a security boundary
-Before any generic-host support, validate URL schemes, special address families, and the **actual connected IP** against internal-address restrictions to address DNS rebinding. Redirects remain disabled for the first slice unless each hop can be revalidated. Keep strict content-type, total-response-size, time, nesting and processing limits. HTML/JSON-LD is parsed as data only and is never executed or rendered as raw markup.
+### Retain adapters and use deterministic JSON-LD extraction
 
-### 4. Share-target is a client capability, not an assumption
-Mobile share integration depends on HTTPS origin, PWA manifest/share-target support and mobile browser/OS behavior. Do not promise support merely by adding a Blazor route. Always retain a manual URL paste entry point; confirm the URL before network fetching.
+Retain source-specific adapters, with generic parsing for other supported public recipe pages. Recognize `Recipe` objects in root, arrays or `@graph`, string/array `@type`, and ordered text/`HowToStep`/`HowToSection`. Uncertain fields remain reviewable draft data with blockers; do not fabricate values.
 
-### 5. Keep duplicate detection helpful, not destructive
-Use normalized source URLs without discarding meaningful path/query semantics; also check normalized titles. A matching URL suggests an existing recipe, but users must retain control over whether to open a record or continue reviewing a draft.
+### Exactly one candidate becomes one persisted editable draft
 
-## Risks / Trade-offs
+If extraction returns one plausible recipe, persist the ordinary draft. Multiple candidates produce a **temporary persisted import attempt** with bounded candidate summaries/IDs and a `selection required` response. Selecting one yields the single normal draft. Repeating selection for the same attempt/candidate returns the same draft; unrelated candidates cannot silently overwrite it. Unselected attempts expire after **24 hours** and cannot be selected afterward. Cancel/expire creates no trusted recipe; expired candidate data may be cleaned. This is separate from the trusted recipe tables and preserves existing finalization validation.
 
-- **SSRF via generic hosts**: release blocker until connection-level destination protections are independently verified.
-- **Fragile website markup**: only claim import when valid recipe fields were extracted and the draft can be reviewed.
-- **Nested/large JSON-LD payloads**: cap total bytes and parsing depth; fail gracefully.
-- **Client share behavior differences**: validate on target Android/iOS browsers with HTTPS and an installed PWA where applicable.
-- **OpenSpec dependency conflicts**: synchronize this change only after the base `recipe-imports` capability reaches canonical specs.
+### Network security is a release gate
+
+For arbitrary domains only HTTP(S) public destinations, verified both at resolution and **actual connection**; block loopback, private/link-local, metadata service, ambiguous IP forms and rebinding. **Disable redirects** for MVP and report the limitation. Bound connect/total timeout, bytes, content types, JSON nesting and candidate count. Parse untrusted HTML/JSON-LD as data only; do not execute scripts or render unescaped source markup.
+
+### URL equivalence is conservative and advisory
+
+Normalize host case, default ports, fragments and known tracking parameters (`utm_*`, `fbclid`, `gclid`). Preserve scheme, meaningful path, and unknown/meaningful query parameters. False negatives are acceptable; false positives must not silently merge distinct recipes. A source match only suggests the existing recipe; normalized title uniqueness still blocks finalization when applicable.
+
+### Mobile sharing has explicit compatibility fallback
+
+Share-target registration requires compatible OS/browser, HTTPS origin and supported PWA installation. Shared URLs prefill a confirmation UI before fetching. Manual URL paste remains a usable fallback, with mobile-device compatibility tests.
+
+## Risks and mitigations
+
+- Arbitrary outbound URL support expands SSRF exposure: prohibit rollout without connection-level security tests.
+- Multiple recipe candidates may leave temporary records: bound count/size and use 24-hour expiry/idempotent selection.
+- Incorrect URL normalization merges different recipes: preserve meaningful components and use soft warnings.
+- Incomplete OCR tasks in base change: split before canonical sync rather than require OCR.
+- PWA share behavior differs by browser: verify explicit supported devices and manual fallback.
 
 ## Future delivery sequence
 
-1. Finalize existing `add-recipe-import` contract and canonical `recipe-imports` capability.
-2. Confirm structured-data field mapping and multiple-recipe UX.
-3. Harden and test the fetcher before accepting arbitrary recipe domains.
-4. Add generic parser and the existing draft review end-to-end workflow.
-5. Add duplicate warnings and phone share integration with paste fallback.
-6. Validate tests/traceability and sync the delta only after implementation.
-
-## Open Questions
-
-- Should source-specific adapters take precedence over valid JSON-LD when both are present, or should the richest validated extraction be chosen?
-- What UI is best for pages containing multiple recipes?
-- Is a mobile PWA installation required for share-target support or can a launcher/link route cover initial needs?
-- What is the acceptable supported-sites baseline and success rate before calling the feature "universal"?
+1. Separate/sync working URL-draft base from photo backlog, before this delta is synced.
+2. Agree candidate selection lifecycle and extraction mapping.
+3. Harden network fetch and bounded parsing; test hostile destinations and payloads.
+4. Implement generic parser, temporary attempts and idempotent draft selection.
+5. Add mobile sharing, duplicate guidance, error recovery and E2E tests; sync only after base canonical exists.
