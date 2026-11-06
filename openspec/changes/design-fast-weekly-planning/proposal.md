@@ -1,15 +1,14 @@
 ## Why
 
-Household meal planning is repetitive: users already have successful weeks and favourite combinations but must recreate arrangements manually. The current planner supports date-range plans, recipe assignment, ordering and multipliers, yet lacks a focused copy-and-adjust flow.
+Recreating next week's meal plan one day at a time is unnecessary work. The current planner already supports multiple meals per slot, ordering and multipliers, but does not offer a reliable copy-and-adjust workflow.
 
 ## What Changes
 
-- Create a new plan from an existing plan, preserving relative day assignments, meal slots, order and multipliers without mutating the source.
-- Preview and edit the target week immediately, including simple replacement, moving and swapping meals without mandatory drag-and-drop.
-- Represent `Eating out / No cooking` and linked leftovers without inventing fake recipes or duplicating shopping ingredients.
-- Preserve the current shopping-list regeneration decision while saving edits.
-- Define saved combinations as stretch scope rather than a gate for an initial copy-and-edit release.
-- Add product-level user stories and PENDING test-traceability for eventual implementation.
+- Copy any previous plan to new dates as an independent plan, with preview, explicit resolution of archived recipes and duplicate-request protection.
+- Replace, move/append and explicitly swap individual recipe entries, preserving the existing **multiple-recipes-per-slot** model and multipliers.
+- Represent no-cooking and leftovers without fake recipes, with safe ingredient and source-reference semantics.
+- Preserve shopping-list regeneration choice and atomic persistence during edits.
+- Keep reusable saved combinations as a **deferred idea**, not an unconditional requirement in this delta.
 
 ## Capabilities
 
@@ -17,18 +16,18 @@ Household meal planning is repetitive: users already have successful weeks and f
 None.
 
 ### Modified Capabilities
-- `meal-planning`: extend the existing canonical capability with planning reuse, flexible slot handling and safe changes.
+- `meal-planning`: plan reuse, explicit entry movement, leftovers, no-cooking and save invariants.
 
 ## Impact
 
-Future implementation touches meal plan persistence/validation, plan duplication and edit endpoints, Blazor planner UI, shopping-list regeneration, and integration/component/E2E tests.
+Later work touches planner models/API, `SortOrder`/slot handling, copy idempotency, Blazor planner UI, shopping regeneration and PostgreSQL/E2E tests.
 
 ## Non-Goals
 
-- No implementation, migrations, application changes or automated tests in this design-only package.
-- No generative AI weekly-menu planner, nutrition optimization, calorie counting or external calendar synchronization.
-- No automatic pantry deduction or guarantees about leftover portion quantities.
+- **No implementation yet** or runtime/migration/test changes in this PR.
+- No AI-generated plan, external calendar, pantry deductions or recipe replacement by implicit occupied-slot overwrite.
+- No WP-07 saved combinations in this change.
 
 ## Product outcome
 
-A planner can reuse a previously successful week and adjust five dinners in approximately three minutes in a measured usability session. See [user-stories.md](user-stories.md) for detailed narratives and acceptance criteria.
+A planner can copy and adjust a familiar week in a few focused actions instead of building it again. See [user-stories.md](user-stories.md).
