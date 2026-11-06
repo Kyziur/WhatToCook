@@ -29,7 +29,9 @@ WhatToCook already supports named date-range meal plans, assignment of recipes t
 - **AC4:** Planned recipes map to the corresponding day offset in the target date range; their meal slot, order, and multiplier are preserved.
 - **AC5:** The copy operation detects duplicate recipe/day conflicts and does not produce an invalid plan.
 - **AC6:** The new plan is not silently considered shopped-for: existing purchase or checklist states from the source are not copied into a fresh shopping list.
-- **AC7:** Copying the source again produces a separate new plan unless the user explicitly chooses to edit an existing target.
+- **AC7:** A deliberate second copy creates a separate plan, but retrying the **same** copy confirmation after a timeout must not create a duplicate target.
+
+- **AC8:** Inactive/archived recipes in the source are identified in preview and must be replaced or explicitly omitted before saving the new plan; the source is not modified.
 
 **Scope decision:** For MVP, default to copying the source plan's entire date range length. Changing the duration is a separate refinement and must define how out-of-range entries are handled.
 
@@ -52,7 +54,7 @@ WhatToCook already supports named date-range meal plans, assignment of recipes t
 **Acceptance criteria**
 
 - **AC1:** A planned recipe has a clear **Replace** action.
-- **AC2:** Choosing a replacement preserves the original day and meal slot unless I explicitly change them.
+- **AC2:** Replacement retains the date, encoded meal slot, intra-slot position and previous multiplier by default; I can change the multiplier deliberately afterwards.
 - **AC3:** The picker searches active recipes and supports existing library search/filter behavior where available.
 - **AC4:** Selecting a recipe already scheduled on that same day is rejected with an understandable message; a recipe planned on another day is allowed.
 - **AC5:** On cancel, the original assignment is preserved.
@@ -65,8 +67,8 @@ WhatToCook already supports named date-range meal plans, assignment of recipes t
 **Acceptance criteria**
 
 - **AC1:** I can choose **Move to another day/slot** using a tap- and keyboard-friendly control; drag-and-drop is optional, not required.
-- **AC2:** When moving into an empty destination, the entry's recipe and multiplier are preserved.
-- **AC3:** When the destination contains another meal, the UI explicitly offers a **Swap** option rather than overwriting it unexpectedly.
+- **AC2:** Moving to an empty date/slot preserves the recipe and multiplier; moving into a slot with other recipes **appends without overwriting them** when the recipe is not already scheduled that day.
+- **AC3:** **Swap** explicitly exchanges **two selected entries**, each retaining its own multiplier. Other meals already in either slot are untouched; merely moving into an occupied slot does not require a swap.
 - **AC4:** Moving or swapping cannot create a duplicate recipe on the same day.
 - **AC5:** Canceling a move or swap leaves both assignments unchanged.
 - **AC6:** Saving uses the existing plan validation and does not bypass shopping-list regeneration rules.
@@ -77,12 +79,12 @@ WhatToCook already supports named date-range meal plans, assignment of recipes t
 
 **Acceptance criteria**
 
-- **AC1:** A slot can be marked as **Eating out / No cooking** without creating a fake recipe in the recipe library.
-- **AC2:** A slot can be marked as **Leftovers from an earlier meal** and linked to the source meal in the same plan.
+- **AC1:** An empty date-and-slot can contain **Eating out / No cooking** without a fake recipe. If existing meals occupy it, I must explicitly remove/replace them; no recipes disappear automatically.
+- **AC2:** A **Leftovers** entry links by stable ID to a cooked recipe entry in the same plan on an earlier date or strictly earlier meal slot.
 - **AC3:** The plan visually distinguishes a recipe cooked from scratch from leftovers and eating out.
 - **AC4:** **Eating out / No cooking** does not add ingredients to a shopping list.
 - **AC5:** **Leftovers** do not create a second set of ingredients; the source meal's intended cooked quantity remains the input to shopping-list generation.
-- **AC6:** If the source meal is moved, removed, or changed, the leftover reference is validated and the user is prompted to resolve it instead of keeping a broken link.
+- **AC6:** If the source meal is removed, moved after the leftover, or converted into a no-cooking entry, save is blocked until the leftover points to a valid earlier cooked entry or is removed.
 - **AC7:** If the source meal is planned at a multiplier insufficient for desired leftovers, the UI does not imply a sufficient quantity; the user can adjust the multiplier.
 
 **Product note:** Leftovers are a planning annotation, not inventory tracking or automatic portion prediction.
@@ -99,6 +101,10 @@ WhatToCook already supports named date-range meal plans, assignment of recipes t
 - **AC4:** Confirming regeneration updates plan and list together and preserves applicable manual items and checklist states under existing list reconciliation rules.
 - **AC5:** The UI exposes pending, success, and failure states; repeated clicks do not save duplicate changes.
 
+## Deferred future candidate — outside this OpenSpec delta
+
+WP-07 is a product idea for future prioritization. It is **not** part of the current normative spec, implementation tasks or test traceability; implement it only in a separate approved OpenSpec change.
+
 ### WP-07 — Quickly repeat favourite meal combinations
 
 **As a** planner, **I want** a saved group of meals for common occasions **so that** I can fill the next plan without repeatedly searching for each recipe.
@@ -109,7 +115,7 @@ WhatToCook already supports named date-range meal plans, assignment of recipes t
 - **AC2:** I can insert the saved combination starting at a chosen date in a target plan, with a preview showing the inserted meals and any conflicts.
 - **AC3:** Recipe IDs, meal slots, relative order, and multipliers are carried over.
 - **AC4:** Archived/inactive recipes in a combination are shown as unavailable for new assignment and are excluded or require an explicit replacement.
-- **AC5:** The user confirms replacement when a destination slot already contains a meal.
+- **AC5:** For a saved combination, I can choose explicit replacement of a **specific selected entry**; an occupied slot may contain multiple entries, so inserting alongside existing meals must also be supported.
 - **AC6:** I can rename and delete a saved combination without deleting recipes or existing plans.
 
 **Release strategy:** WP-07 is a **stretch story** for the epic. Do not hold the first copy-and-edit release for this feature unless validation shows it is essential.
@@ -143,5 +149,5 @@ WhatToCook already supports named date-range meal plans, assignment of recipes t
 
 - Existing [meal-planning](../../../openspec/specs/meal-planning/spec.md) requirements, planner UI, and shopping reconciliation.
 - WP-05 requires explicit model changes to represent non-recipe entries and leftovers safely.
-- WP-01 through WP-04 can be delivered before leftovers or saved combinations.
+- WP-01 through WP-04 can be delivered before leftovers; WP-07 saved combinations require their own future OpenSpec change.
 - Agree OpenSpec delta, migration strategy, and test traceability before implementation.
