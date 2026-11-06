@@ -1,11 +1,11 @@
 ## ADDED Requirements
 
 ### Requirement: URI-01 — Recipe importer can extract public Schema.org Recipe metadata
-The system SHALL support importing publicly reachable HTTP(S) recipe pages containing usable Schema.org `Recipe` structured data into untrusted import drafts, while retaining existing source-specific adapters.
+The system SHALL extract usable Schema.org `Recipe` data from publicly reachable safe HTTP(S) pages, retaining specialized adapters. A **single unambiguous candidate** may create a persisted draft immediately; a page with multiple candidates creates a **bounded temporary selection attempt**, not an arbitrarily selected draft.
 
-#### Scenario: URI-01 — Extract a structured Recipe document
-- **WHEN** a user submits a public supported HTML page containing a valid `Recipe` JSON-LD object
-- **THEN** the system creates a persisted draft with extractable title, source URL, servings when available, ingredients, instructions, and other supported fields without creating a trusted recipe
+#### Scenario: URI-01 — Extract an unambiguous structured recipe
+- **WHEN** a user submits a safe public HTML page containing exactly one usable `Recipe` JSON-LD candidate
+- **THEN** the system creates a persisted draft with available title, source URL, servings, ingredients and instructions, without creating a trusted recipe
 
 #### Scenario: URI-01 — Recognize common JSON-LD layouts
 - **WHEN** the page has a `Recipe` object at the JSON-LD root, inside an array, or nested in an `@graph`, with `@type` as string or string array
@@ -34,9 +34,17 @@ The system SHALL use the existing editable import-draft lifecycle and finalizati
 - **WHEN** a user changes draft values or reorders, removes, or merges preparation steps
 - **THEN** the corrected draft is persisted and reopened with the user's changes intact, without writing into trusted recipe tables
 
-#### Scenario: URI-02 — Resolve multiple recipes on one page
-- **WHEN** a page exposes multiple plausible `Recipe` objects
-- **THEN** the user can select the intended recipe or is prompted to disambiguate before an incorrect draft is finalized
+#### Scenario: URI-02 — Persist a temporary multi-recipe selection attempt
+- **WHEN** a fetched page exposes multiple plausible `Recipe` objects
+- **THEN** the importer creates a time-limited, untrusted import attempt containing bounded candidate summaries and identifiers and returns an explicit selection-required response without creating a trusted recipe or silently choosing a draft
+
+#### Scenario: URI-02 — Select one candidate and create a single draft
+- **WHEN** a user selects a candidate from a valid pending import attempt
+- **THEN** exactly that candidate becomes the persisted editable import draft and repeated selection of the same candidate returns the same draft instead of creating duplicates
+
+#### Scenario: URI-02 — Expire or cancel multi-recipe attempts
+- **WHEN** the user cancels selection or the attempt expires after 24 hours
+- **THEN** no trusted recipe is created, its candidate data cannot be selected anymore, and expired attempt data is eligible for deletion
 
 #### Scenario: URI-02 — Finalize with existing validation
 - **WHEN** a user finalizes a valid reviewed draft
@@ -91,17 +99,21 @@ The system SHALL offer a phone-friendly path from a shared recipe URL into the e
 ### Requirement: URI-05 — Import avoids accidental duplicates
 The system SHALL warn about matching sources and normalized recipe titles while leaving the user in control of draft review.
 
-#### Scenario: URI-05 — Recognize already imported source URLs
-- **WHEN** a submitted URL matches the normalized source of an existing recipe
-- **THEN** the importer offers to open the existing recipe rather than automatically creating a second one
+#### Scenario: URI-05 — Normalize source URLs without erasing recipe identity
+- **WHEN** URLs differ only by fragment, default port, host casing, or known tracking query keys (e.g. utm_*, fbclid, gclid)
+- **THEN** they may be treated as the same source; scheme, meaningful path differences, and unknown or meaningful query parameters are retained when comparing sources
+
+#### Scenario: URI-05 — Offer a soft source-match warning
+- **WHEN** the normalized submitted source URL matches an existing trusted recipe
+- **THEN** the importer offers to open it while still permitting review of a new draft; source matches alone never silently block importing
 
 #### Scenario: URI-05 — Detect title conflicts in review
 - **WHEN** the extracted normalized title matches a saved recipe
 - **THEN** the reviewer can inspect the existing entry or correct the draft; normal title uniqueness remains enforced at finalization
 
-#### Scenario: URI-05 — Do not merge unrelated recipes
-- **WHEN** recipes originate from the same domain or from URLs with semantically meaningful different paths or query components
-- **THEN** they are not automatically merged or treated as identical solely because of their source site
+#### Scenario: URI-05 — Preserve distinct sources
+- **WHEN** two recipe URLs differ in meaningful path segments or preserved query parameters, or only share a domain
+- **THEN** they are not automatically merged or blocked as duplicates solely due to domain/source similarity
 
 ### Requirement: URI-06 — Import errors are recoverable and honest
 The system SHALL explain why a URL import did not succeed and provide a safe alternative to manual entry.
@@ -115,8 +127,8 @@ The system SHALL explain why a URL import did not succeed and provide a safe alt
 - **THEN** it is identified as an untrusted draft requiring review and not as a successfully imported trusted recipe
 
 #### Scenario: URI-06 — Retry transient failures without duplication
-- **WHEN** a user retries after a timeout or temporary fetch failure
-- **THEN** the import can be attempted again without silently creating duplicate trusted recipes
+- **WHEN** a user retries after a timeout or temporary fetch failure, or retries selection/finalization with the same operation identity
+- **THEN** the importer does not silently create duplicate trusted recipes or duplicate selected drafts
 
 #### Scenario: URI-06 — Do not equate HTTP success with recipe success
 - **WHEN** the remote server responds with HTTP 200 but no valid extractable recipe information
