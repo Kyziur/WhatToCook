@@ -36,7 +36,11 @@ The system SHALL use the existing editable import-draft lifecycle and finalizati
 
 #### Scenario: URI-02 — Persist a temporary multi-recipe selection attempt
 - **WHEN** a fetched page exposes multiple plausible `Recipe` objects
-- **THEN** the importer creates a time-limited, untrusted import attempt containing bounded candidate summaries and identifiers and returns an explicit selection-required response without creating a trusted recipe or silently choosing a draft
+- **THEN** the importer persistently stores a bounded, untrusted **extracted field snapshot for each candidate** (including data needed to populate the later draft) plus its stable candidate ID and safe summary, and returns an explicit selection-required response without creating a trusted recipe or silently choosing a draft
+
+#### Scenario: URI-02 — Select from the original extracted snapshot
+- **WHEN** the user selects a candidate in a valid pending attempt after the source webpage has changed or become unavailable
+- **THEN** the draft is created from the bounded candidate snapshot captured for that attempt, without re-fetching arbitrary external content or accidentally selecting a different recipe
 
 #### Scenario: URI-02 — Select one candidate and create a single draft
 - **WHEN** a user selects a candidate from a valid pending import attempt
@@ -48,7 +52,7 @@ The system SHALL use the existing editable import-draft lifecycle and finalizati
 
 #### Scenario: URI-02 — Expire or cancel multi-recipe attempts
 - **WHEN** the user cancels selection or the attempt expires after 24 hours
-- **THEN** no trusted recipe is created, its candidate data cannot be selected anymore, and expired attempt data is eligible for deletion
+- **THEN** no trusted recipe is created by that cancellation/expiry, no selection is possible after the attempt is cancelled or expired, and stored candidate snapshots are deleted or made inaccessible according to the retention policy; an already selected and finalized draft remains governed by the existing draft lifecycle
 
 #### Scenario: URI-02 — Finalize with existing validation
 - **WHEN** a user finalizes a valid reviewed draft
