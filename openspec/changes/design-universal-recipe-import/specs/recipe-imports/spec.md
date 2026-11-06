@@ -8,8 +8,8 @@ The system SHALL extract usable Schema.org `Recipe` data from publicly reachable
 - **THEN** the system creates a persisted draft with available title, source URL, servings, ingredients and instructions, without creating a trusted recipe
 
 #### Scenario: URI-01 — Recognize common JSON-LD layouts
-- **WHEN** the page has a `Recipe` object at the JSON-LD root, inside an array, or nested in an `@graph`, with `@type` as string or string array
-- **THEN** the importer finds relevant recipe objects without mistaking unrelated structured entities for recipes
+- **WHEN** the page has a `Recipe` object at the JSON-LD root, inside an array, or nested in an `@graph`, with `@type` as a string or string array containing either the compact name `Recipe` or a Schema.org IRI such as `https://schema.org/Recipe`
+- **THEN** the importer recognizes the recipe type in both representations without mistaking unrelated structured entities for recipes
 
 #### Scenario: URI-01 — Preserve meaningful instruction order and text
 - **WHEN** the recipe contains instruction text, `HowToStep`, or ordered `HowToSection` structures
