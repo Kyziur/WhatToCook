@@ -1,16 +1,15 @@
 ## Why
 
-The current recipe import flow supports a small set of source-specific websites. Users discover recipes elsewhere, frequently on phones, and manually transferring them is slow. Many recipe websites expose Schema.org `Recipe` JSON-LD that can be extracted deterministically before a user reviews and saves the draft.
+WhatToCook imports recipes from a few hard-coded sources; many other pages provide Schema.org `Recipe` data that could save manual retyping.
 
 ## What Changes
 
-- Add a generic structured-data extraction path for public recipe pages, retaining specialized adapters when appropriate.
-- Support single, array, and `@graph` JSON-LD layouts, ordered instructions, missing-value reporting, and pages containing multiple recipes.
-- Reuse the existing draft correction and finalization workflow; never trust raw scraped content directly.
-- Define secure arbitrary-host fetching as a **mandatory release gate** before broadening beyond current allowlisted hosts.
-- Add mobile share-to-import with explicit confirmation and manual paste fallback.
-- Define source/title duplicate guidance and actionable recovery for unsupported sites.
-- Supply detailed user stories and PENDING traceability for future implementation.
+- Add generic deterministic JSON-LD extraction while retaining existing adapters and reviewable drafts.
+- Handle pages with multiple recipes via a **24-hour temporary candidate-selection attempt**; only a selected candidate becomes a draft.
+- Require connection-level SSRF defenses, bounded input and safe markup before accepting generic domains.
+- Support mobile share-to-import with explicit URL confirmation and a manual paste fallback.
+- Offer conservative URL/source duplicate warnings, never automatic source-based merging or blocking.
+- Reuse validated, repeat-safe draft finalization.
 
 ## Capabilities
 
@@ -18,22 +17,21 @@ The current recipe import flow supports a small set of source-specific websites.
 None.
 
 ### Modified Capabilities
-- `recipe-imports`: extend draft-based imports with generic structured extraction, safe network fetching, phone sharing, duplicate handling, and error recovery.
+- `recipe-imports`: generic structured extraction, candidate selection, safe fetching, mobile entry and duplicate guidance.
 
 ## Dependencies / Integration
 
-The existing [add-recipe-import](../add-recipe-import/proposal.md) change is still active and owns the base `recipe-imports` capability. The canonical file `openspec/specs/recipe-imports/spec.md` is not yet present. **Do not sync or archive this delta before that base change is completed and the capability exists in canonical specs.** Treat this as a separate, design-only follow-up to avoid editing another change's uncompleted work.
+The existing [add-recipe-import](../add-recipe-import/proposal.md) change still has unfinished **photo/OCR** tasks. These do **not** block merging this design-only backlog proposal or implementing generic extraction once the URL/draft base is canonical. Before synchronizing this delta, sync the implemented URL/draft foundation and move pending OCR work into a separate future OpenSpec change; do not archive incomplete changes.
 
 ## Impact
 
-Future work touches import page fetching and SSRF controls, generic JSON-LD parser, adapter selection, draft review, source duplicate detection, mobile share/PWA experience, error messages, and PostgreSQL/browser tests.
+Future URL fetcher, JSON-LD parser, attempt persistence, import draft APIs, mobile share UX and PostgreSQL/security/E2E tests.
 
 ## Non-Goals
 
-- No implementation, external network crawling, schema migration, or tests in this design-only change.
-- No AI/LLM dependency, bulk scraping, image OCR, video/PDF imports, or automatic downloading of copyrighted images.
-- No automatic finalization or execution of remote HTML/scripts.
+- **No implementation yet** and no runtime, migration or test changes in this PR.
+- No OCR, generative AI parsing, bulk crawling, image downloads or automatic trusted recipe creation.
 
 ## Product outcome
 
-Users can submit recipes from many structured websites with minimal manual retyping and an explicit correction step. See [user-stories.md](user-stories.md).
+A user can import a structured recipe and select the right one when a page contains several. Full product detail: [user-stories.md](user-stories.md).
