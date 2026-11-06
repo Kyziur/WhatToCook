@@ -19,6 +19,10 @@ The system SHALL maintain a persistent purchase indicator **separate from** the 
 - **WHEN** a shopper confirms Finish shopping on the active plan-linked list
 - **THEN** all Bought items atomically become `MAM` with their purchase indicator cleared, while unpurchased `NIE MAM` items remain outstanding
 
+#### Scenario: SL2-01 — Reject stale concurrent checkout
+- **WHEN** one device requests Finish shopping using an obsolete list version while another device has changed the list
+- **THEN** checkout is rejected without partial conversion, the latest list is displayed, and the shopper can explicitly retry
+
 #### Scenario: SL2-01 — Make completed purchases available to recommendations
 - **WHEN** a user requests ingredient-based recommendations after Finish shopping
 - **THEN** items converted to `MAM` are treated as owned by the existing recommendation logic, while not-yet-finished Bought items are not
@@ -51,7 +55,7 @@ The system SHALL expose a mobile-friendly shopping view prioritizing outstanding
 - **THEN** the screen explains the state and offers an appropriate next action; connected-only MVP never claims to support offline cached reading or queued writes
 
 ### Requirement: SL2-03 — User can group purchases by store department
-The system SHALL offer item-level assignment to a fixed MVP department list: Produce, Dairy, Bakery, Meat & Fish, Pantry, Frozen, Household, Other. Users cannot create, rename, delete, or reorder departments in MVP.
+The system SHALL offer item-level assignment to a fixed MVP department list: Produce, Dairy, Bakery, Meat & Fish, Pantry, Frozen, Household, Other. Users cannot create, rename, delete, or reorder departments in MVP. Departments use stable identifiers; visible names are localized for the Polish UI.
 
 #### Scenario: SL2-03 — Group items by department
 - **WHEN** a shopper views the checklist with categories assigned
@@ -147,6 +151,10 @@ The system SHALL require an explicit regeneration decision before saving meal-pl
 #### Scenario: SL2-06 — Do not carry buying state across different units
 - **WHEN** the same ingredient appears with a different normalized unit
 - **THEN** the new unit entry does not inherit `MAM` or Bought from the former unit
+
+#### Scenario: SL2-06 — Resolve ambiguous generated-item matching safely
+- **WHEN** multiple generated items share a normalized ingredient and unit but differ in descriptive quantities so that previous and new entries cannot be paired unambiguously
+- **THEN** the system does not arbitrarily inherit `MAM` or Bought; affected entries require a fresh `NIE MAM` decision, and unrelated manual items are preserved
 
 #### Scenario: SL2-06 — Regeneration is atomic in both update paths
 - **WHEN** direct regeneration or plan-save-with-regeneration fails
