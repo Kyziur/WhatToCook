@@ -6,6 +6,7 @@ All in-scope scenarios are PENDING for this design-only change; WP-07 saved comb
 | --- | --- | --- | --- |
 | WP-01 — Choose a source plan and target dates | Not implemented | PENDING | 2.1, 3.1 |
 | WP-01 — Create an independent copy | Not implemented | PENDING | 2.1, 3.1 |
+| WP-01 — Copy no-cooking entries and rebind leftovers | Not implemented | PENDING | 2.1, 3.1 |
 | WP-01 — Resolve archived source recipes | Not implemented | PENDING | 2.1, 3.1 |
 | WP-01 — Handle a deliberate second copy and a network retry | Not implemented | PENDING | 2.1, 3.1 |
 | WP-01 — Reject invalid assignments | Not implemented | PENDING | 2.1, 3.1 |
