@@ -42,6 +42,10 @@ The system SHALL use the existing editable import-draft lifecycle and finalizati
 - **WHEN** a user selects a candidate from a valid pending import attempt
 - **THEN** exactly that candidate becomes the persisted editable import draft and repeated selection of the same candidate returns the same draft instead of creating duplicates
 
+#### Scenario: URI-02 — Reject a second candidate selection from an already selected attempt
+- **WHEN** the user tries selecting a different candidate from an attempt that has already created a draft
+- **THEN** the server reports the existing selected draft instead of creating another draft or overwriting the first selection
+
 #### Scenario: URI-02 — Expire or cancel multi-recipe attempts
 - **WHEN** the user cancels selection or the attempt expires after 24 hours
 - **THEN** no trusted recipe is created, its candidate data cannot be selected anymore, and expired attempt data is eligible for deletion
