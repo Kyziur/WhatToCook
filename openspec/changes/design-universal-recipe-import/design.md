@@ -28,7 +28,7 @@ For arbitrary domains only HTTP(S) public destinations, verified both at resolut
 
 ### URL equivalence is conservative and advisory
 
-Normalize host case, default ports, fragments and known tracking parameters (`utm_*`, `fbclid`, `gclid`). Preserve scheme, meaningful path, and unknown/meaningful query parameters. False negatives are acceptable; false positives must not silently merge distinct recipes. A source match only suggests the existing recipe; normalized title uniqueness still blocks finalization when applicable.
+Normalize host case, default ports and known tracking parameters (`utm_*`, `fbclid`, `gclid`). Preserve the scheme, meaningful path and query parameters, **and fragments by default**: hash-based client routes may identify different recipes. A source-specific adapter may remove a known non-identifying presentation anchor, but generic matching must prefer false negatives to false positive merges. False negatives are acceptable; false positives must not silently merge distinct recipes. A source match only suggests the existing recipe; normalized title uniqueness still blocks finalization when applicable.
 
 ### Mobile sharing has explicit compatibility fallback
 
