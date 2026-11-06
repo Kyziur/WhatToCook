@@ -1,6 +1,6 @@
 # Shopping List 2.0 — Test Traceability
 
-Design-only change: no runtime code has been implemented. All **in-scope** scenarios are PENDING; deferred SL2-07 offline is not part of this delta.
+This is a **design-only** change. `PENDING` means tests must verify the proposed delta before delivery; the four pre-existing scenarios are repeated because OpenSpec MODIFIED requirements must restate the full canonical requirement. Their baseline behavior exists, but new quantity-aware conditions require regression verification (including changes to `Regeneration_ShouldPreserveMatchingStateAndManualDuplicates`). Deferred offline SL2-07 is outside this contract.
 
 | Capability scenario | Automated coverage | Status | Owning task |
 | --- | --- | --- | --- |
@@ -28,6 +28,10 @@ Design-only change: no runtime code has been implemented. All **in-scope** scena
 | SL2-05 — Edit or remove a manual item | Not implemented | PENDING | 2.3, 3.1 |
 | SL2-05 — Preserve duplicate manual entries | Not implemented | PENDING | 2.3, 3.1 |
 | SL2-05 — Retain manually entered products after regeneration | Not implemented | PENDING | 2.3, 3.1 |
+| Attempt to save changed plan with existing shopping list | Existing baseline; verify/update tests against revised contract | PENDING | 2.5, 3.1 |
+| Cancel shopping list regeneration | Existing baseline; verify/update tests against revised contract | PENDING | 2.5, 3.1 |
+| Confirm shopping list regeneration | Existing baseline; verify/update tests against revised contract | PENDING | 2.5, 3.1 |
+| Regenerate a shopping list directly | Existing baseline; verify/update tests against revised contract | PENDING | 2.5, 3.1 |
 | SL2-06 — Preserve state for unchanged ingredient and quantity | Not implemented | PENDING | 2.5, 3.1 |
 | SL2-06 — Reset home/purchase state when amount changes | Not implemented | PENDING | 2.5, 3.1 |
 | SL2-06 — Add and remove generated needs | Not implemented | PENDING | 2.5, 3.1 |
