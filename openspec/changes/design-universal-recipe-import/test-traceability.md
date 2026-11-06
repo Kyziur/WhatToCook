@@ -13,6 +13,7 @@ Design-only follow-up to the active `add-recipe-import` baseline. Base canonical
 | URI-02 — Persist draft corrections | Not implemented | PENDING | 2.3, 3.3 |
 | URI-02 — Persist a temporary multi-recipe selection attempt | Not implemented | PENDING | 2.3, 3.3 |
 | URI-02 — Select one candidate and create a single draft | Not implemented | PENDING | 2.3, 3.3 |
+| URI-02 — Reject a second candidate selection from an already selected attempt | Not implemented | PENDING | 2.3, 3.3 |
 | URI-02 — Expire or cancel multi-recipe attempts | Not implemented | PENDING | 2.3, 3.3 |
 | URI-02 — Finalize with existing validation | Not implemented | PENDING | 2.3, 3.3 |
 | URI-02 — Retry finalization safely | Not implemented | PENDING | 2.3, 3.3 |
