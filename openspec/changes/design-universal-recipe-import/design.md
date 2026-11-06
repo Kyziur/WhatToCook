@@ -16,7 +16,7 @@ This proposal may be merged as **design-only backlog**. Before implementation/sy
 
 ### Retain adapters and use deterministic JSON-LD extraction
 
-Retain source-specific adapters, with generic parsing for other supported public recipe pages. Recognize `Recipe` objects in root, arrays or `@graph`, string/array `@type`, and ordered text/`HowToStep`/`HowToSection`. Uncertain fields remain reviewable draft data with blockers; do not fabricate values.
+Retain source-specific adapters, with generic parsing for other supported public recipe pages. Recognize `Recipe` objects in root, arrays or `@graph`, string/array `@type` values with compact names or Schema.org IRIs, and ordered text/`HowToStep`/`HowToSection`. Uncertain fields remain reviewable draft data with blockers; do not fabricate values.
 
 ### Exactly one candidate becomes one persisted editable draft
 
