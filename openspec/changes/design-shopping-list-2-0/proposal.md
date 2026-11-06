@@ -7,7 +7,7 @@ The existing shopping list shows what is at home or still needed, but not what i
 - Add a persisted Bought indicator distinct from `MAM`/`NIE MAM`, undo and `Finish shopping` to make purchased items available to recommendations.
 - Add mobile views with accurate progress, fixed store departments and editing of manual products on existing plan-linked lists.
 - Add server-authoritative automatic syncing for one connected, trusted household deployment, using per-item version checks to reject stale edits.
-- Reconcile list regeneration atomically, resetting `MAM`/Bought when a matched item's amount changes.
+- **Modify the existing canonical regeneration requirement** to reset `MAM`/Bought when a matched item's amount changes, while retaining unchanged-state behavior and atomic manual-item preservation.
 - Record offline shopping only as a **separate potential future change**, not a normative requirement here.
 
 ## Capabilities
