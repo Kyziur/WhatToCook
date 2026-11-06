@@ -1,6 +1,5 @@
 using System.Linq;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
+using SkiaSharp;
 
 namespace WhatToCook.Api.Infrastructure.Storage;
 
@@ -35,17 +34,15 @@ public sealed class FileSystemRecipeImageStorage(
             throw new InvalidDataException("Only JPEG, PNG, GIF and WebP images are supported.");
         }
 
-        content.Position = 0;
-        ImageInfo imageInfo;
-        try
-        {
-            imageInfo = Image.Identify(new DecoderOptions(), content);
-        }
-        catch (Exception exception)
-            when (exception is InvalidImageContentException or UnknownImageFormatException)
+        // Decode only the metadata. Do not allocate a pixel bitmap or re-encode the upload.
+        using var encodedImage = SKData.CreateCopy(imageBytes);
+        using var codec = SKCodec.Create(encodedImage);
+        if (codec is null)
         {
             throw new InvalidDataException("The image content is invalid.");
         }
+
+        var imageInfo = codec.Info;
         if (
             imageInfo.Width <= 0
             || imageInfo.Height <= 0

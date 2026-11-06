@@ -41,7 +41,7 @@ async function main() {
   const connectionString = `Host=127.0.0.1;Port=${hostPort};Database=${databaseName};Username=${databaseUser};Password=${databasePassword}`;
   apiProcess = spawn(
     "dotnet",
-    ["run", "--project", "src/WhatToCook.Api", "--no-build", "--urls", "http://127.0.0.1:5181"],
+    ["run", "--project", "src/WhatToCook.Api", "--no-build", "--configuration", process.env.PLAYWRIGHT_DOTNET_CONFIGURATION ?? "Debug", "--urls", "http://127.0.0.1:5181"],
     {
       cwd: repoRoot,
       stdio: "inherit",

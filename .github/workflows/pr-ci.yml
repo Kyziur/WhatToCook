@@ -25,9 +25,11 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Restore .NET tools and packages
-        run: dotnet tool restore; dotnet restore WhatToCook.slnx
-        shell: pwsh
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Restore .NET packages
+        run: dotnet restore WhatToCook.slnx
 
       - name: Build
         run: dotnet build WhatToCook.slnx --no-restore --configuration Release
@@ -36,16 +38,20 @@ jobs:
         run: dotnet test WhatToCook.slnx --no-build --configuration Release
 
       - name: Install Playwright dependencies
-        run: npm ci; npx playwright install --with-deps chromium
+        run: npm ci && npx playwright install --with-deps chromium
         shell: bash
 
       - name: Playwright smoke suite
         run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts
         shell: bash
+        env:
+          PLAYWRIGHT_DOTNET_CONFIGURATION: Release
 
-      - name: Audit dependencies
-        run: dotnet list WhatToCook.slnx package --vulnerable --include-transitive; npm audit --audit-level=high
-        shell: pwsh
+      - name: Audit .NET dependencies
+        run: dotnet list WhatToCook.slnx package --vulnerable --include-transitive
+
+      - name: Audit npm dependencies
+        run: npm audit --audit-level=high
 
       - name: Check formatting
         run: dotnet csharpier check .

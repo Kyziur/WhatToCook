@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using SkiaSharp;
 
 namespace WhatToCook.Api.IntegrationTests.Specs;
 
@@ -174,6 +175,37 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
         var photoPath = uploadJson.GetProperty("mainPhotoPath").GetString();
         Assert.False(string.IsNullOrWhiteSpace(photoPath));
         Assert.True(File.Exists(Path.Combine(factory.StorageRootPath, photoPath!)));
+    }
+
+    [Theory]
+    [InlineData(SKEncodedImageFormat.Png, ".png")]
+    [InlineData(SKEncodedImageFormat.Jpeg, ".jpg")]
+    [InlineData(SKEncodedImageFormat.Webp, ".webp")]
+    public async Task UploadingSupportedRasterFormats_ShouldPersistImage(
+        SKEncodedImageFormat format,
+        string extension
+    )
+    {
+        using var bitmap = new SKBitmap(2, 2);
+        bitmap.Erase(SKColors.Red);
+        using var image = SKImage.FromBitmap(bitmap);
+        using var encoded = image.Encode(format, 90);
+        Assert.NotNull(encoded);
+
+        using var client = factory.CreateClient();
+        var created = await CreateRecipe(client, $"Upload {format} {Guid.NewGuid():N}");
+
+        using var multipart = new MultipartFormDataContent();
+        multipart.Add(new ByteArrayContent(encoded.ToArray()), "file", $"photo{extension}");
+
+        var uploadResponse = await client.PostAsync($"/api/recipes/{created.Id}/photo", multipart);
+        Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
+
+        var uploadJson = await uploadResponse.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        var photoPath = uploadJson.GetProperty("mainPhotoPath").GetString();
+        Assert.NotNull(photoPath);
+        Assert.EndsWith(extension, photoPath, StringComparison.OrdinalIgnoreCase);
+        Assert.True(File.Exists(Path.Combine(factory.StorageRootPath, photoPath)));
     }
 
     [Fact]
