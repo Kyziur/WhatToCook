@@ -1,6 +1,6 @@
 # Shopping List 2.0 — Test Traceability
 
-This is a **design-only** change. `PENDING` means tests must verify the proposed delta before delivery; the four pre-existing scenarios are repeated because OpenSpec MODIFIED requirements must restate the full canonical requirement. Their baseline behavior exists, but new quantity-aware conditions require regression verification (including changes to `Regeneration_ShouldPreserveMatchingStateAndManualDuplicates`). Deferred offline SL2-07 is outside this contract.
+This design-only change introduces no runtime behavior. The four canonical scenarios are repeated under MODIFIED Requirements and must be reverified against the revised contract; `PENDING` refers to future test verification, not absence of existing baseline functionality. The existing regression `Regeneration_ShouldPreserveMatchingStateAndManualDuplicates` must be updated for changed-quantity resets. Deferred offline SL2-07 is outside this delta.
 
 | Capability scenario | Automated coverage | Status | Owning task |
 | --- | --- | --- | --- |
@@ -8,6 +8,7 @@ This is a **design-only** change. `PENDING` means tests must verify the proposed
 | SL2-01 — Undo buying an item | Not implemented | PENDING | 2.1, 3.1 |
 | SL2-01 — Distinguish stocked and purchased items | Not implemented | PENDING | 2.1, 3.1 |
 | SL2-01 — Finish shopping and mark purchases as owned | Not implemented | PENDING | 2.1, 3.1 |
+| SL2-01 — Reject stale concurrent checkout | Not implemented | PENDING | 2.1, 3.1 |
 | SL2-01 — Make completed purchases available to recommendations | Not implemented | PENDING | 2.1, 3.1 |
 | SL2-01 — Recover from an unsuccessful update | Not implemented | PENDING | 2.1, 3.1 |
 | SL2-01 — Accessible purchase control | Not implemented | PENDING | 2.1, 3.1 |
@@ -28,12 +29,13 @@ This is a **design-only** change. `PENDING` means tests must verify the proposed
 | SL2-05 — Edit or remove a manual item | Not implemented | PENDING | 2.3, 3.1 |
 | SL2-05 — Preserve duplicate manual entries | Not implemented | PENDING | 2.3, 3.1 |
 | SL2-05 — Retain manually entered products after regeneration | Not implemented | PENDING | 2.3, 3.1 |
-| Attempt to save changed plan with existing shopping list | Existing baseline; verify/update tests against revised contract | PENDING | 2.5, 3.1 |
-| Cancel shopping list regeneration | Existing baseline; verify/update tests against revised contract | PENDING | 2.5, 3.1 |
-| Confirm shopping list regeneration | Existing baseline; verify/update tests against revised contract | PENDING | 2.5, 3.1 |
-| Regenerate a shopping list directly | Existing baseline; verify/update tests against revised contract | PENDING | 2.5, 3.1 |
+| Attempt to save changed plan with existing shopping list | Existing behavior; update/verify regression | PENDING | 2.5, 3.1 |
+| Cancel shopping list regeneration | Existing behavior; update/verify regression | PENDING | 2.5, 3.1 |
+| Confirm shopping list regeneration | Existing behavior; update/verify regression | PENDING | 2.5, 3.1 |
+| Regenerate a shopping list directly | Existing behavior; update/verify regression | PENDING | 2.5, 3.1 |
 | SL2-06 — Preserve state for unchanged ingredient and quantity | Not implemented | PENDING | 2.5, 3.1 |
 | SL2-06 — Reset home/purchase state when amount changes | Not implemented | PENDING | 2.5, 3.1 |
 | SL2-06 — Add and remove generated needs | Not implemented | PENDING | 2.5, 3.1 |
 | SL2-06 — Do not carry buying state across different units | Not implemented | PENDING | 2.5, 3.1 |
+| SL2-06 — Resolve ambiguous generated-item matching safely | Not implemented | PENDING | 2.5, 3.1 |
 | SL2-06 — Regeneration is atomic in both update paths | Not implemented | PENDING | 2.5, 3.1 |
