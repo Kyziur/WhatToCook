@@ -46,7 +46,7 @@ Today WhatToCook builds a shopping list from a meal plan, aggregates ingredients
 **Acceptance criteria**
 
 - **AC1:** The shopping screen defaults to **Still to buy** items, with an explicit way to show **Bought** and **Already at home** items.
-- **AC2:** A visible progress summary shows bought items divided by Bought plus outstanding `NIE MAM` items, excluding `MAM`. After finishing, the counter reflects unmet needs, not a historical trip percentage.
+- **AC2:** A visible progress summary shows bought items divided by Bought plus outstanding `NIE MAM` items, excluding `MAM`. When the denominator is zero, the screen says **No items to buy** rather than displaying an undefined percentage. After finishing, the counter reflects unmet needs, not a historical trip percentage.
 - **AC3:** An empty list, completed trip, loading state, and error state each have a clear explanation and next action.
 - **AC4:** On a narrow phone screen, product name, amount, unit, category, and action are legible without horizontal scrolling.
 - **AC5:** Users can navigate directly to the active list from the main app navigation; the current list is retained after returning from another screen.
@@ -90,7 +90,7 @@ Today WhatToCook builds a shopping list from a meal plan, aggregates ingredients
 - **AC1:** On an **already generated plan-linked** shopping list, I can add a manual item with a required, nonblank name; amount and fixed-list category are optional. Standalone manual-only lists are outside MVP.
 - **AC2:** I can edit or remove a manual item, with safe handling of accidental removal (confirmation or undo).
 - **AC3:** Manually added items can be marked **Bought** and return to the correct view after refreshing.
-- **AC4:** Two intentionally identical manual entries remain distinct until a user explicitly removes or merges them.
+- **AC4:** Two intentionally identical manual entries remain distinct until a user explicitly removes one. Manual-item merging is outside MVP.
 - **AC5:** Updating or regenerating the meal plan does not delete manually added items, their purchasing state, or their category.
 - **AC6:** Invalid input and length limits show understandable validation messages.
 
