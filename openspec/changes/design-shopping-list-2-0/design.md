@@ -1,56 +1,50 @@
 ## Context
 
-WhatToCook already aggregates recipe ingredients into shopping lists and stores `MAM` and `NIE MAM` state. Lists also contain manually entered items and are regenerated when meal plans change. The primary client is Blazor Interactive Server, deployed in a self-hosted household LAN environment.
+The current shopping list belongs to a meal plan and is available only after explicit generation. Items carry `MAM` / `NIE MAM`; recipe recommendations count only `MAM`. The client uses Blazor Interactive Server, so offline persistence is not available out of the box.
 
 ## Goals / Non-Goals
 
-**Goals**
-- Separate **already owned** from **purchased during this trip** without breaking existing state meaning.
-- Maintain item identity, manual duplicates, categories, and progress across regeneration.
-- Support more than one device with explicit authorization, consistency, and user-visible sync status.
-- Specify an offline release gate separately from connected-list functionality.
+**Goals:** phone-first connected shopping; distinct purchase and household-stock state; fixed store departments; two-device automatic synchronization; quantity-safe regeneration.
 
-**Non-Goals**
-- No implementation now, and no requirement to introduce a general inventory system.
-- No assumption that server-side Blazor circuits or browser memory provide offline durability.
+**Non-Goals:** no code in this design change; no offline list, standalone manual-only list, accounts or multi-household tenancy, store pricing, stock counts, trip history or customizable category taxonomy.
 
-## Decisions for this proposal
+## Decisions
 
-### 1. Introduce purchasing state orthogonally to home availability
-A new **Bought** outcome is necessary; simply renaming `MAM` would conflate "we already had it" and "we purchased it". Future schema may use an orthogonal purchase-status field rather than expanding one enum. Choose and verify during implementation design.
+### One current trip against a generated list
 
-### 2. Keep stable list-item identity across refresh and regeneration
-Matching must take normalization, unit and provenance into account; intentionally duplicated manual items are not merged. Changed quantities on previously bought entries must be surfaced and either reset to outstanding or otherwise explicitly reconciled.
+No separate shopping-session record or Start action. Marking a `NIE MAM` item as Bought creates persisted progress; undo clears Bought. `Finish shopping` atomically converts all Bought items to `MAM` and leaves other `NIE MAM` needs outstanding. Further buying may continue for remaining items. Past trip completion percentages are not retained. Recipe recommendations continue to consider only `MAM`, so bought items count as owned only after Finish shopping.
 
-### 3. Define sync and access boundaries before multi-device release
-Use versioned or conditional updates on server-side item state; distinguish independent updates from conflicting writes. Do not rely solely on a shared LAN for confidentiality once remote access is introduced. Authorization requirements should be aligned with a planned household identity solution.
+### Bought is an orthogonal purchase indicator
 
-### 4. Avoid coupling shopping-category data to recipe source text
-Categories may be explicitly assigned by a member and optionally suggested from normalized ingredients. Manual entries can have their own category. Missing classifications must not block shopping.
+Do not redefine the existing `ChecklistState` values or historical rows. Bought applies only when `NieMam`; setting `Mam` clears Bought. Implementation selects the precise persisted representation, keeping this transition table invariant.
 
-### 5. Treat offline as a separate architectural decision
-Connected multi-device updates can use existing server APIs and realtime refresh. Offline read/write with durable conflict-safe sync needs browser-side persistent storage and an explicitly designed communication path (for example a PWA client or isolated offline-capable view); it is not covered by the current Blazor Interactive Server circuit.
+### Regeneration is conservative and deterministic
 
-## Risks / Trade-offs
+Match only generated items by normalized ingredient and normalized unit; preserve identity and item-level category. If the normalized amount/descriptor is unchanged, retain availability/purchase state. If the amount increases, decreases or changes text, reset to `NIE MAM` and clear Bought, with a visible explanation. An altered unit is a different item and cannot inherit buying state. Manual duplicates retain separate IDs and all their state. Both direct regeneration and plan-save-with-regeneration remain atomic.
 
-- **False progress** from mixing `MAM` with `Bought`: mitigate with separate states and migration tests.
-- **Silent loss during regeneration**: mitigate with transactional reconciliation and identity/provenance-aware mapping.
-- **Conflicting devices**: mitigate with documented per-item conflict policy and integration tests.
-- **Security of remote lists**: access and identity must be designed before external availability.
-- **Offline scope creep**: treat SL2-07 as an explicit release gate and avoid claiming more than is tested.
+### Fixed MVP categories
 
-## Migration and release approach (future)
+Produce, Dairy, Bakery, Meat & Fish, Pantry, Frozen, Household, Other. Item-level reassignment and ungrouped view only; no custom labels, global ingredient taxonomy or category CRUD in MVP. Legacy/unclassified entries appear under Other.
 
-1. Agree on state model, category inheritance, and changed-quantity rules.
-2. Add backwards-compatible persistence and API contracts with Testcontainers coverage.
-3. Deliver a focused connected-only shopping view and one-device purchase flow.
-4. Introduce authorized two-device reconciliation and failure feedback.
-5. Decide separately on offline delivery; implement browser-side durability and conflict handling only if approved.
-6. Test release behavior on real phones and across network transitions before updating canonical specs.
+### Trusted connected-only single-household deployment
 
-## Open Questions
+No new app accounts, `Household` table or multi-tenant roles in MVP. The single household shares the deployment through a trusted LAN or an authenticated private tunnel/VPN; the unauthenticated app/API must never be exposed publicly. Two connected devices receive updates automatically (target <= 5 seconds on healthy connectivity). Server-side item versions detect stale writes and require explicit user retry; different-item updates coexist. A disconnected client reports lack of sync and does not pretend offline changes are queued.
 
-- Will shopping list access require household logins, a trusted VPN, or another explicit access mechanism?
-- If a bought item is regenerated with a larger quantity, should it revert to outstanding automatically or retain partial progress?
-- Is robust offline read/write required for the first shopping release or explicitly deferred?
-- Are store departments household-global, per-list, or per-user preferences?
+### Offline remains a separate future change
+
+SL2-07 is preserved as a **non-normative future story** only. To provide offline reading and writes on a phone, a separate OpenSpec change must define local persistence, mutation queue and replay/conflict resolution, rather than relying on Blazor Interactive Server.
+
+## Trade-offs and risks
+
+- Conservative quantity reset can require repeating a manual decision, but prevents false `MAM` and Bought carryover.
+- LAN/private tunnel access is an explicit deployment boundary; remote connection setup and user account management are not silently assumed.
+- New item purchase/version fields require data migration and integration tests.
+- Any stale list cannot claim success or automatic offline reconciliation.
+
+## Future delivery sequence
+
+1. Confirm state transitions, `Finish shopping` and recommendation behavior.
+2. Add backwards-compatible purchase/version storage and quantity-aware regeneration, with PostgreSQL tests.
+3. Add the mobile shopping view, fixed category selection and manual-entry editing/deletion.
+4. Implement automatic connected-device updates, stale-write feedback and private-network deployment checks.
+5. Complete E2E and concurrency tests and sync canonical specifications before archive.
