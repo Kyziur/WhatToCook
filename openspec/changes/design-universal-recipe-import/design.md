@@ -20,7 +20,7 @@ Retain source-specific adapters, with generic parsing for other supported public
 
 ### Exactly one candidate becomes one persisted editable draft
 
-If extraction returns one plausible recipe, persist the ordinary draft. Multiple candidates produce a **temporary persisted import attempt** with bounded candidate summaries/IDs and a `selection required` response. Selecting one yields the single normal draft. Repeating selection for the same attempt/candidate returns the same draft; choosing a different candidate from the already selected attempt returns an explicit conflict and the selected draft, without creating or overwriting another. Unselected attempts expire after **24 hours** and cannot be selected afterward. Cancel/expire creates no trusted recipe; expired candidate data may be cleaned. This is separate from the trusted recipe tables and preserves existing finalization validation.
+If extraction returns one plausible recipe, persist the ordinary draft. Multiple candidates produce a **temporary persisted import attempt** holding bounded, untrusted **extracted candidate field snapshots**, stable IDs, and safe display summaries, with a `selection required` response. The attempt stores enough structured fields to build the ordinary draft without re-fetching the source after selection; raw page HTML is not required and must not be persisted as trusted content. Selecting one yields the single normal draft. Repeating selection for the same attempt/candidate returns the same draft; choosing a different candidate from the already selected attempt returns an explicit conflict and the selected draft, without creating or overwriting another. Unselected attempts expire after **24 hours** and cannot be selected afterward. Explicit cancellation revokes pending selection; selected drafts continue under the normal draft lifecycle. Expired or cancelled candidate snapshots are made inaccessible and eligible for cleanup under a defined retention policy. Cancel/expire creates no trusted recipe; expired candidate data may be cleaned. This is separate from the trusted recipe tables and preserves existing finalization validation.
 
 ### Network security is a release gate
 
@@ -37,7 +37,7 @@ Share-target registration requires compatible OS/browser, HTTPS origin and suppo
 ## Risks and mitigations
 
 - Arbitrary outbound URL support expands SSRF exposure: prohibit rollout without connection-level security tests.
-- Multiple recipe candidates may leave temporary records: bound count/size and use 24-hour expiry/idempotent selection.
+- Multiple recipe candidates may leave temporary untrusted snapshots: bound candidates per attempt, per-field/text size and total stored bytes; apply 24-hour expiry, cleanup and idempotent selection without re-fetching the page.
 - Incorrect URL normalization merges different recipes: preserve meaningful components and use soft warnings.
 - Incomplete OCR tasks in base change: split before canonical sync rather than require OCR.
 - PWA share behavior differs by browser: verify explicit supported devices and manual fallback.
