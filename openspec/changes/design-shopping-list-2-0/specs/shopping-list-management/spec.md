@@ -44,7 +44,7 @@ The system SHALL expose a mobile-friendly shopping view prioritizing outstanding
 
 #### Scenario: SL2-02 — Calculate trip progress
 - **WHEN** the shopping list contains bought, outstanding, and already-at-home items
-- **THEN** progress counts Bought out of Bought-plus-outstanding `NIE MAM` items and excludes `MAM`; after Finish shopping the counter reflects remaining needs, not a historical completed-trip percentage
+- **THEN** progress counts Bought out of Bought-plus-outstanding `NIE MAM` items and excludes `MAM`; when neither Bought nor outstanding items exist, the screen shows **No items to buy** rather than dividing by zero; after Finish shopping the counter reflects remaining needs, not a historical completed-trip percentage
 
 #### Scenario: SL2-02 — Make the list usable on a phone
 - **WHEN** the shopper views the active list in a narrow viewport or returns from another screen
@@ -109,7 +109,7 @@ The system SHALL let users add, change, remove, and purchase manual items **on a
 
 #### Scenario: SL2-05 — Preserve duplicate manual entries
 - **WHEN** a shopper deliberately creates two identical free-text items
-- **THEN** both keep distinct identities until explicitly removed or merged
+- **THEN** both keep distinct identities until one is explicitly removed; manual-item merging is not part of MVP
 
 #### Scenario: SL2-05 — Retain manually entered products after regeneration
 - **WHEN** a meal plan and its generated list are updated
