@@ -31,7 +31,7 @@ WhatToCook currently offers a URL-based import draft, review and correction, fin
 
 - **AC1:** Given a safe public HTTP(S) page with **one unambiguous** Schema.org `Recipe` candidate, submitting its URL creates a draft. Multiple candidates require explicit selection before draft creation.
 - **AC2:** The import can find a `Recipe` object nested in a `@graph`, an array of JSON-LD objects, or a single root object, without assuming one fixed placement.
-- **AC3:** A `@type` value represented as a string or array can be recognized; unrelated structured objects are not imported as recipes.
+- **AC3:** A `@type` value represented as a string or array, using either compact `Recipe` or a Schema.org IRI (e.g. `https://schema.org/Recipe`), can be recognized; unrelated structured objects are not imported as recipes.
 - **AC4:** Extracted title, recipe yield/servings when unambiguous, ingredients, preparation instructions, source URL, and available supported metadata are mapped to the existing draft model.
 - **AC5:** Instructions provided as plain text, `HowToStep`, or `HowToSection` are presented in a sensible readable order, without treating CSS/scripts/navigation as recipe steps.
 - **AC6:** The system handles simple HTML entity decoding, Unicode, Polish diacritics, and common line breaks without damaging text.
