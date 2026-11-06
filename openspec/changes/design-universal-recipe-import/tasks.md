@@ -16,7 +16,7 @@
 
 ## 3. Future Tests and Canonical Sync
 
-- [ ] 3.1 Add parser fixtures for JSON-LD root/graph/arrays, steps, Unicode and malformed content
+- [ ] 3.1 Add parser fixtures for JSON-LD root/graph/arrays, compact and full-IRI `@type`, steps, Unicode and malformed content
 - [ ] 3.2 Add controlled fake-network SSRF, DNS-rebinding, redirect-block and parser-bound tests
 - [ ] 3.3 Add PostgreSQL tests for candidate selection, bounded snapshots, changed/unavailable original page, 24-hour expiry/cancellation and idempotent finalization; component/E2E review tests
 - [ ] 3.4 Test share/paste UX on supported devices and unsupported browser fallback
