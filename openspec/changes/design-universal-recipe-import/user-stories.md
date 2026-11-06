@@ -54,6 +54,7 @@ WhatToCook currently offers a URL-based import draft, review and correction, fin
 - **AC6:** Multiple plausible recipe objects create a **temporary untrusted import attempt** with candidate summaries. I choose one before a persisted editable draft is created; choosing the same candidate twice returns the same draft.
 - **AC7:** Finalization is atomic and repeat-safe: retries must not create duplicate trusted recipes from the same finalized draft.
 - **AC8:** An unselected import attempt expires after 24 hours; cancellation or expiry creates no trusted recipe and prevents later selection.
+- **AC9:** Once a candidate has become a draft, choosing a different candidate from that same attempt does not create or overwrite a draft; I am shown the existing selection and conflict explanation.
 
 ### URI-03 — Import safely from arbitrary recipe websites
 
