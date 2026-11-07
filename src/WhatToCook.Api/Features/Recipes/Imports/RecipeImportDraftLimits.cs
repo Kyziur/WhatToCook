@@ -73,5 +73,4 @@ internal static class RecipeImportDraftLimits
 
     public static bool ExceedsMaxSourceUrlLength(string sourceUrl) =>
         UnicodeTextLength.Exceeds(sourceUrl, MaxSourceUrlLength, trim: false);
-
 }

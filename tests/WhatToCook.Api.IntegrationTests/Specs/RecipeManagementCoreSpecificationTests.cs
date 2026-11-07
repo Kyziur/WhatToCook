@@ -23,8 +23,8 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
     {
         using var client = factory.CreateClient();
         var uniqueSuffix = Guid.NewGuid().ToString("N");
-        var title = string.Concat(Enumerable.Repeat("😀", length - uniqueSuffix.Length))
-            + uniqueSuffix;
+        var title =
+            string.Concat(Enumerable.Repeat("😀", length - uniqueSuffix.Length)) + uniqueSuffix;
         var payload = RecipeApiContracts.CreateRecipePayload(title);
         payload.Ingredients =
         [

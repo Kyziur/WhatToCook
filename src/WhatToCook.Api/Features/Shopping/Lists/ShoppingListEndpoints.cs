@@ -1,5 +1,5 @@
-using WhatToCook.Api.Infrastructure.Validation;
 using WhatToCook.Api.Domain.Shopping;
+using WhatToCook.Api.Infrastructure.Validation;
 
 namespace WhatToCook.Api.Features.Shopping.Lists;
 
