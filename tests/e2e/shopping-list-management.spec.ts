@@ -138,7 +138,8 @@ test.describe("OpenSpec: shopping-list-management", () => {
 
     await gotoAndWaitForApp(page, "/shopping");
     await selectShoppingPlan(page, `${planName} v2`);
-    await expect(shoppingItem(page, "Pomidor")).toHaveAttribute("aria-pressed", "true");
+    await expect(shoppingItem(page, "Pomidor")).toHaveAttribute("aria-pressed", "false");
+    await expect(page.getByText("Ilość uległa zmianie — sprawdź dostępność.")).toBeVisible();
     await expect(page.getByText("Mleko")).toBeVisible();
     await expectShoppingItem(page, "Pomidor", "2 szt");
   });
