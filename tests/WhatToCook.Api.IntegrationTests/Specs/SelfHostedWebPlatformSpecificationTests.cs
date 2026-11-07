@@ -247,8 +247,9 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         );
         Assert.Contains(
             postgres.GetProperty("volumes").EnumerateArray(),
-            volume => volume.GetProperty("target").GetString() == "/var/lib/postgresql/data"
-                && volume.GetProperty("type").GetString() == "volume"
+            volume =>
+                    volume.GetProperty("target").GetString() == "/var/lib/postgresql/data"
+                    && volume.GetProperty("type").GetString() == "volume"
         );
 
         var missingMount = new Dictionary<string, string?>(env, StringComparer.Ordinal)
