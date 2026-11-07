@@ -306,6 +306,15 @@ public sealed class RecipeImportService(
         CancellationToken cancellationToken
     )
     {
+        // Lock the draft before reading its state. The transaction also encompasses recipe creation,
+        // so a concurrent finalizer observes the committed Finalized status instead of racing a write.
+        await using var finalizeTransaction = await dbContext.Database.BeginTransactionAsync(
+            cancellationToken
+        );
+        await dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT id FROM recipe_import_drafts WHERE id = {draftId} FOR UPDATE",
+            cancellationToken
+        );
         var draft = await LoadDraftAsync(draftId, cancellationToken);
         if (draft is null)
         {
@@ -340,9 +349,6 @@ public sealed class RecipeImportService(
         );
         if (evaluation.Status != RecipeImportStatus.ReadyToFinalize)
         {
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(
-                cancellationToken
-            );
             var trackedDraft = await dbContext.RecipeImportDrafts.SingleAsync(
                 x => x.Id == draftId,
                 cancellationToken
@@ -354,7 +360,7 @@ public sealed class RecipeImportService(
                 .ExecuteDeleteAsync(cancellationToken);
             dbContext.RecipeImportIssues.AddRange(CreateIssueEntities(draftId, evaluation.Issues));
             await dbContext.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            await finalizeTransaction.CommitAsync(cancellationToken);
             return RecipeImportFinalizeResult.Blocked(
                 (await GetDraftAsync(draftId, cancellationToken))!
             );
@@ -377,9 +383,6 @@ public sealed class RecipeImportService(
             Tags = tags,
         };
 
-        await using var finalizeTransaction = await dbContext.Database.BeginTransactionAsync(
-            cancellationToken
-        );
         var result = await recipeWriteService.CreateAsync(request, cancellationToken);
         if (result.Status == RecipeWriteStatus.ValidationFailure)
         {

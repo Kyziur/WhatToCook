@@ -713,6 +713,85 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
     }
 
     [Fact]
+    public async Task FinalizeDraft_ConcurrentRequests_ShouldCreateExactlyOneRecipe()
+    {
+        using var client = factory.CreateClient();
+        var title = $"Concurrent finalize {Guid.NewGuid():N}";
+        var url = $"https://aniagotuje.pl/przepis/concurrent-{Guid.NewGuid():N}";
+        factory.ImportedPagesByUrl[url] = CreateAniaGotujeHtml(title, "4 porcje");
+
+        using var createResponse = await client.PostAsJsonAsync(
+            "/api/recipe-imports/url",
+            new RecipeApiContracts.CreateRecipeImportFromUrlPayload { Url = url }
+        );
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var draft =
+            await createResponse.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+                JsonOptions
+            );
+        Assert.NotNull(draft);
+        Assert.True(draft.CanFinalize);
+
+        var responses = await Task.WhenAll(
+            Enumerable.Range(0, 10).Select(_ =>
+                client.PostAsync($"/api/recipe-imports/{draft.Id}/finalize", null)
+            )
+        );
+        try
+        {
+            Assert.Single(responses, x => x.StatusCode == HttpStatusCode.Created);
+            Assert.All(
+                responses,
+                x => Assert.True(
+                    x.StatusCode is HttpStatusCode.Created or HttpStatusCode.Conflict,
+                    $"Unexpected HTTP {(int)x.StatusCode}"
+                )
+            );
+
+            var winner = responses.Single(x => x.StatusCode == HttpStatusCode.Created);
+            var recipe =
+                await winner.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>(
+                    JsonOptions
+                );
+            Assert.NotNull(recipe);
+
+            foreach (var response in responses.Where(x => x.StatusCode == HttpStatusCode.Conflict))
+            {
+                using var conflictBody = await JsonDocument.ParseAsync(
+                    await response.Content.ReadAsStreamAsync()
+                );
+                Assert.Equal(
+                    recipe.Id,
+                    conflictBody.RootElement.GetProperty("recipeId").GetGuid()
+                );
+            }
+
+            var persisted = await client.GetFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+                $"/api/recipe-imports/{draft.Id}",
+                JsonOptions
+            );
+            Assert.NotNull(persisted);
+            Assert.Equal("finalized", persisted.Status);
+            Assert.Equal(recipe.Id, persisted.FinalizedRecipeId);
+
+            var library =
+                await client.GetFromJsonAsync<List<RecipeApiContracts.RecipeSummaryDto>>(
+                    "/api/recipes",
+                    JsonOptions
+                );
+            Assert.NotNull(library);
+            Assert.Single(library, x => x.Title == title);
+        }
+        finally
+        {
+            foreach (var response in responses)
+            {
+                response.Dispose();
+            }
+        }
+    }
+
+    [Fact]
     public async Task FinalizeDraft_ShouldBlockOnDuplicateNormalizedTitle()
     {
         using var client = factory.CreateClient();
