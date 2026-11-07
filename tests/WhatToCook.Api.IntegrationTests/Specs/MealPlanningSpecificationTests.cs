@@ -58,7 +58,10 @@ public sealed class MealPlanningSpecificationTests(TestWebApplicationFactory fac
             }
         );
 
-        Assert.Equal(accepted ? HttpStatusCode.Created : HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(
+            accepted ? HttpStatusCode.Created : HttpStatusCode.BadRequest,
+            response.StatusCode
+        );
         if (accepted)
         {
             var plan = await response.Content.ReadFromJsonAsync<PlanDetailsDto>(JsonOptions);
@@ -67,7 +70,10 @@ public sealed class MealPlanningSpecificationTests(TestWebApplicationFactory fac
         }
         else
         {
-            var plans = await client.GetFromJsonAsync<List<PlanSummaryDto>>("/api/plans", JsonOptions);
+            var plans = await client.GetFromJsonAsync<List<PlanSummaryDto>>(
+                "/api/plans",
+                JsonOptions
+            );
             Assert.NotNull(plans);
             Assert.DoesNotContain(plans, x => x.Name == name);
         }
@@ -98,7 +104,10 @@ public sealed class MealPlanningSpecificationTests(TestWebApplicationFactory fac
             }
         );
 
-        Assert.Equal(accepted ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(
+            accepted ? HttpStatusCode.OK : HttpStatusCode.BadRequest,
+            response.StatusCode
+        );
         var persisted = await client.GetFromJsonAsync<PlanDetailsDto>(
             $"/api/plans/{initial.Id}",
             JsonOptions
