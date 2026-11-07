@@ -141,7 +141,7 @@ test.describe("OpenSpec: shopping-list-management", () => {
     await expect(shoppingItem(page, "Pomidor")).toHaveAttribute("aria-pressed", "false");
     await expect(page.getByText("Ilość uległa zmianie — sprawdź dostępność.")).toBeVisible();
     await expect(page.getByText("Mleko")).toBeVisible();
-    await expectShoppingItem(page, "Pomidor", "2 szt");
+    await expect(shoppingItem(page, "Pomidor").locator(".shopping-item-quantity")).toContainText("2 szt");
   });
 
   test("Direct shopping regeneration preserves saved shopping work", async ({ page }) => {
