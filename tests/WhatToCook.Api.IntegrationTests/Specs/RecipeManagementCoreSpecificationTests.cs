@@ -337,8 +337,15 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
                 : """[{"name":"Pomidor","quantityText":"2","unit":"szt"}]""";
         var steps = field == "steps" ? invalidValue : """["Wymieszaj składniki"]""";
         var tags = field == "tags" ? invalidValue : """["obiad"]""";
-        var json =
-            $"""{"title":"Updated recipe","servings":4,"ingredients":{{ingredients}},"steps":{{steps}},"tags":{{tags}}}""";
+        var json = $"""
+            {
+                "title": "Updated recipe",
+                "servings": 4,
+                "ingredients": {{ingredients}},
+                "steps": {{steps}},
+                "tags": {{tags}}
+            }
+            """;
 
         using var create = await client.PostAsync(
             "/api/recipes",
@@ -365,8 +372,15 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
     public async Task CreateRecipeWithOmittedOptionalTags_ShouldUseEmptyTags()
     {
         using var client = factory.CreateClient();
-        var json =
-            $"""{"title":"Omitted tags {{Guid.NewGuid():N}}","servings":4,"ingredients":[{"name":"Pomidor"}],"steps":["Gotuj"]}""";
+        var title = $"Omitted tags {Guid.NewGuid():N}";
+        var json = $"""
+            {
+                "title": "{{title}}",
+                "servings": 4,
+                "ingredients": [{"name":"Pomidor"}],
+                "steps": ["Gotuj"]
+            }
+            """;
         using var response = await client.PostAsync(
             "/api/recipes",
             new StringContent(json, System.Text.Encoding.UTF8, "application/json")
