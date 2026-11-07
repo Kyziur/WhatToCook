@@ -1,3 +1,4 @@
+using System.Text;
 using WhatToCook.Api.Domain.Shopping;
 
 namespace WhatToCook.Api.Features.Shopping.Lists;
@@ -116,7 +117,7 @@ public static class ShoppingListEndpoints
             );
         }
 
-        if (request.Text.Trim().Length > MaxManualItemNameLength)
+        if (ExceedsMaxManualItemNameLength(request.Text))
         {
             return Results.ValidationProblem(
                 new Dictionary<string, string[]>
@@ -132,6 +133,22 @@ public static class ShoppingListEndpoints
             cancellationToken
         );
         return list is null ? Results.NotFound() : Results.Ok(ToResponse(list));
+    }
+
+    private static bool ExceedsMaxManualItemNameLength(string text)
+    {
+        var trimmedText = text.AsSpan().Trim();
+        var scalarCount = 0;
+
+        foreach (var _ in trimmedText.EnumerateRunes())
+        {
+            if (++scalarCount > MaxManualItemNameLength)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static async Task<IResult> CopyShoppingListText(
