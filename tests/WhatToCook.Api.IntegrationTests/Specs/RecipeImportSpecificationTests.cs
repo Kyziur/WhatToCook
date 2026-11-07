@@ -742,8 +742,9 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
             Assert.Single(responses, x => x.StatusCode == HttpStatusCode.Created);
             Assert.All(
                 responses,
-                x => Assert.True(
-                    x.StatusCode is HttpStatusCode.Created or HttpStatusCode.Conflict,
+                x =>
+                    Assert.True(
+                        x.StatusCode is HttpStatusCode.Created or HttpStatusCode.Conflict,
                     $"Unexpected HTTP {(int)x.StatusCode}"
                 )
             );
