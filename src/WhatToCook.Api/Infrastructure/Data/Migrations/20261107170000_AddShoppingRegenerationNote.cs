@@ -22,9 +22,6 @@ public partial class AddShoppingRegenerationNote : Migration
 
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "RegenerationNote",
-            table: "shopping_list_items"
-        );
+        migrationBuilder.DropColumn(name: "RegenerationNote", table: "shopping_list_items");
     }
 }
