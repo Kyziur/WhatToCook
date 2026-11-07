@@ -312,7 +312,7 @@ public sealed class RecipeImportService(
             cancellationToken
         );
         await dbContext.Database.ExecuteSqlInterpolatedAsync(
-            $"SELECT id FROM recipe_import_drafts WHERE id = {draftId} FOR UPDATE",
+            $"SELECT \"Id\" FROM recipe_import_drafts WHERE \"Id\" = {draftId} FOR UPDATE",
             cancellationToken
         );
         var draft = await LoadDraftAsync(draftId, cancellationToken);
