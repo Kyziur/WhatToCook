@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SkiaSharp;
 
@@ -19,44 +20,55 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
     {
         using var client = factory.CreateClient();
         var prefix = $"Paged{Guid.NewGuid():N}";
-        using (var scope = factory.Services.CreateScope())
+        try
         {
+            using (var scope = factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<
+                    WhatToCook.Api.Infrastructure.Data.AppDbContext
+                >();
+                db.Recipes.AddRange(
+                    Enumerable.Range(1, 505).Select(number => new WhatToCook.Api.Domain.Recipes.Recipe
+                    {
+                        Title = $"{prefix}{number:0000}",
+                        NormalizedTitle = $"{prefix}{number:0000}".ToLowerInvariant(),
+                        Servings = 4,
+                        IsActive = true,
+                    })
+                );
+                await db.SaveChangesAsync();
+            }
+
+            var first = await client.GetFromJsonAsync<PagedLibraryDto>(
+                $"/api/recipes/page?q={prefix}&page=1&pageSize=50", JsonOptions
+            );
+            Assert.NotNull(first);
+            Assert.Equal(505, first.TotalCount);
+            Assert.Equal(50, first.Items.Count);
+            Assert.Equal($"{prefix}0001", first.Items[0].Title);
+
+            var last = await client.GetFromJsonAsync<PagedLibraryDto>(
+                $"/api/recipes/page?q={prefix}&page=11&pageSize=50", JsonOptions
+            );
+            Assert.NotNull(last);
+            Assert.Equal(5, last.Items.Count);
+            Assert.Contains(last.Items, x => x.Title == $"{prefix}0505");
+            Assert.All(last.Items, x => Assert.DoesNotContain(first.Items, y => y.Id == x.Id));
+
+            var searched = await client.GetFromJsonAsync<
+                List<RecipeApiContracts.RecipeSummaryDto>
+            >($"/api/recipes/search?title={prefix}&page=11&pageSize=50", JsonOptions);
+            Assert.NotNull(searched);
+            Assert.Equal(5, searched.Count);
+        }
+        finally
+        {
+            using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<
                 WhatToCook.Api.Infrastructure.Data.AppDbContext
             >();
-            db.Recipes.AddRange(
-                Enumerable.Range(1, 505).Select(number => new WhatToCook.Api.Domain.Recipes.Recipe
-                {
-                    Title = $"{prefix}{number:0000}",
-                    NormalizedTitle = $"{prefix}{number:0000}".ToLowerInvariant(),
-                    Servings = 4,
-                    IsActive = true,
-                })
-            );
-            await db.SaveChangesAsync();
+            await db.Recipes.Where(x => x.Title.StartsWith(prefix)).ExecuteDeleteAsync();
         }
-
-        var first = await client.GetFromJsonAsync<PagedLibraryDto>(
-            $"/api/recipes/page?q={prefix}&page=1&pageSize=50", JsonOptions
-        );
-        Assert.NotNull(first);
-        Assert.Equal(505, first.TotalCount);
-        Assert.Equal(50, first.Items.Count);
-        Assert.Equal($"{prefix}0001", first.Items[0].Title);
-
-        var last = await client.GetFromJsonAsync<PagedLibraryDto>(
-            $"/api/recipes/page?q={prefix}&page=11&pageSize=50", JsonOptions
-        );
-        Assert.NotNull(last);
-        Assert.Equal(5, last.Items.Count);
-        Assert.Contains(last.Items, x => x.Title == $"{prefix}0505");
-        Assert.All(last.Items, x => Assert.DoesNotContain(first.Items, y => y.Id == x.Id));
-
-        var searched = await client.GetFromJsonAsync<
-            List<RecipeApiContracts.RecipeSummaryDto>
-        >($"/api/recipes/search?title={prefix}&page=11&pageSize=50", JsonOptions);
-        Assert.NotNull(searched);
-        Assert.Equal(5, searched.Count);
     }
 
     private sealed class PagedLibraryDto

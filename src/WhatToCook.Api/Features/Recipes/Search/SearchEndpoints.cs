@@ -65,8 +65,8 @@ public static class SearchEndpoints
             );
         }
 
-        var page = Math.Max(1, request.Page);
-        var size = Math.Clamp(request.PageSize, 1, RecipePaging.MaxPageSize);
+        var page = request.Page ?? 1;
+        var size = request.PageSize ?? RecipePaging.MaxPageSize;
         if (RecipePaging.IsInvalid(page, size))
         {
             return Results.ValidationProblem(new Dictionary<string, string[]>
@@ -146,9 +146,9 @@ public static class SearchEndpoints
         public string[] Ingredient { get; init; } = [];
 
         [FromQuery(Name = "page")]
-        public int Page { get; init; } = 1;
+        public int? Page { get; init; }
 
         [FromQuery(Name = "pageSize")]
-        public int PageSize { get; init; } = RecipePaging.MaxPageSize;
+        public int? PageSize { get; init; }
     }
 }

@@ -25,7 +25,9 @@ public static class LibraryEndpoints
         CancellationToken cancellationToken
     )
     {
-        if (RecipePaging.IsInvalid(request.Page, request.PageSize))
+        var page = request.Page ?? 1;
+        var pageSize = request.PageSize ?? RecipePaging.DefaultPageSize;
+        if (RecipePaging.IsInvalid(page, pageSize))
         {
             return Results.ValidationProblem(
                 new Dictionary<string, string[]>
@@ -50,7 +52,7 @@ public static class LibraryEndpoints
         }
 
         var ingredients = SplitNormalizedValues(request.Ingredients);
-        if (request.MatchAllIngredients)
+        if (request.MatchAllIngredients ?? true)
         {
             foreach (var ingredient in ingredients)
             {
@@ -68,8 +70,8 @@ public static class LibraryEndpoints
             );
         }
 
-        var page = await RecipePaging.FetchAsync(
-            query, request.Page, request.PageSize, request.Sort, cancellationToken
+        var result = await RecipePaging.FetchAsync(
+            query, page, pageSize, request.Sort ?? "TitleAscending", cancellationToken
         );
 
         // Facets represent the whole active catalog, not just the current result page.
@@ -87,7 +89,7 @@ public static class LibraryEndpoints
             .ToListAsync(cancellationToken);
 
         return Results.Ok(new RecipeLibraryPageResponse(
-            page.Items, page.TotalCount, request.Page, request.PageSize,
+            result.Items, result.TotalCount, page, pageSize,
             tagUsage.Keys.OrderBy(x => x).ToArray(),
             allIngredients,
             tagUsage
@@ -106,9 +108,9 @@ public static class LibraryEndpoints
     private sealed class RecipeLibraryPageRequest
     {
         [FromQuery(Name = "page")]
-        public int Page { get; init; } = 1;
+        public int? Page { get; init; }
         [FromQuery(Name = "pageSize")]
-        public int PageSize { get; init; } = RecipePaging.DefaultPageSize;
+        public int? PageSize { get; init; }
         [FromQuery(Name = "q")]
         public string? Q { get; init; }
         [FromQuery(Name = "tags")]
@@ -116,9 +118,9 @@ public static class LibraryEndpoints
         [FromQuery(Name = "ingredients")]
         public string? Ingredients { get; init; }
         [FromQuery(Name = "matchAllIngredients")]
-        public bool MatchAllIngredients { get; init; } = true;
+        public bool? MatchAllIngredients { get; init; }
         [FromQuery(Name = "sort")]
-        public string Sort { get; init; } = "TitleAscending";
+        public string? Sort { get; init; }
     }
 
     private sealed record RecipeLibraryPageResponse(
