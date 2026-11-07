@@ -327,10 +327,7 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
     )
     {
         using var client = factory.CreateClient();
-        var initial = await CreateRecipe(
-            client,
-            $"Before null validation {Guid.NewGuid():N}"
-        );
+        var initial = await CreateRecipe(client, $"Before null validation {Guid.NewGuid():N}");
         var ingredients =
             field == "ingredients"
                 ? invalidValue
