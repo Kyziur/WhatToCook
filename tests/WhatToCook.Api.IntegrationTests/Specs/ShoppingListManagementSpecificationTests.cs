@@ -246,6 +246,102 @@ public sealed class ShoppingListManagementSpecificationTests(TestWebApplicationF
         Assert.Contains(afterUpdate.Items, x => x.IsManual && x.Name == "Papier do pieczenia");
     }
 
+    [Theory]
+    [InlineData(200, true)]
+    [InlineData(201, false)]
+    public async Task AddManualItem_ShouldValidateTrimmedNameLength(int length, bool accepted)
+    {
+        using var client = factory.CreateClient();
+        var recipe = await CreateRecipe(
+            client,
+            $"ManualLimit {Guid.NewGuid():N}"[..24],
+            [new RecipeApiContracts.RecipeIngredientPayload("Pomidor", "1", "szt")]
+        );
+        var plan = await CreatePlan(
+            client,
+            $"Plan {Guid.NewGuid():N}",
+            new DateOnly(2026, 6, 1),
+            new DateOnly(2026, 6, 7)
+        );
+        await SavePlanWithSingleEntry(client, plan, recipe.Id, 1m, new DateOnly(2026, 6, 1));
+        var generate = await client.PostAsync($"/api/plans/{plan.Id}/shopping-generated", null);
+        Assert.Equal(HttpStatusCode.NoContent, generate.StatusCode);
+
+        var url = $"/api/shopping-lists/plan/{plan.Id}";
+        var before = await client.GetFromJsonAsync<ShoppingListDto>(url, JsonOptions);
+        Assert.NotNull(before);
+
+        var name = new string('M', length);
+        var response = await client.PostAsJsonAsync(
+            $"{url}/manual-items",
+            new ManualItemPayload { Text = $"  {name}  " }
+        );
+        Assert.Equal(accepted ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.StatusCode);
+
+        var after = await client.GetFromJsonAsync<ShoppingListDto>(url, JsonOptions);
+        Assert.NotNull(after);
+        Assert.Equal(before!.Items.Count + (accepted ? 1 : 0), after!.Items.Count);
+        Assert.Equal(accepted, after.Items.Any(x => x.IsManual && x.Name == name));
+    }
+
+    [Theory]
+    [InlineData(200, true)]
+    [InlineData(201, false)]
+    public async Task AddManualItem_ShouldValidateSupplementaryUnicodeScalarCount(
+        int scalarCount,
+        bool accepted
+    )
+    {
+        using var client = factory.CreateClient();
+        var recipe = await CreateRecipe(
+            client,
+            $"ManualUnicode {Guid.NewGuid():N}"[..24],
+            [new RecipeApiContracts.RecipeIngredientPayload("Pomidor", "1", "szt")]
+        );
+        var plan = await CreatePlan(
+            client,
+            $"Plan {Guid.NewGuid():N}",
+            new DateOnly(2026, 6, 1),
+            new DateOnly(2026, 6, 7)
+        );
+        await SavePlanWithSingleEntry(client, plan, recipe.Id, 1m, new DateOnly(2026, 6, 1));
+        var generate = await client.PostAsync($"/api/plans/{plan.Id}/shopping-generated", null);
+        Assert.Equal(HttpStatusCode.NoContent, generate.StatusCode);
+
+        var url = $"/api/shopping-lists/plan/{plan.Id}";
+        var before = await client.GetFromJsonAsync<ShoppingListDto>(url, JsonOptions);
+        Assert.NotNull(before);
+
+        var name = string.Concat(Enumerable.Repeat("😀", scalarCount));
+
+        var response = await client.PostAsJsonAsync(
+            $"{url}/manual-items",
+            new ManualItemPayload { Text = name }
+        );
+        Assert.Equal(accepted ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.StatusCode);
+
+        var after = await client.GetFromJsonAsync<ShoppingListDto>(url, JsonOptions);
+        Assert.NotNull(after);
+        Assert.Equal(before!.Id, after!.Id);
+        Assert.Equal(before.Items.Count + (accepted ? 1 : 0), after.Items.Count);
+
+        if (accepted)
+        {
+            Assert.Contains(after.Items, item => item.IsManual && item.Name == name);
+        }
+        else
+        {
+            Assert.Equal(
+                before.Items.Select(item =>
+                    (item.Id, item.Name, item.QuantityText, item.Unit, item.State, item.IsManual)
+                ),
+                after.Items.Select(item =>
+                    (item.Id, item.Name, item.QuantityText, item.Unit, item.State, item.IsManual)
+                )
+            );
+        }
+    }
+
     [Fact]
     public async Task Recommendations_ShouldRankMatchedIngredientsAndExcludePlannedRecipes()
     {

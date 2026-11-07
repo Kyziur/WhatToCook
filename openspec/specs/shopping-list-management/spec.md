@@ -43,6 +43,14 @@ The system SHALL allow each shopping list item to be marked as `MAM` or `NIE MAM
 - **WHEN** the user adds a custom shopping list entry not derived from a recipe
 - **THEN** the system stores the entry as a plain-text item in the shopping list
 
+#### Scenario: Validate manual item length
+- **WHEN** the user adds a nonempty manual item containing at most 200 Unicode scalar values after trimming
+- **THEN** the system stores the trimmed item text
+
+#### Scenario: Reject an oversized manual item
+- **WHEN** the user adds a manual item containing more than 200 Unicode scalar values after trimming
+- **THEN** the system returns a validation error without changing the shopping list
+
 ### Requirement: Regenerating a shopping list preserves matching generated state and manual items
 The system SHALL require an explicit regeneration decision before saving meal-plan changes that affect an existing shopping list and SHALL atomically update generated items by stable ingredient-and-unit keys without removing manual items, including duplicates, or checklist state for matching generated items.
 

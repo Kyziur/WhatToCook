@@ -1,9 +1,12 @@
+using System.Text;
 using WhatToCook.Api.Domain.Shopping;
 
 namespace WhatToCook.Api.Features.Shopping.Lists;
 
 public static class ShoppingListEndpoints
 {
+    private const int MaxManualItemNameLength = 200;
+
     public static IEndpointRouteBuilder MapShoppingListEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/shopping-lists").WithTags("Shopping");
@@ -114,12 +117,38 @@ public static class ShoppingListEndpoints
             );
         }
 
+        if (ExceedsMaxManualItemNameLength(request.Text))
+        {
+            return Results.ValidationProblem(
+                new Dictionary<string, string[]>
+                {
+                    [nameof(AddManualItemRequest.Text)] = ["Text must be at most 200 characters."],
+                }
+            );
+        }
+
         var list = await shoppingListService.AddManualItemAsync(
             planId,
             request.Text,
             cancellationToken
         );
         return list is null ? Results.NotFound() : Results.Ok(ToResponse(list));
+    }
+
+    private static bool ExceedsMaxManualItemNameLength(string text)
+    {
+        var trimmedText = text.AsSpan().Trim();
+        var scalarCount = 0;
+
+        foreach (var _ in trimmedText.EnumerateRunes())
+        {
+            if (++scalarCount > MaxManualItemNameLength)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static async Task<IResult> CopyShoppingListText(
