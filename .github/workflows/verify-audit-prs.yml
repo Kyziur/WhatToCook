@@ -1,0 +1,95 @@
+name: Temporary independent audit PR verification
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/verify-audit-prs.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: PR ${{ matrix.pr }} on CI-unblocked baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pr: 2
+            branch: fix/cor-05-plan-name-limit
+          - pr: 3
+            branch: fix/cor-06-manual-item-name-limit
+          - pr: 4
+            branch: fix/cor-01-normalized-ingredient-tag-keys
+          - pr: 5
+            branch: fix/cor-08-recipe-null-input
+          - pr: 6
+            branch: chore/perf-02-remove-inactive-output-cache
+          - pr: 7
+            branch: fix/cor-02-import-draft-bounds
+          - pr: 8
+            branch: docs/align-openspec-product-context
+    steps:
+      - name: Checkout CI-unblocked PR 1 baseline
+        uses: actions/checkout@v4
+        with:
+          ref: docs/product-user-stories-2026-11-06
+          fetch-depth: 0
+
+      - name: Apply only changes from target audit PR
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "refs/heads/${{ matrix.branch }}:refs/remotes/origin/${{ matrix.branch }}"
+          git fetch origin "refs/heads/main:refs/remotes/origin/main"
+          base="$(git merge-base origin/main "origin/${{ matrix.branch }}")"
+          git diff --binary "$base" "origin/${{ matrix.branch }}" | git apply --3way
+          git diff --check
+          git status --short
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Restore
+        shell: pwsh
+        run: |
+          dotnet tool restore
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet restore WhatToCook.slnx
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build
+        run: dotnet build WhatToCook.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test WhatToCook.slnx --no-build --configuration Release
+
+      - name: Install browser dependencies
+        shell: bash
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: E2E
+        run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts
+
+      - name: CSharpier
+        run: dotnet csharpier check .
+
+      - name: Dependency audit
+        shell: pwsh
+        run: |
+          dotnet list WhatToCook.slnx package --vulnerable --include-transitive
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm audit --audit-level=high
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
