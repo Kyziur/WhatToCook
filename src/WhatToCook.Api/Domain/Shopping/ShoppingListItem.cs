@@ -9,6 +9,7 @@ public sealed class ShoppingListItem
     public string? NormalizedName { get; set; }
     public string? QuantityText { get; set; }
     public string? QuantityContext { get; set; }
+    public string? RegenerationNote { get; set; }
     public string? Unit { get; set; }
     public ChecklistState State { get; set; } = ChecklistState.NieMam;
     public bool IsManual { get; set; }

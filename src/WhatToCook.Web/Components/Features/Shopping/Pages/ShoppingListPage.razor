@@ -568,7 +568,7 @@
             <button type="button" class="shopping-item @(item.State == ShoppingChecklistState.Mam ? "shopping-item-mam" : "shopping-item-niemam")" aria-pressed="@(item.State == ShoppingChecklistState.Mam ? "true" : "false")" aria-label="@GetToggleLabel(item)" disabled="@IsBusy" @onclick="() => ToggleStateAsync(item)">
                 <span class="planner-state-indicator @(item.State == ShoppingChecklistState.NieMam ? "niemam" : "mam")">@(item.State == ShoppingChecklistState.NieMam ? "❌ Nie mam" : "✅ Mam w domu")</span>
                 <span class="shopping-item-copy"><strong>@item.Name</strong>@if (item.IsManual) { <small>pozycja ręczna</small> }</span>
-                <span class="shopping-item-quantity">@FormatItemQuantity(item)</span>
+                <span class="shopping-item-quantity">@FormatItemQuantity(item)@if (item.RegenerationNote is not null) { <small>@item.RegenerationNote</small> }</span>
             </button>
         }
     </div>;

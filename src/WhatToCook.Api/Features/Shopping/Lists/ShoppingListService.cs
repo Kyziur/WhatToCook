@@ -280,6 +280,7 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
         }
 
         item.State = state;
+        item.RegenerationNote = null;
         shoppingList.UpdatedAt = DateTimeOffset.UtcNow;
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -483,28 +484,79 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
         IReadOnlyList<ShoppingListItem> generatedItems
     )
     {
-        var existingGeneratedItems = shoppingList.Items.Where(x => !x.IsManual).ToList();
-        var existingGeneratedIds = existingGeneratedItems.Select(x => x.Id).ToHashSet();
-        var existingGenerated = existingGeneratedItems
-            .Where(x => !x.IsManual)
+        var existingItems = shoppingList.Items.Where(x => !x.IsManual).ToList();
+        var existingIds = existingItems.Select(x => x.Id).ToHashSet();
+        var existingByIngredient = existingItems
             .GroupBy(GetIngredientUnitKey)
-            .ToDictionary(x => x.Key, x => new Queue<ShoppingListItem>(x));
-        var retainedGenerated = new HashSet<Guid>();
+            .ToDictionary(group => group.Key, group => group.OrderBy(x => x.SortOrder).ToList());
 
+        // Reserve unique exact-amount matches before reusing any obsolete row.
+        // Otherwise an earlier changed amount could steal the identity of a later exact match.
+        var assignments = new Dictionary<ShoppingListItem, (ShoppingListItem Existing, bool KeepState)>();
+        foreach (var incomingGroup in generatedItems.GroupBy(GetIngredientUnitKey))
+        {
+            if (!existingByIngredient.TryGetValue(incomingGroup.Key, out var oldGroup))
+            {
+                continue;
+            }
+
+            var remaining = oldGroup.ToList();
+            var upcoming = incomingGroup.ToList();
+            foreach (var incoming in upcoming)
+            {
+                var amount = GetAmountSignature(incoming);
+                if (upcoming.Count(x => GetAmountSignature(x) == amount) != 1)
+                {
+                    continue;
+                }
+
+                var matchingOld = oldGroup.Where(x => GetAmountSignature(x) == amount).ToList();
+                if (matchingOld.Count != 1)
+                {
+                    continue;
+                }
+
+                assignments[incoming] = (matchingOld[0], true);
+                remaining.Remove(matchingOld[0]);
+            }
+
+            foreach (var incoming in upcoming.Where(x => !assignments.ContainsKey(x)))
+            {
+                if (remaining.Count == 0)
+                {
+                    break;
+                }
+
+                assignments[incoming] = (remaining[0], false);
+                remaining.RemoveAt(0);
+            }
+        }
+
+        var retainedIds = new HashSet<Guid>();
         for (var index = 0; index < generatedItems.Count; index++)
         {
             var generated = generatedItems[index];
-            var key = GetIngredientUnitKey(generated);
-            if (existingGenerated.TryGetValue(key, out var candidates) && candidates.Count > 0)
+            if (assignments.TryGetValue(generated, out var match))
             {
-                var existing = candidates.Dequeue();
-                existing.Name = generated.Name;
-                existing.NormalizedName = generated.NormalizedName;
-                existing.QuantityText = generated.QuantityText;
-                existing.QuantityContext = generated.QuantityContext;
-                existing.Unit = generated.Unit;
-                existing.SortOrder = index;
-                retainedGenerated.Add(existing.Id);
+                var previous = match.Existing;
+                var amountChanged = GetAmountSignature(previous) != GetAmountSignature(generated);
+                previous.Name = generated.Name;
+                previous.NormalizedName = generated.NormalizedName;
+                previous.QuantityText = generated.QuantityText;
+                previous.QuantityContext = generated.QuantityContext;
+                previous.Unit = generated.Unit;
+                previous.SortOrder = index;
+                previous.RegenerationNote = match.KeepState
+                    ? null
+                    : amountChanged
+                        ? "Ilość uległa zmianie — sprawdź dostępność."
+                        : "Dopasowanie pozycji jest niejednoznaczne — sprawdź dostępność.";
+                if (!match.KeepState)
+                {
+                    previous.State = ChecklistState.NieMam;
+                }
+
+                retainedIds.Add(previous.Id);
                 continue;
             }
 
@@ -513,20 +565,24 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
             dbContext.ShoppingListItems.Add(generated);
         }
 
-        var staleItems = shoppingList
-            .Items.Where(x =>
-                existingGeneratedIds.Contains(x.Id) && !retainedGenerated.Contains(x.Id)
-            )
+        var stale = shoppingList.Items
+            .Where(x => existingIds.Contains(x.Id) && !retainedIds.Contains(x.Id))
             .ToList();
-        dbContext.ShoppingListItems.RemoveRange(staleItems);
+        dbContext.ShoppingListItems.RemoveRange(stale);
 
-        var manualIndex = generatedItems.Count;
-        foreach (
-            var manualItem in shoppingList.Items.Where(x => x.IsManual).OrderBy(x => x.SortOrder)
-        )
+        var nextSortOrder = generatedItems.Count;
+        foreach (var manual in shoppingList.Items.Where(x => x.IsManual).OrderBy(x => x.SortOrder))
         {
-            manualItem.SortOrder = manualIndex++;
+            manual.SortOrder = nextSortOrder++;
         }
+    }
+
+    private static string GetAmountSignature(ShoppingListItem item)
+    {
+        var amount = TryParseDecimal(item.QuantityText, out var numeric)
+            ? $"numeric:{FormatQuantity(numeric)}"
+            : $"text:{TextNormalizer.Normalize(item.QuantityText ?? string.Empty)}";
+        return $"{amount}|{item.QuantityContext ?? string.Empty}";
     }
 
     private static string GetIngredientUnitKey(ShoppingListItem item) =>
@@ -551,7 +607,8 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
                     x.IsManual,
                     x.SortOrder,
                     ToDisplayText(x),
-                    x.QuantityContext
+                    x.QuantityContext,
+                    x.RegenerationNote
                 ))
                 .ToList()
         );
@@ -660,5 +717,6 @@ public sealed record ShoppingListItemView(
     bool IsManual,
     int SortOrder,
     string DisplayText,
-    string? QuantityContext
+    string? QuantityContext,
+    string? RegenerationNote
 );
