@@ -12,9 +12,7 @@ public static class LibraryEndpoints
     {
         var group = app.MapGroup("/api/recipes").WithTags("Recipes");
 
-        group
-            .MapGet("/", GetActiveRecipes)
-            .WithName("GetRecipeLibrary");
+        group.MapGet("/", GetActiveRecipes).WithName("GetRecipeLibrary");
 
         return app;
     }
