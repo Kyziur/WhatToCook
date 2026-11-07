@@ -23,6 +23,28 @@ public static class RecipeWriteValidator
     {
         var errors = new Dictionary<string, string[]>();
 
+        // System.Text.Json can assign explicit nulls despite non-nullable DTO annotations.
+        // Reject them before any collection enumeration or persistence mutation.
+        if (request.Ingredients is null || request.Ingredients.Any(x => x is null))
+        {
+            errors[nameof(request.Ingredients)] = ["Ingredients must contain non-null items."];
+        }
+
+        if (request.Steps is null || request.Steps.Any(x => x is null))
+        {
+            errors[nameof(request.Steps)] = ["Steps must contain non-null items."];
+        }
+
+        if (request.Tags is null || request.Tags.Any(x => x is null))
+        {
+            errors[nameof(request.Tags)] = ["Tags must contain non-null items."];
+        }
+
+        if (errors.Count > 0)
+        {
+            return errors;
+        }
+
         if (string.IsNullOrWhiteSpace(request.Title))
         {
             errors[nameof(request.Title)] = ["Title is required."];
