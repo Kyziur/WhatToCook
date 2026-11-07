@@ -276,10 +276,7 @@ public sealed class ShoppingListManagementSpecificationTests(TestWebApplicationF
             $"{url}/manual-items",
             new ManualItemPayload { Text = $"  {name}  " }
         );
-        Assert.Equal(
-            accepted ? HttpStatusCode.OK : HttpStatusCode.BadRequest,
-            response.StatusCode
-        );
+        Assert.Equal(accepted ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.StatusCode);
 
         var after = await client.GetFromJsonAsync<ShoppingListDto>(url, JsonOptions);
         Assert.NotNull(after);
