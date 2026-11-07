@@ -167,7 +167,10 @@ public sealed class ShoppingListManagementSpecificationTests(TestWebApplicationF
             }
         );
 
-        using var generate = await client.PostAsync($"/api/plans/{plan.Id}/shopping-generated", null);
+        using var generate = await client.PostAsync(
+            $"/api/plans/{plan.Id}/shopping-generated",
+            null
+        );
         Assert.Equal(HttpStatusCode.NoContent, generate.StatusCode);
         var generated = await client.GetFromJsonAsync<ShoppingListDto>(
             $"/api/shopping-lists/plan/{plan.Id}",
