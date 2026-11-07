@@ -46,13 +46,17 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
             fields.Add($"ingredients={Uri.EscapeDataString(string.Join("|", query.Ingredients))}");
         }
 
-        var page = await httpClient.GetFromJsonAsync<RecipePageDto>(
-            $"/api/recipes/page?{string.Join("&", fields)}",
-            cancellationToken
-        ) ?? throw new HttpRequestException("Catalog page response is missing.");
+        var page =
+            await httpClient.GetFromJsonAsync<RecipePageDto>(
+                $"/api/recipes/page?{string.Join("&", fields)}",
+                cancellationToken
+            ) ?? throw new HttpRequestException("Catalog page response is missing.");
         return new CatalogPage(
             page.Items.Select(MapSummaryToCatalogItem).ToList(),
-            page.TotalCount, page.Tags, page.Ingredients, page.TagUsage
+            page.TotalCount,
+            page.Tags,
+            page.Ingredients,
+            page.TagUsage
         );
     }
 

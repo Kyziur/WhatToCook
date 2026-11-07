@@ -27,10 +27,16 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
 
         var recipeA = RecipeApiContracts.CreateRecipePayload($"Filter A {suffix}");
         recipeA.Tags = [tagA, tagB];
-        recipeA.Ingredients = [new RecipeApiContracts.RecipeIngredientPayload(ingredientA, "1", "szt")];
+        recipeA.Ingredients =
+        [
+            new RecipeApiContracts.RecipeIngredientPayload(ingredientA, "1", "szt"),
+        ];
         var recipeB = RecipeApiContracts.CreateRecipePayload($"Filter B {suffix}");
         recipeB.Tags = [tagA];
-        recipeB.Ingredients = [new RecipeApiContracts.RecipeIngredientPayload(ingredientB, "1", "szt")];
+        recipeB.Ingredients =
+        [
+            new RecipeApiContracts.RecipeIngredientPayload(ingredientB, "1", "szt"),
+        ];
 
         using var createdA = await client.PostAsJsonAsync("/api/recipes", recipeA);
         using var createdB = await client.PostAsJsonAsync("/api/recipes", recipeB);
@@ -74,23 +80,25 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
         {
             using (var scope = factory.Services.CreateScope())
             {
-                var db = scope.ServiceProvider.GetRequiredService<
-                    WhatToCook.Api.Infrastructure.Data.AppDbContext
-                >();
+                var db =
+                    scope.ServiceProvider.GetRequiredService<WhatToCook.Api.Infrastructure.Data.AppDbContext>();
                 db.Recipes.AddRange(
-                    Enumerable.Range(1, 505).Select(number => new WhatToCook.Api.Domain.Recipes.Recipe
-                    {
-                        Title = $"{prefix}{number:0000}",
-                        NormalizedTitle = $"{prefix}{number:0000}".ToLowerInvariant(),
-                        Servings = 4,
-                        IsActive = true,
-                    })
+                    Enumerable
+                        .Range(1, 505)
+                        .Select(number => new WhatToCook.Api.Domain.Recipes.Recipe
+                        {
+                            Title = $"{prefix}{number:0000}",
+                            NormalizedTitle = $"{prefix}{number:0000}".ToLowerInvariant(),
+                            Servings = 4,
+                            IsActive = true,
+                        })
                 );
                 await db.SaveChangesAsync();
             }
 
             var first = await client.GetFromJsonAsync<PagedLibraryDto>(
-                $"/api/recipes/page?q={prefix}&page=1&pageSize=50", JsonOptions
+                $"/api/recipes/page?q={prefix}&page=1&pageSize=50",
+                JsonOptions
             );
             Assert.NotNull(first);
             Assert.Equal(505, first.TotalCount);
@@ -98,25 +106,26 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
             Assert.Equal($"{prefix}0001", first.Items[0].Title);
 
             var last = await client.GetFromJsonAsync<PagedLibraryDto>(
-                $"/api/recipes/page?q={prefix}&page=11&pageSize=50", JsonOptions
+                $"/api/recipes/page?q={prefix}&page=11&pageSize=50",
+                JsonOptions
             );
             Assert.NotNull(last);
             Assert.Equal(5, last.Items.Count);
             Assert.Contains(last.Items, x => x.Title == $"{prefix}0505");
             Assert.All(last.Items, x => Assert.DoesNotContain(first.Items, y => y.Id == x.Id));
 
-            var searched = await client.GetFromJsonAsync<
-                List<RecipeApiContracts.RecipeSummaryDto>
-            >($"/api/recipes/search?title={prefix}&page=11&pageSize=50", JsonOptions);
+            var searched = await client.GetFromJsonAsync<List<RecipeApiContracts.RecipeSummaryDto>>(
+                $"/api/recipes/search?title={prefix}&page=11&pageSize=50",
+                JsonOptions
+            );
             Assert.NotNull(searched);
             Assert.Equal(5, searched.Count);
         }
         finally
         {
             using var scope = factory.Services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<
-                WhatToCook.Api.Infrastructure.Data.AppDbContext
-            >();
+            var db =
+                scope.ServiceProvider.GetRequiredService<WhatToCook.Api.Infrastructure.Data.AppDbContext>();
             await db.Recipes.Where(x => x.Title.StartsWith(prefix)).ExecuteDeleteAsync();
         }
     }

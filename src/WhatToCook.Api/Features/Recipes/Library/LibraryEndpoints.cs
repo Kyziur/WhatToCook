@@ -32,7 +32,10 @@ public static class LibraryEndpoints
             return Results.ValidationProblem(
                 new Dictionary<string, string[]>
                 {
-                    [nameof(request.Page)] = ["Page must be positive and pageSize must be between 1 and 50."],
+                    [nameof(request.Page)] =
+                    [
+                        "Page must be positive and pageSize must be between 1 and 50.",
+                    ],
                 }
             );
         }
@@ -64,42 +67,52 @@ public static class LibraryEndpoints
         else if (ingredients.Length > 0)
         {
             query = query.Where(x =>
-                x.Ingredients.Any(ri => ingredients.Any(ingredient =>
-                    ri.Ingredient.NormalizedName.Contains(ingredient)
-                ))
+                x.Ingredients.Any(ri =>
+                    ingredients.Any(ingredient => ri.Ingredient.NormalizedName.Contains(ingredient))
+                )
             );
         }
 
         var result = await RecipePaging.FetchAsync(
-            query, page, pageSize, request.Sort ?? "TitleAscending", cancellationToken
+            query,
+            page,
+            pageSize,
+            request.Sort ?? "TitleAscending",
+            cancellationToken
         );
 
         // Facets represent the whole active catalog, not just the current result page.
-        var tagUsage = await dbContext.RecipeTags
-            .AsNoTracking()
+        var tagUsage = await dbContext
+            .RecipeTags.AsNoTracking()
             .Where(x => x.Recipe.IsActive)
             .GroupBy(x => x.Tag.DisplayName)
             .Select(group => new { Tag = group.Key, Count = group.Count() })
             .ToDictionaryAsync(x => x.Tag, x => x.Count, cancellationToken);
-        var allIngredients = await dbContext.Ingredients
-            .AsNoTracking()
+        var allIngredients = await dbContext
+            .Ingredients.AsNoTracking()
             .Where(x => x.RecipeIngredients.Any(ri => ri.Recipe.IsActive))
             .OrderBy(x => x.DisplayName)
             .Select(x => x.DisplayName)
             .ToListAsync(cancellationToken);
 
-        return Results.Ok(new RecipeLibraryPageResponse(
-            result.Items, result.TotalCount, page, pageSize,
-            tagUsage.Keys.OrderBy(x => x).ToArray(),
-            allIngredients,
-            tagUsage
-        ));
+        return Results.Ok(
+            new RecipeLibraryPageResponse(
+                result.Items,
+                result.TotalCount,
+                page,
+                pageSize,
+                tagUsage.Keys.OrderBy(x => x).ToArray(),
+                allIngredients,
+                tagUsage
+            )
+        );
     }
 
     private static string[] SplitNormalizedValues(string? value) =>
         string.IsNullOrWhiteSpace(value)
             ? []
-            : value.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            : value
+                .Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Select(TextNormalizer.Normalize)
                 .Where(x => x.Length > 0)
                 .Distinct(StringComparer.Ordinal)
@@ -109,16 +122,22 @@ public static class LibraryEndpoints
     {
         [FromQuery(Name = "page")]
         public int? Page { get; init; }
+
         [FromQuery(Name = "pageSize")]
         public int? PageSize { get; init; }
+
         [FromQuery(Name = "q")]
         public string? Q { get; init; }
+
         [FromQuery(Name = "tags")]
         public string? Tags { get; init; }
+
         [FromQuery(Name = "ingredients")]
         public string? Ingredients { get; init; }
+
         [FromQuery(Name = "matchAllIngredients")]
         public bool? MatchAllIngredients { get; init; }
+
         [FromQuery(Name = "sort")]
         public string? Sort { get; init; }
     }

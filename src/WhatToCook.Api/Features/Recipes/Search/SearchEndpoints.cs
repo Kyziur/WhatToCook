@@ -69,14 +69,20 @@ public static class SearchEndpoints
         var size = request.PageSize ?? RecipePaging.MaxPageSize;
         if (RecipePaging.IsInvalid(page, size))
         {
-            return Results.ValidationProblem(new Dictionary<string, string[]>
-            {
-                [nameof(request.Page)] = ["Page exceeds the supported range."],
-            });
+            return Results.ValidationProblem(
+                new Dictionary<string, string[]>
+                {
+                    [nameof(request.Page)] = ["Page exceeds the supported range."],
+                }
+            );
         }
 
         var result = await RecipePaging.FetchAsync(
-            query, page, size, "TitleAscending", cancellationToken
+            query,
+            page,
+            size,
+            "TitleAscending",
+            cancellationToken
         );
         // Preserve the legacy list response; callers can retrieve additional bounded pages.
         return Results.Ok(result.Items);

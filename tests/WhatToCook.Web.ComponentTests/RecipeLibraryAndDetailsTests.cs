@@ -158,7 +158,8 @@ public sealed class RecipeLibraryAndDetailsTests
     public void Library_ShouldNavigatePastFirstPageAndKeepFullCatalogFacets()
     {
         using var context = CreateContext();
-        var items = Enumerable.Range(1, 55)
+        var items = Enumerable
+            .Range(1, 55)
             .Select(index => new RecipeCatalogItem(
                 Guid.NewGuid(),
                 $"Przepis {index:00}",
@@ -167,7 +168,13 @@ public sealed class RecipeLibraryAndDetailsTests
                 null,
                 true,
                 [index == 55 ? "ostatni-tag" : "wspólny"],
-                [new RecipeCatalogIngredient(index == 55 ? "ostatni-składnik" : "pomidor", null, null)],
+                [
+                    new RecipeCatalogIngredient(
+                        index == 55 ? "ostatni-składnik" : "pomidor",
+                        null,
+                        null
+                    ),
+                ],
                 ["Krok"]
             ))
             .ToArray();
