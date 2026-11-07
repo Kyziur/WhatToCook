@@ -733,9 +733,9 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
         Assert.True(draft.CanFinalize);
 
         var responses = await Task.WhenAll(
-            Enumerable.Range(0, 10).Select(_ =>
-                client.PostAsync($"/api/recipe-imports/{draft.Id}/finalize", null)
-            )
+            Enumerable
+                .Range(0, 10)
+                .Select(_ => client.PostAsync($"/api/recipe-imports/{draft.Id}/finalize", null))
         );
         try
         {
