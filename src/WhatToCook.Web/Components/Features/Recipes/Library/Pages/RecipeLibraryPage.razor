@@ -42,7 +42,7 @@
             class="input"
             value="@SearchTerm"
             data-interactive="@IsInteractive.ToString().ToLowerInvariant()"
-            disabled="@(LoadState == CatalogLoadState.Loading || !IsInteractive)"
+            disabled="@(!IsInteractive)"
             @oninput="OnSearchTermInput"
             placeholder="Szukaj przepisu..." />
     </section>
@@ -99,7 +99,7 @@
                             class="input"
                             value="@SearchTerm"
                             data-interactive="@IsInteractive.ToString().ToLowerInvariant()"
-                            disabled="@(LoadState == CatalogLoadState.Loading || !IsInteractive)"
+                            disabled="@(!IsInteractive)"
                             @oninput="OnSearchTermInput"
                             placeholder="Szukaj przepisów..." />
                     </div>
@@ -314,6 +314,7 @@
     private bool QueryInitialized { get; set; }
     private string ErrorMessage { get; set; } = string.Empty;
     private readonly CancellationTokenSource lifetimeCts = new();
+    private long requestSequence;
     private int SelectedFilterCount => SelectedTags.Count + SelectedIngredients.Count;
 
     [SupplyParameterFromQuery(Name = "q")]
@@ -357,6 +358,7 @@
 
     private async Task LoadAsync()
     {
+        var sequence = ++requestSequence;
         LoadState = CatalogLoadState.Loading;
         ErrorMessage = string.Empty;
 
@@ -374,6 +376,11 @@
                 ),
                 lifetimeCts.Token
             );
+            if (sequence != requestSequence || lifetimeCts.IsCancellationRequested)
+            {
+                return;
+            }
+
             AllRecipes = page.Items.ToList();
             TotalResults = page.TotalCount;
             AvailableTags = page.Tags
@@ -395,6 +402,10 @@
         catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
         catch
         {
+            if (sequence != requestSequence)
+            {
+                return;
+            }
             AllRecipes = [];
             FilteredRecipes = [];
             ErrorMessage = "Spróbuj ponownie. Jeśli problem się powtarza, sprawdź połączenie.";
