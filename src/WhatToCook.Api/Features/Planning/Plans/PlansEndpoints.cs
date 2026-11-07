@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using WhatToCook.Api.Domain.Planning;
 using WhatToCook.Api.Features.Shopping.Lists;
-using WhatToCook.Api.Infrastructure.Validation;
 using WhatToCook.Api.Infrastructure.Data;
+using WhatToCook.Api.Infrastructure.Validation;
 
 namespace WhatToCook.Api.Features.Planning.Plans;
 
