@@ -772,11 +772,10 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
             Assert.Equal("finalized", persisted.Status);
             Assert.Equal(recipe.Id, persisted.FinalizedRecipeId);
 
-            var library =
-                await client.GetFromJsonAsync<List<RecipeApiContracts.RecipeSummaryDto>>(
-                    "/api/recipes",
-                    JsonOptions
-                );
+            var library = await client.GetFromJsonAsync<List<RecipeApiContracts.RecipeSummaryDto>>(
+                "/api/recipes",
+                JsonOptions
+            );
             Assert.NotNull(library);
             Assert.Single(library, x => x.Title == title);
         }
