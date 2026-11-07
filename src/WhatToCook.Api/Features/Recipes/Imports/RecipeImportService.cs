@@ -51,6 +51,13 @@ public sealed class RecipeImportService(
             return RecipeImportCreateResult.ValidationFailure("A valid recipe URL is required.");
         }
 
+        if (uri.ToString().Length > RecipeImportDraftLimits.MaxSourceUrlLength)
+        {
+            return RecipeImportCreateResult.ValidationFailure(
+                "Recipe URL must be at most 2000 characters."
+            );
+        }
+
         var adapter = sourceAdapterResolver.Resolve(uri);
         if (adapter is null)
         {
@@ -77,6 +84,20 @@ public sealed class RecipeImportService(
             return RecipeImportCreateResult.UnsupportedSource(
                 extraction.ErrorMessage ?? "The recipe page could not be extracted into a draft."
             );
+        }
+
+        var extracted = extraction.Draft;
+        var validation = RecipeImportDraftLimits.Validate(
+            extracted.Title,
+            extracted.Source,
+            extracted.Ingredients,
+            extracted.Steps,
+            extracted.Tags,
+            extracted.RawContent
+        );
+        if (validation is not null)
+        {
+            return RecipeImportCreateResult.ValidationFailure(validation);
         }
 
         var draft = new RecipeImportDraft
@@ -162,6 +183,18 @@ public sealed class RecipeImportService(
         CancellationToken cancellationToken
     )
     {
+        var validation = RecipeImportDraftLimits.Validate(
+            request.Title,
+            request.Source,
+            request.Ingredients,
+            request.Steps,
+            request.Tags
+        );
+        if (validation is not null)
+        {
+            return RecipeImportUpdateResult.ValidationFailure(validation);
+        }
+
         await using var transaction = await dbContext.Database.BeginTransactionAsync(
             cancellationToken
         );
