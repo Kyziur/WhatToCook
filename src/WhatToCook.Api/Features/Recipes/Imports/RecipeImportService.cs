@@ -51,7 +51,8 @@ public sealed class RecipeImportService(
             return RecipeImportCreateResult.ValidationFailure("A valid recipe URL is required.");
         }
 
-        if (uri.ToString().Length > RecipeImportDraftLimits.MaxSourceUrlLength)
+        var sourceUrl = uri.ToString();
+        if (RecipeImportDraftLimits.ExceedsMaxSourceUrlLength(sourceUrl))
         {
             return RecipeImportCreateResult.ValidationFailure(
                 "Recipe URL must be at most 2000 characters."
@@ -103,7 +104,7 @@ public sealed class RecipeImportService(
         var draft = new RecipeImportDraft
         {
             SourceType = RecipeImportSourceType.Url,
-            SourceUrl = uri.ToString(),
+            SourceUrl = sourceUrl,
             RawContent = extraction.Draft.RawContent,
             Title = extraction.Draft.Title,
             Servings = extraction.Draft.Servings,

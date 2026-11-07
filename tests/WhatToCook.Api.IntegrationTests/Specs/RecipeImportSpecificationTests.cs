@@ -367,6 +367,123 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
     }
 
     [Fact]
+    public async Task UpdateImportDraft_ShouldAcceptTagAtPostgresCharacterLimitAndRejectOverflow()
+    {
+        using var client = factory.CreateClient();
+        var url = $"https://aniagotuje.pl/przepis/unicode-tag-{Guid.NewGuid():N}";
+        factory.ImportedPagesByUrl[url] = CreateAniaGotujeHtml(
+            "Unicode tag draft",
+            "keksowka 11 x 30 cm"
+        );
+
+        var created = await client.PostAsJsonAsync(
+            "/api/recipe-imports/url",
+            new RecipeApiContracts.CreateRecipeImportFromUrlPayload { Url = url }
+        );
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var draft =
+            await created.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+                JsonOptions
+            );
+        Assert.NotNull(draft);
+        Assert.Contains(draft!.Issues, x => x.FieldPath == "Servings");
+
+        var tag = string.Concat(Enumerable.Repeat("😀", 100));
+        var updatePayload = new RecipeApiContracts.UpdateRecipeImportDraftPayload
+        {
+            Title = draft.Title,
+            Servings = draft.Servings,
+            Source = url,
+            Ingredients = draft
+                .Ingredients.Select(x => new RecipeApiContracts.RecipeImportIngredientPayload(
+                    x.Name,
+                    x.QuantityText,
+                    x.Unit
+                ))
+                .ToList(),
+            Steps = draft.Steps.ToList(),
+            Tags = [tag],
+        };
+
+        var updateResponse = await client.PutAsJsonAsync(
+            $"/api/recipe-imports/{draft.Id}",
+            updatePayload
+        );
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+        var updated =
+            await updateResponse.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+                JsonOptions
+            );
+        Assert.NotNull(updated);
+        Assert.Equal(new[] { tag }, updated!.Tags);
+        Assert.Contains(updated.Issues, x => x.FieldPath == "Servings");
+
+        var persisted = await client.GetFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+            $"/api/recipe-imports/{draft.Id}",
+            JsonOptions
+        );
+        Assert.NotNull(persisted);
+        var saved = persisted!;
+        Assert.Equal(new[] { tag }, saved.Tags);
+
+        var oversizedTag = string.Concat(Enumerable.Repeat("😀", 101));
+        var oversizedUpdateResponse = await client.PutAsJsonAsync(
+            $"/api/recipe-imports/{draft.Id}",
+            new RecipeApiContracts.UpdateRecipeImportDraftPayload
+            {
+                Title = "Rejected draft update",
+                Servings = updatePayload.Servings,
+                Source = updatePayload.Source,
+                Ingredients = updatePayload.Ingredients,
+                Steps = updatePayload.Steps,
+                Tags = [oversizedTag],
+            }
+        );
+        Assert.Equal(HttpStatusCode.BadRequest, oversizedUpdateResponse.StatusCode);
+
+        var afterRejectedUpdate =
+            await client.GetFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+                $"/api/recipe-imports/{draft.Id}",
+                JsonOptions
+            );
+        Assert.NotNull(afterRejectedUpdate);
+        var unchanged = afterRejectedUpdate!;
+        Assert.Equal(saved.Id, unchanged.Id);
+        Assert.Equal(
+            (
+                saved.SourceType,
+                saved.Status,
+                saved.SourceUrl,
+                saved.Title,
+                saved.Servings,
+                saved.Source,
+                saved.CanFinalize,
+                saved.FinalizedRecipeId
+            ),
+            (
+                unchanged.SourceType,
+                unchanged.Status,
+                unchanged.SourceUrl,
+                unchanged.Title,
+                unchanged.Servings,
+                unchanged.Source,
+                unchanged.CanFinalize,
+                unchanged.FinalizedRecipeId
+            )
+        );
+        Assert.Equal(
+            saved.Ingredients.Select(x => (x.Name, x.QuantityText, x.Unit)),
+            unchanged.Ingredients.Select(x => (x.Name, x.QuantityText, x.Unit))
+        );
+        Assert.Equal(saved.Steps, unchanged.Steps);
+        Assert.Equal(saved.Tags, unchanged.Tags);
+        Assert.Equal(
+            saved.Issues.Select(x => (x.FieldPath, x.Code, x.Message, x.Severity)),
+            unchanged.Issues.Select(x => (x.FieldPath, x.Code, x.Message, x.Severity))
+        );
+    }
+
+    [Fact]
     public async Task CreateImportDraft_ShouldRejectOversizedExtractedTitle()
     {
         using var client = factory.CreateClient();
@@ -378,6 +495,36 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
             new RecipeApiContracts.CreateRecipeImportFromUrlPayload { Url = url }
         );
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateImportDraft_ShouldValidateSourceUrlByUnicodeScalarCount()
+    {
+        using var client = factory.CreateClient();
+        var prefix = $"https://aniagotuje.pl/przepis/unicode-{Guid.NewGuid():N}-";
+        var acceptedUrl = prefix + string.Concat(Enumerable.Repeat("😀", 2000 - prefix.Length));
+        factory.ImportedPagesByUrl[acceptedUrl] = CreateAniaGotujeHtml(
+            "Unicode source URL",
+            "4 porcje"
+        );
+
+        var created = await client.PostAsJsonAsync(
+            "/api/recipe-imports/url",
+            new RecipeApiContracts.CreateRecipeImportFromUrlPayload { Url = acceptedUrl }
+        );
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var draft =
+            await created.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+                JsonOptions
+            );
+        Assert.NotNull(draft);
+        Assert.Equal(acceptedUrl, draft.SourceUrl);
+
+        var rejected = await client.PostAsJsonAsync(
+            "/api/recipe-imports/url",
+            new RecipeApiContracts.CreateRecipeImportFromUrlPayload { Url = acceptedUrl + "😀" }
+        );
+        Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
     }
 
     [Fact]
