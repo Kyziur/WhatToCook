@@ -359,7 +359,10 @@
     private async Task LoadAsync()
     {
         var sequence = ++requestSequence;
-        LoadState = CatalogLoadState.Loading;
+        if (LoadState != CatalogLoadState.Loaded)
+        {
+            LoadState = CatalogLoadState.Loading;
+        }
         ErrorMessage = string.Empty;
 
         try

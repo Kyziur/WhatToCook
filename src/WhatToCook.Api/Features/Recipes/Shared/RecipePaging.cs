@@ -22,10 +22,10 @@ internal static class RecipePaging
         var total = await query.CountAsync(cancellationToken);
         var ordered = sort switch
         {
-            "TitleDescending" => query.OrderByDescending(x => x.Title).ThenBy(x => x.Id),
-            "ServingsAscending" => query.OrderBy(x => x.Servings).ThenBy(x => x.Title).ThenBy(x => x.Id),
-            "ServingsDescending" => query.OrderByDescending(x => x.Servings).ThenBy(x => x.Title).ThenBy(x => x.Id),
-            _ => query.OrderBy(x => x.Title).ThenBy(x => x.Id),
+            "TitleDescending" => query.OrderByDescending(x => x.NormalizedTitle).ThenBy(x => x.Title).ThenBy(x => x.Id),
+            "ServingsAscending" => query.OrderBy(x => x.Servings).ThenBy(x => x.NormalizedTitle).ThenBy(x => x.Title).ThenBy(x => x.Id),
+            "ServingsDescending" => query.OrderByDescending(x => x.Servings).ThenBy(x => x.NormalizedTitle).ThenBy(x => x.Title).ThenBy(x => x.Id),
+            _ => query.OrderBy(x => x.NormalizedTitle).ThenBy(x => x.Title).ThenBy(x => x.Id),
         };
         var pageIds = await ordered
             .Skip((page - 1) * size)

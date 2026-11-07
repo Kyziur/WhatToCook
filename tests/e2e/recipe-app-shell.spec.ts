@@ -6,9 +6,9 @@ test.describe("OpenSpec: recipe-app-shell", () => {
     await gotoAndWaitForApp(page, "/");
 
     await expect(page.getByRole("heading", { name: "Biblioteka przepisów" })).toBeVisible();
-    await expect(page.getByRole("navigation")).toContainText("Biblioteka");
-    await expect(page.getByRole("navigation")).toContainText("Planer");
-    await expect(page.getByRole("navigation")).toContainText("Zakupy");
+    await expect(page.getByRole("navigation", { name: "Główna nawigacja" })).toContainText("Biblioteka");
+    await expect(page.getByRole("navigation", { name: "Główna nawigacja" })).toContainText("Planer");
+    await expect(page.getByRole("navigation", { name: "Główna nawigacja" })).toContainText("Zakupy");
 
     await attachPageSnapshot(page, testInfo, "library-landing");
   });
@@ -94,13 +94,13 @@ test.describe("OpenSpec: recipe-app-shell", () => {
     await gotoAndWaitForApp(page, "/recipes/new");
     await page.locator("#recipe-title").fill("Niezapisany test");
 
-    await page.getByRole("navigation").getByRole("link", { name: "Planer" }).click();
+    await page.getByRole("navigation", { name: "Główna nawigacja" }).getByRole("link", { name: "Planer" }).click();
     await expect(page).toHaveURL(/\/recipes\/new/);
   });
 
   test("Open planner from shell", async ({ page }, testInfo) => {
     await gotoAndWaitForApp(page, "/");
-    await page.getByRole("navigation").getByRole("link", { name: "Planer" }).click();
+    await page.getByRole("navigation", { name: "Główna nawigacja" }).getByRole("link", { name: "Planer" }).click();
     await expect(page).toHaveURL(/\/planning/);
     await expect(page.getByRole("heading", { name: "Plan posiłków" })).toBeVisible();
     await attachPageSnapshot(page, testInfo, "planner-screen");
