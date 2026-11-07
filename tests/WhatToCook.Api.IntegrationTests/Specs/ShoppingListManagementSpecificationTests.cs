@@ -828,10 +828,9 @@ public sealed class ShoppingListManagementSpecificationTests(TestWebApplicationF
         );
         Assert.NotNull(regenerated);
         Assert.Equal(2, regenerated!.Items.Count(x => x.IsManual && x.Name == "Mleko"));
-        Assert.Contains(regenerated.Items, x =>
-            x.Name == "Pomidor"
-            && x.State == "NIE_MAM"
-            && x.RegenerationNote != null
+        Assert.Contains(
+            regenerated.Items,
+            x => x.Name == "Pomidor" && x.State == "NIE_MAM" && x.RegenerationNote != null
         );
         Assert.Contains(regenerated.Items, x => x.Name == "Pomidor" && x.QuantityText == "2");
         Assert.DoesNotContain(regenerated.Items, x => x.Name == "Ogórek");
