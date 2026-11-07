@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -10,6 +11,7 @@ namespace WhatToCook.Api.Features.Planning.Plans;
 public static class PlansEndpoints
 {
     private const int MaxPlanEntries = 500;
+    private const int MaxPlanNameLength = 200;
 
     public static IEndpointRouteBuilder MapMealPlanEndpoints(this IEndpointRouteBuilder app)
     {
@@ -84,6 +86,16 @@ public static class PlansEndpoints
         var name = string.IsNullOrWhiteSpace(request.Name)
             ? BuildDefaultPlanName(request.DateFrom, request.DateTo)
             : request.Name.Trim();
+
+        if (IsPlanNameTooLong(name))
+        {
+            return Results.ValidationProblem(
+                new Dictionary<string, string[]>
+                {
+                    [nameof(request.Name)] = ["Name must be at most 200 characters."],
+                }
+            );
+        }
 
         var plan = new MealPlan
         {
@@ -295,6 +307,25 @@ public static class PlansEndpoints
         return null;
     }
 
+    private static bool IsPlanNameTooLong(string? name)
+    {
+        if (name is null)
+        {
+            return false;
+        }
+
+        var scalarCount = 0;
+        foreach (var _ in name.AsSpan().Trim().EnumerateRunes())
+        {
+            if (++scalarCount > MaxPlanNameLength)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static IResult? ValidateUpdateRequest(UpdateMealPlanRequest request)
     {
         var errors = new Dictionary<string, string[]>();
@@ -304,7 +335,7 @@ public static class PlansEndpoints
             errors[nameof(request.Name)] = ["Name is required."];
         }
 
-        if (request.Name.Trim().Length > 200)
+        if (IsPlanNameTooLong(request.Name))
         {
             errors[nameof(request.Name)] = ["Name must be at most 200 characters."];
         }

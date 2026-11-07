@@ -17,6 +17,14 @@ The system SHALL allow the user to create a meal plan with a date range and edit
 - **WHEN** the user creates a new meal plan whose date range overlaps another existing plan
 - **THEN** the system stores the new plan as a separate valid plan
 
+#### Scenario: Save a plan name at the supported length
+- **WHEN** the user creates or updates a valid plan with a nonempty name of at most 200 Unicode scalar values after trimming
+- **THEN** the system stores the trimmed name
+
+#### Scenario: Reject an oversized plan name
+- **WHEN** the user creates or updates a plan with a name exceeding 200 Unicode scalar values after trimming
+- **THEN** the system returns a validation error without changing stored plan data
+
 ### Requirement: User can assign recipes to specific days in a meal plan
 The system SHALL allow the user to add active recipes to individual days in a meal plan so that the same recipe can be planned on multiple days while appearing at most once per day in the same plan.
 
