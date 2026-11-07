@@ -240,8 +240,8 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         Assert.Contains(
             api.GetProperty("volumes").EnumerateArray(),
             volume =>
-                    volume.GetProperty("target").GetString() == "/data/recipe-images"
-                    && volume.GetProperty("source").GetString()
+                volume.GetProperty("target").GetString() == "/data/recipe-images"
+                && volume.GetProperty("source").GetString()
                     == Path.Combine(dataRoot, "recipe-images")
                 && volume.GetProperty("type").GetString() == "bind"
         );
