@@ -51,6 +51,14 @@ public sealed class RecipeImportService(
             return RecipeImportCreateResult.ValidationFailure("A valid recipe URL is required.");
         }
 
+        var sourceUrl = uri.ToString();
+        if (RecipeImportDraftLimits.ExceedsMaxSourceUrlLength(sourceUrl))
+        {
+            return RecipeImportCreateResult.ValidationFailure(
+                "Recipe URL must be at most 2000 characters."
+            );
+        }
+
         var adapter = sourceAdapterResolver.Resolve(uri);
         if (adapter is null)
         {
@@ -79,10 +87,24 @@ public sealed class RecipeImportService(
             );
         }
 
+        var extracted = extraction.Draft;
+        var validation = RecipeImportDraftLimits.Validate(
+            extracted.Title,
+            extracted.Source,
+            extracted.Ingredients,
+            extracted.Steps,
+            extracted.Tags,
+            extracted.RawContent
+        );
+        if (validation is not null)
+        {
+            return RecipeImportCreateResult.ValidationFailure(validation);
+        }
+
         var draft = new RecipeImportDraft
         {
             SourceType = RecipeImportSourceType.Url,
-            SourceUrl = uri.ToString(),
+            SourceUrl = sourceUrl,
             RawContent = extraction.Draft.RawContent,
             Title = extraction.Draft.Title,
             Servings = extraction.Draft.Servings,
@@ -133,6 +155,7 @@ public sealed class RecipeImportService(
         var evaluation = await EvaluateDraftAsync(
             draft.Title,
             draft.Servings,
+            draft.Source,
             extraction.Draft.Ingredients.ToList(),
             extraction.Draft.Steps.ToList(),
             extraction.Draft.Tags.ToList(),
@@ -162,6 +185,18 @@ public sealed class RecipeImportService(
         CancellationToken cancellationToken
     )
     {
+        var validation = RecipeImportDraftLimits.Validate(
+            request.Title,
+            request.Source,
+            request.Ingredients,
+            request.Steps,
+            request.Tags
+        );
+        if (validation is not null)
+        {
+            return RecipeImportUpdateResult.ValidationFailure(validation);
+        }
+
         await using var transaction = await dbContext.Database.BeginTransactionAsync(
             cancellationToken
         );
@@ -252,6 +287,7 @@ public sealed class RecipeImportService(
         var evaluation = await EvaluateDraftAsync(
             draft.Title,
             draft.Servings,
+            draft.Source,
             sanitizedIngredients,
             sanitizedSteps,
             sanitizedTags,
@@ -296,6 +332,7 @@ public sealed class RecipeImportService(
         var evaluation = await EvaluateDraftAsync(
             draft.Title,
             draft.Servings,
+            draft.Source,
             ingredientRequests,
             steps,
             tags,
@@ -436,6 +473,7 @@ public sealed class RecipeImportService(
     private async Task<DraftEvaluation> EvaluateDraftAsync(
         string? title,
         int? servings,
+        string? source,
         IReadOnlyList<RecipeImportIngredientRequest> ingredients,
         IReadOnlyList<string> steps,
         IReadOnlyList<string> tags,
@@ -446,6 +484,7 @@ public sealed class RecipeImportService(
         {
             Title = title ?? string.Empty,
             Servings = servings ?? 0,
+            Source = source,
             Ingredients = ingredients
                 .Select(x => new SharedRecipeIngredientRequest
                 {
