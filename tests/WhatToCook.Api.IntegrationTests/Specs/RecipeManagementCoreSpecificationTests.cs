@@ -105,10 +105,7 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
         RecipeApiContracts.RecipeDetailsDto saved;
         if (update)
         {
-            var original = await CreateRecipe(
-                client,
-                $"Before normalization {Guid.NewGuid():N}"
-            );
+            var original = await CreateRecipe(client, $"Before normalization {Guid.NewGuid():N}");
             var response = await client.PutAsJsonAsync($"/api/recipes/{original.Id}", payload);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             saved = (await response.Content.ReadFromJsonAsync<
