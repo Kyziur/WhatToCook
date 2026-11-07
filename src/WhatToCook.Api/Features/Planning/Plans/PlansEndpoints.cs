@@ -306,8 +306,7 @@ public static class PlansEndpoints
         return null;
     }
 
-    private static bool IsPlanNameTooLong(string? name) =>
-        name?.Trim().Length > MaxPlanNameLength;
+    private static bool IsPlanNameTooLong(string? name) => name?.Trim().Length > MaxPlanNameLength;
 
     private static IResult? ValidateUpdateRequest(UpdateMealPlanRequest request)
     {
