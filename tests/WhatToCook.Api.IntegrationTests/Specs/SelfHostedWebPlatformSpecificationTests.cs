@@ -245,7 +245,9 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
                     == Path.Combine(dataRoot, "recipe-images")
                 && volume.GetProperty("type").GetString() == "bind"
         );
-        var postgresDataVolume = postgres.GetProperty("volumes").EnumerateArray()
+        var postgresDataVolume = postgres
+            .GetProperty("volumes")
+            .EnumerateArray()
             .Single(x => x.GetProperty("target").GetString() == "/var/lib/postgresql/data");
         Assert.Equal("volume", postgresDataVolume.GetProperty("type").GetString());
 
