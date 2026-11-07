@@ -41,6 +41,72 @@ public sealed class MealPlanningSpecificationTests(TestWebApplicationFactory fac
         Assert.Equal("Plan rodzinny", updated.Name);
     }
 
+    [Theory]
+    [InlineData(200, true)]
+    [InlineData(201, false)]
+    public async Task CreatePlan_ShouldValidateNameLength(int length, bool accepted)
+    {
+        using var client = factory.CreateClient();
+        var name = new string('P', length);
+        var response = await client.PostAsJsonAsync(
+            "/api/plans",
+            new CreatePlanPayload
+            {
+                Name = name,
+                DateFrom = new DateOnly(2026, 5, 1),
+                DateTo = new DateOnly(2026, 5, 7),
+            }
+        );
+
+        Assert.Equal(accepted ? HttpStatusCode.Created : HttpStatusCode.BadRequest, response.StatusCode);
+        if (accepted)
+        {
+            var plan = await response.Content.ReadFromJsonAsync<PlanDetailsDto>(JsonOptions);
+            Assert.NotNull(plan);
+            Assert.Equal(name, plan.Name);
+        }
+        else
+        {
+            var plans = await client.GetFromJsonAsync<List<PlanSummaryDto>>("/api/plans", JsonOptions);
+            Assert.NotNull(plans);
+            Assert.DoesNotContain(plans, x => x.Name == name);
+        }
+    }
+
+    [Theory]
+    [InlineData(200, true)]
+    [InlineData(201, false)]
+    public async Task UpdatePlan_ShouldValidateNameLength(int length, bool accepted)
+    {
+        using var client = factory.CreateClient();
+        var initial = await CreatePlan(
+            client,
+            $"Plan {Guid.NewGuid():N}",
+            new DateOnly(2026, 5, 1),
+            new DateOnly(2026, 5, 7)
+        );
+        var name = new string('U', length);
+        var response = await client.PutAsJsonAsync(
+            $"/api/plans/{initial.Id}",
+            new SavePlanPayload
+            {
+                Name = name,
+                DateFrom = initial.DateFrom,
+                DateTo = initial.DateTo,
+                Entries = [],
+                RegenerateShoppingList = false,
+            }
+        );
+
+        Assert.Equal(accepted ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.StatusCode);
+        var persisted = await client.GetFromJsonAsync<PlanDetailsDto>(
+            $"/api/plans/{initial.Id}",
+            JsonOptions
+        );
+        Assert.NotNull(persisted);
+        Assert.Equal(accepted ? name : initial.Name, persisted.Name);
+    }
+
     [Fact]
     public async Task CreateOverlappingPlans_ShouldStoreAsSeparatePlans()
     {
