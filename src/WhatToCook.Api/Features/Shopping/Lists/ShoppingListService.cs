@@ -599,8 +599,7 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
         var text =
             !string.IsNullOrWhiteSpace(item.QuantityText) && !string.IsNullOrWhiteSpace(item.Unit)
                 ? $"{item.QuantityText} {item.Unit} {item.Name}"
-            : !string.IsNullOrWhiteSpace(item.QuantityText)
-                ? $"{item.QuantityText} {item.Name}"
+            : !string.IsNullOrWhiteSpace(item.QuantityText) ? $"{item.QuantityText} {item.Name}"
                 : item.Name;
 
         return item.QuantityContext is null ? text : $"{text} ({item.QuantityContext})";
