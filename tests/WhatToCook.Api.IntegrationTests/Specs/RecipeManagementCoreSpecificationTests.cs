@@ -85,6 +85,55 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
         Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SaveRecipeWithNormalizedNameCollisions_ShouldPreserveIngredientQuantities(
+        bool update
+    )
+    {
+        using var client = factory.CreateClient();
+        var payload = RecipeApiContracts.CreateRecipePayload(
+            $"Normalized collision {Guid.NewGuid():N}"
+        );
+        payload.Ingredients =
+        [
+            new RecipeApiContracts.RecipeIngredientPayload("Łosoś", "1", "kg"),
+            new RecipeApiContracts.RecipeIngredientPayload("Losos", "2", "kg"),
+        ];
+        payload.Tags = ["Łosoś", "Losos"];
+
+        RecipeApiContracts.RecipeDetailsDto saved;
+        if (update)
+        {
+            var original = await CreateRecipe(client, $"Before normalization {Guid.NewGuid():N}");
+            var response = await client.PutAsJsonAsync($"/api/recipes/{original.Id}", payload);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            saved = (
+                await response.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>(
+                    JsonOptions
+                )
+            )!;
+        }
+        else
+        {
+            saved = await CreateRecipe(client, payload);
+        }
+
+        Assert.Equal(2, saved.Ingredients.Count);
+        Assert.Contains(saved.Ingredients, x => x.QuantityText == "1" && x.Unit == "kg");
+        Assert.Contains(saved.Ingredients, x => x.QuantityText == "2" && x.Unit == "kg");
+        Assert.Single(saved.Ingredients.Select(x => x.Ingredient).Distinct());
+
+        var library = await client.GetFromJsonAsync<List<RecipeApiContracts.RecipeSummaryDto>>(
+            "/api/recipes",
+            JsonOptions
+        );
+        Assert.NotNull(library);
+        var recipe = Assert.Single(library, x => x.Id == saved.Id);
+        Assert.Single(recipe.Tags);
+    }
+
     [Fact]
     public async Task ArchiveRecipe_ShouldRemoveItFromLibraryResults()
     {
