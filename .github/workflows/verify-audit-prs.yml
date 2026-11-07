@@ -82,6 +82,8 @@ jobs:
 
       - name: E2E
         run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts
+        env:
+          PLAYWRIGHT_DOTNET_CONFIGURATION: Release
 
       - name: CSharpier
         run: dotnet csharpier check .
