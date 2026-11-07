@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -306,7 +307,24 @@ public static class PlansEndpoints
         return null;
     }
 
-    private static bool IsPlanNameTooLong(string? name) => name?.Trim().Length > MaxPlanNameLength;
+    private static bool IsPlanNameTooLong(string? name)
+    {
+        if (name is null)
+        {
+            return false;
+        }
+
+        var scalarCount = 0;
+        foreach (var _ in name.AsSpan().Trim().EnumerateRunes())
+        {
+            if (++scalarCount > MaxPlanNameLength)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static IResult? ValidateUpdateRequest(UpdateMealPlanRequest request)
     {

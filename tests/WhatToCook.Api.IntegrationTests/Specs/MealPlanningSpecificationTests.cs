@@ -114,6 +114,91 @@ public sealed class MealPlanningSpecificationTests(TestWebApplicationFactory fac
     }
 
     [Fact]
+    public async Task CreateAndUpdatePlan_ShouldValidateUnicodeScalarNameLength()
+    {
+        using var client = factory.CreateClient();
+        var dateFrom = new DateOnly(2026, 5, 1);
+        var dateTo = new DateOnly(2026, 5, 7);
+        var acceptedCreateName = new string('P', 199) + "😀";
+        var rejectedCreateName = new string('C', 200) + "😀";
+        var createAcceptedResponse = await client.PostAsJsonAsync(
+            "/api/plans",
+            new CreatePlanPayload
+            {
+                Name = acceptedCreateName,
+                DateFrom = dateFrom,
+                DateTo = dateTo,
+            }
+        );
+
+        Assert.Equal(HttpStatusCode.Created, createAcceptedResponse.StatusCode);
+        var created = await createAcceptedResponse.Content.ReadFromJsonAsync<PlanDetailsDto>(
+            JsonOptions
+        );
+        Assert.NotNull(created);
+        var persistedCreated = await client.GetFromJsonAsync<PlanDetailsDto>(
+            $"/api/plans/{created.Id}",
+            JsonOptions
+        );
+        Assert.NotNull(persistedCreated);
+        Assert.Equal(acceptedCreateName, persistedCreated.Name);
+
+        var createRejectedResponse = await client.PostAsJsonAsync(
+            "/api/plans",
+            new CreatePlanPayload
+            {
+                Name = rejectedCreateName,
+                DateFrom = dateFrom,
+                DateTo = dateTo,
+            }
+        );
+        Assert.Equal(HttpStatusCode.BadRequest, createRejectedResponse.StatusCode);
+        var plans = await client.GetFromJsonAsync<List<PlanSummaryDto>>("/api/plans", JsonOptions);
+        Assert.NotNull(plans);
+        Assert.DoesNotContain(plans, plan => plan.Name == rejectedCreateName);
+
+        var acceptedUpdateName = new string('U', 199) + "😀";
+        var updateAcceptedResponse = await client.PutAsJsonAsync(
+            $"/api/plans/{created.Id}",
+            new SavePlanPayload
+            {
+                Name = acceptedUpdateName,
+                DateFrom = created.DateFrom,
+                DateTo = created.DateTo,
+                Entries = [],
+                RegenerateShoppingList = false,
+            }
+        );
+        Assert.Equal(HttpStatusCode.OK, updateAcceptedResponse.StatusCode);
+        var persistedUpdated = await client.GetFromJsonAsync<PlanDetailsDto>(
+            $"/api/plans/{created.Id}",
+            JsonOptions
+        );
+        Assert.NotNull(persistedUpdated);
+        Assert.Equal(acceptedUpdateName, persistedUpdated.Name);
+
+        var rejectedUpdateName = new string('R', 200) + "😀";
+        var updateRejectedResponse = await client.PutAsJsonAsync(
+            $"/api/plans/{created.Id}",
+            new SavePlanPayload
+            {
+                Name = rejectedUpdateName,
+                DateFrom = created.DateFrom,
+                DateTo = created.DateTo,
+                Entries = [],
+                RegenerateShoppingList = false,
+            }
+        );
+        Assert.Equal(HttpStatusCode.BadRequest, updateRejectedResponse.StatusCode);
+        var persistedAfterRejectedUpdate = await client.GetFromJsonAsync<PlanDetailsDto>(
+            $"/api/plans/{created.Id}",
+            JsonOptions
+        );
+        Assert.NotNull(persistedAfterRejectedUpdate);
+        Assert.Equal(acceptedUpdateName, persistedAfterRejectedUpdate.Name);
+    }
+
+    [Fact]
     public async Task CreateOverlappingPlans_ShouldStoreAsSeparatePlans()
     {
         using var client = factory.CreateClient();
