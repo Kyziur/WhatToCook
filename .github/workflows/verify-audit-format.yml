@@ -1,0 +1,51 @@
+name: Temporary CSharpier correction diagnostics
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/verify-audit-format.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    name: PR ${{ matrix.pr }} formatting diff
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pr: 4
+            branch: fix/cor-01-normalized-ingredient-tag-keys
+          - pr: 7
+            branch: fix/cor-02-import-draft-bounds
+    steps:
+      - name: Checkout PR 1 green baseline
+        uses: actions/checkout@v4
+        with:
+          ref: docs/product-user-stories-2026-11-06
+          fetch-depth: 0
+      - name: Overlay target PR changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "refs/heads/${{ matrix.branch }}:refs/remotes/origin/${{ matrix.branch }}"
+          git fetch origin "refs/heads/main:refs/remotes/origin/main"
+          base="$(git merge-base origin/main "origin/${{ matrix.branch }}")"
+          git diff --binary "$base" "origin/${{ matrix.branch }}" | git apply --3way
+          git add -A
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore tools
+        run: dotnet tool restore
+      - name: Print complete formatting-only diff
+        shell: bash
+        run: |
+          dotnet csharpier format .
+          echo '--- START FORMATTING DIFF ---'
+          git diff -- src/WhatToCook.Api tests/WhatToCook.Api.IntegrationTests
+          echo '--- END FORMATTING DIFF ---'
