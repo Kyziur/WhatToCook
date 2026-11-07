@@ -36,7 +36,10 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
         ];
 
         using var response = await client.PostAsJsonAsync("/api/recipes", payload);
-        Assert.Equal(accepted ? HttpStatusCode.Created : HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(
+            accepted ? HttpStatusCode.Created : HttpStatusCode.BadRequest,
+            response.StatusCode
+        );
 
         if (accepted)
         {
