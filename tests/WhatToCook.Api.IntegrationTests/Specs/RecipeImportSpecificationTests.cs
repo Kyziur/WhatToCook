@@ -334,9 +334,11 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
             case "ingredient-count":
                 payload.Ingredients = Enumerable
                     .Range(0, 101)
-                    .Select(_ =>
-                        new RecipeApiContracts.RecipeImportIngredientPayload("Mąka", "1", "g")
-                    )
+                    .Select(_ => new RecipeApiContracts.RecipeImportIngredientPayload(
+                        "Mąka",
+                        "1",
+                        "g"
+                    ))
                     .ToList();
                 break;
             case "step-count":
@@ -423,10 +425,7 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
         Assert.False(updated.CanFinalize);
         Assert.Contains(updated.Issues, x => x.FieldPath == "Source");
 
-        var finalize = await client.PostAsync(
-            $"/api/recipe-imports/{draft.Id}/finalize",
-            null
-        );
+        var finalize = await client.PostAsync($"/api/recipe-imports/{draft.Id}/finalize", null);
         Assert.Equal(HttpStatusCode.BadRequest, finalize.StatusCode);
     }
 
