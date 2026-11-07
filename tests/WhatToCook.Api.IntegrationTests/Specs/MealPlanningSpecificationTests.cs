@@ -104,10 +104,7 @@ public sealed class MealPlanningSpecificationTests(TestWebApplicationFactory fac
             }
         );
 
-        Assert.Equal(
-            accepted ? HttpStatusCode.OK : HttpStatusCode.BadRequest,
-            response.StatusCode
-        );
+        Assert.Equal(accepted ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.StatusCode);
         var persisted = await client.GetFromJsonAsync<PlanDetailsDto>(
             $"/api/plans/{initial.Id}",
             JsonOptions
