@@ -16,6 +16,56 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
     };
 
     [Fact]
+    public async Task PagedLibrary_ShouldApplyTagAndIngredientFiltersBeforePagination()
+    {
+        using var client = factory.CreateClient();
+        var suffix = Guid.NewGuid().ToString("N");
+        var tagA = $"TagAlpha{suffix}";
+        var tagB = $"TagBeta{suffix}";
+        var ingredientA = $"IngredientAlpha{suffix}";
+        var ingredientB = $"IngredientBeta{suffix}";
+
+        var recipeA = RecipeApiContracts.CreateRecipePayload($"Filter A {suffix}");
+        recipeA.Tags = [tagA, tagB];
+        recipeA.Ingredients = [new RecipeApiContracts.RecipeIngredientPayload(ingredientA, "1", "szt")];
+        var recipeB = RecipeApiContracts.CreateRecipePayload($"Filter B {suffix}");
+        recipeB.Tags = [tagA];
+        recipeB.Ingredients = [new RecipeApiContracts.RecipeIngredientPayload(ingredientB, "1", "szt")];
+
+        using var createdA = await client.PostAsJsonAsync("/api/recipes", recipeA);
+        using var createdB = await client.PostAsJsonAsync("/api/recipes", recipeB);
+        Assert.Equal(HttpStatusCode.Created, createdA.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, createdB.StatusCode);
+
+        var tagsQuery = Uri.EscapeDataString($"{tagA}|{tagB}");
+        var tagged = await client.GetFromJsonAsync<PagedLibraryDto>(
+            $"/api/recipes/page?q={suffix}&tags={tagsQuery}&pageSize=1",
+            JsonOptions
+        );
+        Assert.NotNull(tagged);
+        Assert.Equal(1, tagged.TotalCount);
+        Assert.Equal(recipeA.Title, Assert.Single(tagged.Items).Title);
+        Assert.Contains(tagB, tagged.Tags);
+        Assert.True(tagged.TagUsage[tagA] >= 2);
+
+        var ingredients = Uri.EscapeDataString($"{ingredientA}|{ingredientB}");
+        var anyIngredient = await client.GetFromJsonAsync<PagedLibraryDto>(
+            $"/api/recipes/page?q={suffix}&ingredients={ingredients}&matchAllIngredients=false",
+            JsonOptions
+        );
+        Assert.NotNull(anyIngredient);
+        Assert.Equal(2, anyIngredient.TotalCount);
+
+        var allIngredient = await client.GetFromJsonAsync<PagedLibraryDto>(
+            $"/api/recipes/page?q={suffix}&ingredients={ingredients}&matchAllIngredients=true",
+            JsonOptions
+        );
+        Assert.NotNull(allIngredient);
+        Assert.Equal(0, allIngredient.TotalCount);
+        Assert.Contains(ingredientB, allIngredient.Ingredients);
+    }
+
+    [Fact]
     public async Task PagedLibrary_ShouldFindRecipesBeyondTheOldFiveHundredItemLimit()
     {
         using var client = factory.CreateClient();
@@ -75,6 +125,9 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
     {
         public List<RecipeApiContracts.RecipeSummaryDto> Items { get; set; } = [];
         public int TotalCount { get; set; }
+        public List<string> Tags { get; set; } = [];
+        public List<string> Ingredients { get; set; } = [];
+        public Dictionary<string, int> TagUsage { get; set; } = [];
     }
 
     [Fact]
