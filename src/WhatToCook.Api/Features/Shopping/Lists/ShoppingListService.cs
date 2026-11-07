@@ -382,12 +382,19 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
 
                 if (quantityText is null && unit is null)
                 {
-                    if (!nameOnly.ContainsKey(normalizedName))
+                    if (nameOnly.TryGetValue(normalizedName, out var existingNameOnly))
+                    {
+                        existingNameOnly.Repetitions++;
+                        existingNameOnly.TotalMultiplier += entry.Multiplier;
+                    }
+                    else
                     {
                         nameOnly[normalizedName] = new AggregatedIngredient
                         {
                             Name = displayName,
                             NormalizedName = normalizedName,
+                            Repetitions = 1,
+                            TotalMultiplier = entry.Multiplier,
                         };
                     }
 
@@ -398,6 +405,7 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
                 if (descriptive.TryGetValue(descriptiveKey, out var descriptiveExisting))
                 {
                     descriptiveExisting.Repetitions++;
+                    descriptiveExisting.TotalMultiplier += entry.Multiplier;
                     continue;
                 }
 
@@ -408,6 +416,7 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
                     QuantityText = quantityText,
                     Unit = unit,
                     Repetitions = 1,
+                    TotalMultiplier = entry.Multiplier,
                 };
             }
         }
@@ -438,6 +447,7 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
                     Name = aggregate.Name,
                     NormalizedName = aggregate.NormalizedName,
                     QuantityText = aggregate.QuantityText,
+                    QuantityContext = BuildQuantityContext(aggregate),
                     Unit = aggregate.Unit,
                     IsManual = false,
                     State = ChecklistState.NieMam,
@@ -453,6 +463,7 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
                     ShoppingListId = shoppingListId,
                     Name = aggregate.Name,
                     NormalizedName = aggregate.NormalizedName,
+                    QuantityContext = BuildQuantityContext(aggregate),
                     IsManual = false,
                     State = ChecklistState.NieMam,
                 }
@@ -490,6 +501,7 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
                 existing.Name = generated.Name;
                 existing.NormalizedName = generated.NormalizedName;
                 existing.QuantityText = generated.QuantityText;
+                existing.QuantityContext = generated.QuantityContext;
                 existing.Unit = generated.Unit;
                 existing.SortOrder = index;
                 retainedGenerated.Add(existing.Id);
@@ -538,7 +550,8 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
                     x.State,
                     x.IsManual,
                     x.SortOrder,
-                    ToDisplayText(x)
+                    ToDisplayText(x),
+                    x.QuantityContext
                 ))
                 .ToList()
         );
@@ -569,19 +582,27 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
             ? value.ToString("0", CultureInfo.InvariantCulture)
             : value.ToString("0.##", CultureInfo.InvariantCulture);
 
+    private static string? BuildQuantityContext(AggregatedIngredient aggregate)
+    {
+        if (aggregate.Repetitions == 1 && aggregate.TotalMultiplier == 1m)
+        {
+            return null;
+        }
+
+        // Descriptive quantities cannot be multiplied numerically. Keep the source phrase
+        // intact and expose how often it occurs and the sum of plan multipliers.
+        return $"wystąpienia: {aggregate.Repetitions}; suma mnożników: ×{FormatQuantity(aggregate.TotalMultiplier)}";
+    }
+
     private static string ToDisplayText(ShoppingListItem item)
     {
-        if (!string.IsNullOrWhiteSpace(item.QuantityText) && !string.IsNullOrWhiteSpace(item.Unit))
-        {
-            return $"{item.QuantityText} {item.Unit} {item.Name}";
-        }
+        var text = !string.IsNullOrWhiteSpace(item.QuantityText) && !string.IsNullOrWhiteSpace(item.Unit)
+            ? $"{item.QuantityText} {item.Unit} {item.Name}"
+            : !string.IsNullOrWhiteSpace(item.QuantityText)
+                ? $"{item.QuantityText} {item.Name}"
+                : item.Name;
 
-        if (!string.IsNullOrWhiteSpace(item.QuantityText))
-        {
-            return $"{item.QuantityText} {item.Name}";
-        }
-
-        return item.Name;
+        return item.QuantityContext is null ? text : $"{text} ({item.QuantityContext})";
     }
 
     private sealed class AggregatedIngredient
@@ -592,6 +613,7 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
         public string? Unit { get; init; }
         public decimal AggregatedQuantity { get; set; }
         public int Repetitions { get; set; }
+        public decimal TotalMultiplier { get; set; }
     }
 
     private sealed class StringTupleComparer : IEqualityComparer<(string Name, string? Unit)>
@@ -637,5 +659,6 @@ public sealed record ShoppingListItemView(
     ChecklistState State,
     bool IsManual,
     int SortOrder,
-    string DisplayText
+    string DisplayText,
+    string? QuantityContext
 );

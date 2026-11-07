@@ -176,7 +176,8 @@ public static class ShoppingListEndpoints
                     ToStateText(x.State),
                     x.IsManual,
                     x.SortOrder,
-                    x.DisplayText
+                    x.DisplayText,
+                    x.QuantityContext
                 ))
                 .ToList()
         );
@@ -224,7 +225,8 @@ public static class ShoppingListEndpoints
         string State,
         bool IsManual,
         int SortOrder,
-        string DisplayText
+        string DisplayText,
+        string? QuantityContext
     );
 
     private sealed record RecipeRecommendationsResponse(

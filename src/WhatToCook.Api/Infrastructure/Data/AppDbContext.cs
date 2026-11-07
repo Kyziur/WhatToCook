@@ -233,6 +233,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.NormalizedName).HasMaxLength(200);
             entity.Property(x => x.QuantityText).HasMaxLength(64);
             entity.Property(x => x.Unit).HasMaxLength(32);
+            entity.Property(x => x.QuantityContext).HasMaxLength(100);
             entity.Property(x => x.State).HasConversion<int>();
             entity
                 .HasOne(x => x.ShoppingList)

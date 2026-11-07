@@ -50,7 +50,8 @@ public sealed record ShoppingListItem(
     ShoppingChecklistState State,
     bool IsManual,
     int SortOrder,
-    string DisplayText
+    string DisplayText,
+    string? QuantityContext = null
 );
 
 public sealed record RecipeRecommendation(
