@@ -196,7 +196,7 @@ public sealed class RecipeWriteService(AppDbContext dbContext) : IRecipeWriteSer
             .ToArray();
         var ingredientDisplayNamesByNormalizedName = ingredientRequests
             .Select(x => x.Name)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .DistinctBy(TextNormalizer.Normalize)
             .ToDictionary(TextNormalizer.Normalize, x => x, StringComparer.Ordinal);
         var ingredientsByNormalizedName = await GetOrCreateIngredientsAsync(
             ingredientDisplayNamesByNormalizedName,
@@ -239,7 +239,7 @@ public sealed class RecipeWriteService(AppDbContext dbContext) : IRecipeWriteSer
         var tagDisplayNamesByNormalizedName = request
             .Tags.Select(x => x.Trim())
             .Where(x => x.Length > 0)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .DistinctBy(TextNormalizer.Normalize)
             .ToDictionary(TextNormalizer.Normalize, x => x, StringComparer.Ordinal);
         var tagsByNormalizedName = await GetOrCreateTagsAsync(
             tagDisplayNamesByNormalizedName,
@@ -279,7 +279,7 @@ public sealed class RecipeWriteService(AppDbContext dbContext) : IRecipeWriteSer
             .ToArray();
         var ingredientDisplayNamesByNormalizedName = ingredientRequests
             .Select(x => x.Name)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .DistinctBy(TextNormalizer.Normalize)
             .ToDictionary(TextNormalizer.Normalize, x => x, StringComparer.Ordinal);
         var ingredientsByNormalizedName = await GetOrCreateIngredientsAsync(
             ingredientDisplayNamesByNormalizedName,
@@ -328,7 +328,7 @@ public sealed class RecipeWriteService(AppDbContext dbContext) : IRecipeWriteSer
         var tagDisplayNamesByNormalizedName = request
             .Tags.Select(x => x.Trim())
             .Where(x => x.Length > 0)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .DistinctBy(TextNormalizer.Normalize)
             .ToDictionary(TextNormalizer.Normalize, x => x, StringComparer.Ordinal);
         var tagsByNormalizedName = await GetOrCreateTagsAsync(
             tagDisplayNamesByNormalizedName,
