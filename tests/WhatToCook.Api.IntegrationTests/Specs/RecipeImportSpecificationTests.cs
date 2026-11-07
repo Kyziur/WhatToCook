@@ -293,9 +293,10 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
             new RecipeApiContracts.CreateRecipeImportFromUrlPayload { Url = url }
         );
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
-        var draft = await created.Content.ReadFromJsonAsync<
-            RecipeApiContracts.RecipeImportDraftDto
-        >(JsonOptions);
+        var draft =
+            await created.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+                JsonOptions
+            );
         Assert.NotNull(draft);
 
         var payload = new RecipeApiContracts.UpdateRecipeImportDraftPayload
@@ -391,9 +392,10 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
             new RecipeApiContracts.CreateRecipeImportFromUrlPayload { Url = url }
         );
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
-        var draft = await created.Content.ReadFromJsonAsync<
-            RecipeApiContracts.RecipeImportDraftDto
-        >(JsonOptions);
+        var draft =
+            await created.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+                JsonOptions
+            );
         Assert.NotNull(draft);
 
         var update = await client.PutAsJsonAsync(
@@ -416,9 +418,10 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
         );
 
         Assert.Equal(HttpStatusCode.OK, update.StatusCode);
-        var updated = await update.Content.ReadFromJsonAsync<
-            RecipeApiContracts.RecipeImportDraftDto
-        >(JsonOptions);
+        var updated =
+            await update.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+                JsonOptions
+            );
         Assert.NotNull(updated);
         Assert.False(updated.CanFinalize);
         Assert.Contains(updated.Issues, x => x.FieldPath == "Source");
