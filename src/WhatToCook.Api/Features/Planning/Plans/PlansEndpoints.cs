@@ -307,7 +307,6 @@ public static class PlansEndpoints
         return null;
     }
 
-
     private static IResult? ValidateUpdateRequest(UpdateMealPlanRequest request)
     {
         var errors = new Dictionary<string, string[]>();
