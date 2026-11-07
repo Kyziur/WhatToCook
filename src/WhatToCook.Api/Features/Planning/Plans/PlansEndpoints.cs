@@ -1,4 +1,4 @@
-using System.Text;
+using WhatToCook.Api.Infrastructure.Validation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -87,7 +87,7 @@ public static class PlansEndpoints
             ? BuildDefaultPlanName(request.DateFrom, request.DateTo)
             : request.Name.Trim();
 
-        if (IsPlanNameTooLong(name))
+        if (UnicodeTextLength.Exceeds(name, MaxPlanNameLength))
         {
             return Results.ValidationProblem(
                 new Dictionary<string, string[]>
@@ -307,24 +307,6 @@ public static class PlansEndpoints
         return null;
     }
 
-    private static bool IsPlanNameTooLong(string? name)
-    {
-        if (name is null)
-        {
-            return false;
-        }
-
-        var scalarCount = 0;
-        foreach (var _ in name.AsSpan().Trim().EnumerateRunes())
-        {
-            if (++scalarCount > MaxPlanNameLength)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     private static IResult? ValidateUpdateRequest(UpdateMealPlanRequest request)
     {
@@ -335,7 +317,7 @@ public static class PlansEndpoints
             errors[nameof(request.Name)] = ["Name is required."];
         }
 
-        if (IsPlanNameTooLong(request.Name))
+        if (UnicodeTextLength.Exceeds(request.Name, MaxPlanNameLength))
         {
             errors[nameof(request.Name)] = ["Name must be at most 200 characters."];
         }
