@@ -272,6 +272,163 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
         );
     }
 
+    [Theory]
+    [InlineData("title")]
+    [InlineData("source")]
+    [InlineData("ingredient-name")]
+    [InlineData("ingredient-quantity")]
+    [InlineData("ingredient-unit")]
+    [InlineData("step")]
+    [InlineData("tag")]
+    [InlineData("ingredient-count")]
+    [InlineData("step-count")]
+    [InlineData("tag-count")]
+    public async Task UpdateImportDraft_ShouldRejectOversizedInputWithoutMutation(string field)
+    {
+        using var client = factory.CreateClient();
+        var url = $"https://aniagotuje.pl/przepis/import-limits-{Guid.NewGuid():N}";
+        factory.ImportedPagesByUrl[url] = CreateAniaGotujeHtml("Valid import draft", "4 porcje");
+        var created = await client.PostAsJsonAsync(
+            "/api/recipe-imports/url",
+            new RecipeApiContracts.CreateRecipeImportFromUrlPayload { Url = url }
+        );
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var draft =
+            await created.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+                JsonOptions
+            );
+        Assert.NotNull(draft);
+
+        var payload = new RecipeApiContracts.UpdateRecipeImportDraftPayload
+        {
+            Title = "Updated title",
+            Servings = 4,
+            Source = url,
+            Ingredients = [new RecipeApiContracts.RecipeImportIngredientPayload("Mąka", "2", "g")],
+            Steps = ["Wymieszaj"],
+            Tags = ["Obiad"],
+        };
+        switch (field)
+        {
+            case "title":
+                payload.Title = new string('T', 201);
+                break;
+            case "source":
+                payload.Source = new string('S', 2001);
+                break;
+            case "ingredient-name":
+                payload.Ingredients[0].Name = new string('I', 201);
+                break;
+            case "ingredient-quantity":
+                payload.Ingredients[0].QuantityText = new string('Q', 65);
+                break;
+            case "ingredient-unit":
+                payload.Ingredients[0].Unit = new string('U', 33);
+                break;
+            case "step":
+                payload.Steps = [new string('K', 4001)];
+                break;
+            case "tag":
+                payload.Tags = [new string('G', 101)];
+                break;
+            case "ingredient-count":
+                payload.Ingredients = Enumerable
+                    .Range(0, 101)
+                    .Select(_ => new RecipeApiContracts.RecipeImportIngredientPayload(
+                        "Mąka",
+                        "1",
+                        "g"
+                    ))
+                    .ToList();
+                break;
+            case "step-count":
+                payload.Steps = Enumerable.Range(0, 101).Select(_ => "Wymieszaj").ToList();
+                break;
+            case "tag-count":
+                payload.Tags = Enumerable.Range(0, 51).Select(i => $"Tag {i}").ToList();
+                break;
+        }
+
+        var response = await client.PutAsJsonAsync($"/api/recipe-imports/{draft!.Id}", payload);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var persisted = await client.GetFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+            $"/api/recipe-imports/{draft.Id}",
+            JsonOptions
+        );
+        Assert.NotNull(persisted);
+        Assert.Equal(draft.Title, persisted.Title);
+        Assert.Equal(draft.Status, persisted.Status);
+        Assert.Equal(
+            draft.Ingredients.Select(x => (x.Name, x.QuantityText, x.Unit)),
+            persisted.Ingredients.Select(x => (x.Name, x.QuantityText, x.Unit))
+        );
+        Assert.Equal(draft.Steps, persisted.Steps);
+        Assert.Equal(draft.Tags, persisted.Tags);
+    }
+
+    [Fact]
+    public async Task CreateImportDraft_ShouldRejectOversizedExtractedTitle()
+    {
+        using var client = factory.CreateClient();
+        var url = $"https://aniagotuje.pl/przepis/oversized-{Guid.NewGuid():N}";
+        factory.ImportedPagesByUrl[url] = CreateAniaGotujeHtml(new string('T', 201), "4 porcje");
+
+        var response = await client.PostAsJsonAsync(
+            "/api/recipe-imports/url",
+            new RecipeApiContracts.CreateRecipeImportFromUrlPayload { Url = url }
+        );
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateImportDraft_ShouldReportSourceTooLongForFinalization()
+    {
+        using var client = factory.CreateClient();
+        var url = $"https://aniagotuje.pl/przepis/source-length-{Guid.NewGuid():N}";
+        factory.ImportedPagesByUrl[url] = CreateAniaGotujeHtml("Source length", "4 porcje");
+        var created = await client.PostAsJsonAsync(
+            "/api/recipe-imports/url",
+            new RecipeApiContracts.CreateRecipeImportFromUrlPayload { Url = url }
+        );
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var draft =
+            await created.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+                JsonOptions
+            );
+        Assert.NotNull(draft);
+
+        var update = await client.PutAsJsonAsync(
+            $"/api/recipe-imports/{draft!.Id}",
+            new RecipeApiContracts.UpdateRecipeImportDraftPayload
+            {
+                Title = draft.Title,
+                Servings = draft.Servings,
+                Source = new string('S', 501),
+                Ingredients = draft
+                    .Ingredients.Select(x => new RecipeApiContracts.RecipeImportIngredientPayload(
+                        x.Name,
+                        x.QuantityText,
+                        x.Unit
+                    ))
+                    .ToList(),
+                Steps = draft.Steps.ToList(),
+                Tags = draft.Tags.ToList(),
+            }
+        );
+
+        Assert.Equal(HttpStatusCode.OK, update.StatusCode);
+        var updated =
+            await update.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
+                JsonOptions
+            );
+        Assert.NotNull(updated);
+        Assert.False(updated.CanFinalize);
+        Assert.Contains(updated.Issues, x => x.FieldPath == "Source");
+
+        var finalize = await client.PostAsync($"/api/recipe-imports/{draft.Id}/finalize", null);
+        Assert.Equal(HttpStatusCode.BadRequest, finalize.StatusCode);
+    }
+
     [Fact]
     public async Task CreateImportDraft_ShouldRejectInvalidUrl()
     {
