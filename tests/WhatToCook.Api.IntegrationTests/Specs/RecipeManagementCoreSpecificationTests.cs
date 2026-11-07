@@ -337,7 +337,7 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
                 : """[{"name":"Pomidor","quantityText":"2","unit":"szt"}]""";
         var steps = field == "steps" ? invalidValue : """["Wymieszaj składniki"]""";
         var tags = field == "tags" ? invalidValue : """["obiad"]""";
-        var json = $"""
+        var json = $$"""
             {
                 "title": "Updated recipe",
                 "servings": 4,
@@ -373,7 +373,7 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
     {
         using var client = factory.CreateClient();
         var title = $"Omitted tags {Guid.NewGuid():N}";
-        var json = $"""
+        var json = $$"""
             {
                 "title": "{{title}}",
                 "servings": 4,
