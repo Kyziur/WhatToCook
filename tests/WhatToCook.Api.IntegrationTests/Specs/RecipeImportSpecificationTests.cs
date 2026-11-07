@@ -761,10 +761,7 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
                 using var conflictBody = await JsonDocument.ParseAsync(
                     await response.Content.ReadAsStreamAsync()
                 );
-                Assert.Equal(
-                    recipe.Id,
-                    conflictBody.RootElement.GetProperty("recipeId").GetGuid()
-                );
+                Assert.Equal(recipe.Id, conflictBody.RootElement.GetProperty("recipeId").GetGuid());
             }
 
             var persisted = await client.GetFromJsonAsync<RecipeApiContracts.RecipeImportDraftDto>(
