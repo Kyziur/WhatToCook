@@ -135,7 +135,6 @@ public static class ShoppingListEndpoints
         return list is null ? Results.NotFound() : Results.Ok(ToResponse(list));
     }
 
-
     private static async Task<IResult> CopyShoppingListText(
         Guid planId,
         ShoppingListService shoppingListService,
