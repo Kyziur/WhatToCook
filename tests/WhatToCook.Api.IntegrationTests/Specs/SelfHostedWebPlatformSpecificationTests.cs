@@ -245,12 +245,9 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
                     == Path.Combine(dataRoot, "recipe-images")
                 && volume.GetProperty("type").GetString() == "bind"
         );
-        Assert.Contains(
-            postgres.GetProperty("volumes").EnumerateArray(),
-            volume =>
-                    volume.GetProperty("target").GetString() == "/var/lib/postgresql/data"
-                    && volume.GetProperty("type").GetString() == "volume"
-        );
+        var postgresDataVolume = postgres.GetProperty("volumes").EnumerateArray()
+            .Single(x => x.GetProperty("target").GetString() == "/var/lib/postgresql/data");
+        Assert.Equal("volume", postgresDataVolume.GetProperty("type").GetString());
 
         var missingMount = new Dictionary<string, string?>(env, StringComparer.Ordinal)
         {
