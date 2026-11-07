@@ -62,7 +62,7 @@
             <button type="button" class="primary-action" @onclick="LoadAsync">Spróbuj ponownie</button>
         </section>
     }
-    else if (AllRecipes.Count == 0)
+    else if (TotalResults == 0 && SelectedFilterCount == 0 && string.IsNullOrWhiteSpace(SearchTerm))
     {
         <section class="surface-card state-empty">
             <h2>Biblioteka jest pusta</h2>
@@ -260,6 +260,14 @@
                         }
                     </div>
                 }
+                @if (TotalPages > 1)
+                {
+                    <nav aria-label="Strony przepisów" class="actions-row library-pagination">
+                        <button id="library-previous-page" type="button" class="chip" disabled="@(CurrentPage <= 1)" @onclick="() => GoToPageAsync(CurrentPage - 1)">Poprzednia</button>
+                        <span aria-live="polite">Strona @CurrentPage z @TotalPages</span>
+                        <button id="library-next-page" type="button" class="chip" disabled="@(CurrentPage >= TotalPages)" @onclick="() => GoToPageAsync(CurrentPage + 1)">Następna</button>
+                    </nav>
+                }
             </section>
         </div>
     }
@@ -274,10 +282,16 @@
 
     private const int CollapsedTagCount = 6;
     private const int CollapsedIngredientCount = 7;
+    private const int PageSize = 24;
     private readonly HashSet<string> SelectedIngredients = [];
     private readonly HashSet<string> SelectedTags = [];
 
     private List<RecipeCatalogItem> AllRecipes { get; set; } = [];
+    private int CurrentPage { get; set; } = 1;
+    private int TotalResults { get; set; }
+    private int TotalPages => Math.Max(1, (TotalResults + PageSize - 1) / PageSize);
+    private IReadOnlyDictionary<string, int> TagUsage { get; set; } =
+        new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
     private IReadOnlyList<string> AvailableIngredients { get; set; } = [];
     private IReadOnlyList<string> AvailableTags { get; set; } = [];
     private List<string> FilteredTags { get; set; } = [];
@@ -348,8 +362,33 @@
 
         try
         {
-            AllRecipes = (await RecipeCatalog.GetActiveRecipesAsync(lifetimeCts.Token)).ToList();
-            RebuildCatalogIndex();
+            var page = await RecipeCatalog.GetPageAsync(
+                new CatalogQuery(
+                    CurrentPage,
+                    PageSize,
+                    SearchTerm,
+                    SelectedTags.ToArray(),
+                    SelectedIngredients.ToArray(),
+                    MatchAllIngredients,
+                    SortOrder.ToString()
+                ),
+                lifetimeCts.Token
+            );
+            AllRecipes = page.Items.ToList();
+            TotalResults = page.TotalCount;
+            AvailableTags = page.Tags
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x, PolishIgnoreCaseComparer)
+                .ToArray();
+            AvailableIngredients = page.Ingredients
+                .Select(IngredientFilterNameNormalizer.Normalize)
+                .Where(x => x.Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x, PolishIgnoreCaseComparer)
+                .ToArray();
+            TagUsage = new Dictionary<string, int>(
+                page.TagUsage, StringComparer.OrdinalIgnoreCase
+            );
             RecomputeFilters();
             LoadState = CatalogLoadState.Loaded;
         }
@@ -361,6 +400,22 @@
             ErrorMessage = "Spróbuj ponownie. Jeśli problem się powtarza, sprawdź połączenie.";
             LoadState = CatalogLoadState.Error;
         }
+    }
+
+    private async Task RefreshResultsAsync()
+    {
+        CurrentPage = 1;
+        await LoadAsync();
+    }
+
+    private async Task GoToPageAsync(int page)
+    {
+        if (page < 1 || page > TotalPages)
+        {
+            return;
+        }
+        CurrentPage = page;
+        await LoadAsync();
     }
 
     private static bool MatchesTitle(string title, string query) =>
@@ -416,39 +471,39 @@
         }
     }
 
-    private void ToggleIngredient(string ingredient)
+    private async Task ToggleIngredient(string ingredient)
     {
         if (!SelectedIngredients.Add(ingredient))
         {
             SelectedIngredients.Remove(ingredient);
         }
 
-        RecomputeFilters();
+        await RefreshResultsAsync();
     }
 
-    private void ToggleTag(string tag)
+    private async Task ToggleTag(string tag)
     {
         if (!SelectedTags.Add(tag))
         {
             SelectedTags.Remove(tag);
         }
 
-        RecomputeFilters();
+        await RefreshResultsAsync();
     }
 
-    private void ClearTagFilters()
+    private async Task ClearTagFilters()
     {
         SelectedTags.Clear();
-        RecomputeFilters();
+        await RefreshResultsAsync();
     }
 
-    private void ClearIngredientFilters()
+    private async Task ClearIngredientFilters()
     {
         SelectedIngredients.Clear();
-        RecomputeFilters();
+        await RefreshResultsAsync();
     }
 
-    private void ClearAdvancedFilters()
+    private async Task ClearAdvancedFilters()
     {
         TagFilterTerm = string.Empty;
         IngredientFilterTerm = string.Empty;
@@ -456,15 +511,15 @@
         ShowAllIngredients = false;
         SelectedTags.Clear();
         SelectedIngredients.Clear();
-        RecomputeFilters();
+        await RefreshResultsAsync();
     }
 
     private void ToggleFilters() => FiltersExpanded = !FiltersExpanded;
 
-    private void SetIngredientMatchMode(bool matchAll)
+    private async Task SetIngredientMatchMode(bool matchAll)
     {
         MatchAllIngredients = matchAll;
-        RecomputeFilters();
+        await RefreshResultsAsync();
     }
 
     private void ToggleTagExpansion()
@@ -489,7 +544,7 @@
             ? "Pokaż mniej składników"
             : $"Pokaż wszystkie składniki ({FilteredIngredients.Count})";
 
-    private void ClearFilters()
+    private async Task ClearFilters()
     {
         SearchTerm = string.Empty;
         TagFilterTerm = string.Empty;
@@ -498,20 +553,20 @@
         ShowAllIngredients = false;
         SelectedIngredients.Clear();
         SelectedTags.Clear();
-        RecomputeFilters();
+        await RefreshResultsAsync();
     }
 
-    private void OnSearchTermInput(ChangeEventArgs args)
+    private async Task OnSearchTermInput(ChangeEventArgs args)
     {
         SearchTerm = args.Value?.ToString() ?? string.Empty;
-        RecomputeFilters();
+        await RefreshResultsAsync();
     }
-    private void OnSortOrderChanged(ChangeEventArgs args)
+    private async Task OnSortOrderChanged(ChangeEventArgs args)
     {
         if (Enum.TryParse<RecipeSortOrder>(args.Value?.ToString(), out var sortOrder))
         {
             SortOrder = sortOrder;
-            RecomputeFilters();
+            await RefreshResultsAsync();
         }
     }
 
@@ -540,7 +595,7 @@
             return "Wyniki są chwilowo niedostępne";
         }
 
-        var count = FilteredRecipes.Count;
+        var count = TotalResults;
         if (count == 0)
         {
             return "Brak pasujących przepisów";
@@ -559,29 +614,8 @@
     }
 
     private int GetTagUsageCount(string tag) =>
-        AllRecipes.Count(recipe =>
-            recipe.Tags.Any(recipeTag =>
-                string.Equals(recipeTag, tag, StringComparison.OrdinalIgnoreCase)
-            )
-        );
+        TagUsage.TryGetValue(tag, out var count) ? count : 0;
 
-
-    private void RebuildCatalogIndex()
-    {
-        AvailableIngredients = AllRecipes
-            .SelectMany(x => x.Ingredients)
-            .Select(x => IngredientFilterNameNormalizer.Normalize(x.Name))
-            .Where(x => x.Length > 0)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(x => x, PolishIgnoreCaseComparer)
-            .ToArray();
-
-        AvailableTags = AllRecipes
-            .SelectMany(x => x.Tags)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(x => x, PolishIgnoreCaseComparer)
-            .ToArray();
-    }
 
     private void RecomputeFilters()
     {
@@ -601,28 +635,7 @@
             string.IsNullOrWhiteSpace(IngredientFilterTerm)
             && FilteredIngredients.Count > CollapsedIngredientCount;
 
-        var matchingRecipes = AllRecipes
-            .Where(x => MatchesTitle(x.Title, SearchTerm))
-            .Where(x =>
-                SelectedTags.Count == 0
-                || SelectedTags.All(selected =>
-                    x.Tags.Any(tag => string.Equals(tag, selected, StringComparison.OrdinalIgnoreCase))
-                )
-            )
-            .Where(MatchesSelectedIngredients);
-
-        FilteredRecipes = (SortOrder switch
-        {
-            RecipeSortOrder.TitleDescending => matchingRecipes
-                .OrderByDescending(x => x.Title, PolishIgnoreCaseComparer),
-            RecipeSortOrder.ServingsAscending => matchingRecipes
-                .OrderBy(x => x.Servings)
-                .ThenBy(x => x.Title, PolishIgnoreCaseComparer),
-            RecipeSortOrder.ServingsDescending => matchingRecipes
-                .OrderByDescending(x => x.Servings)
-                .ThenBy(x => x.Title, PolishIgnoreCaseComparer),
-            _ => matchingRecipes.OrderBy(x => x.Title, PolishIgnoreCaseComparer),
-        }).ToList();
+        FilteredRecipes = AllRecipes.ToList();
     }
 
     private bool MatchesSelectedIngredients(RecipeCatalogItem recipe)
