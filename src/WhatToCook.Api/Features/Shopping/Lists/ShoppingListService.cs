@@ -492,7 +492,8 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
 
         // Reserve unique exact-amount matches before reusing any obsolete row.
         // Otherwise an earlier changed amount could steal the identity of a later exact match.
-        var assignments = new Dictionary<ShoppingListItem, (ShoppingListItem Existing, bool KeepState)>();
+        var assignments =
+            new Dictionary<ShoppingListItem, (ShoppingListItem Existing, bool KeepState)>();
         foreach (var incomingGroup in generatedItems.GroupBy(GetIngredientUnitKey))
         {
             if (!existingByIngredient.TryGetValue(incomingGroup.Key, out var oldGroup))
