@@ -23,19 +23,39 @@ public static class RecipeWriteValidator
     {
         var errors = new Dictionary<string, string[]>();
 
-        // System.Text.Json can assign explicit nulls despite non-nullable DTO annotations.
-        // Reject them before any collection enumeration or persistence mutation.
-        if (request.Ingredients is null || request.Ingredients.Any(x => x is null))
+        // Explicit JSON nulls bypass non-nullable DTO annotations. Separate null guards
+        // let nullable flow analysis prove collections are safe to enumerate below.
+        if (request.Ingredients is null || request.Steps is null || request.Tags is null)
+        {
+            if (request.Ingredients is null)
+            {
+                errors[nameof(request.Ingredients)] = ["Ingredients must contain non-null items."];
+            }
+
+            if (request.Steps is null)
+            {
+                errors[nameof(request.Steps)] = ["Steps must contain non-null items."];
+            }
+
+            if (request.Tags is null)
+            {
+                errors[nameof(request.Tags)] = ["Tags must contain non-null items."];
+            }
+
+            return errors;
+        }
+
+        if (request.Ingredients.Any(x => x is null))
         {
             errors[nameof(request.Ingredients)] = ["Ingredients must contain non-null items."];
         }
 
-        if (request.Steps is null || request.Steps.Any(x => x is null))
+        if (request.Steps.Any(x => x is null))
         {
             errors[nameof(request.Steps)] = ["Steps must contain non-null items."];
         }
 
-        if (request.Tags is null || request.Tags.Any(x => x is null))
+        if (request.Tags.Any(x => x is null))
         {
             errors[nameof(request.Tags)] = ["Tags must contain non-null items."];
         }
