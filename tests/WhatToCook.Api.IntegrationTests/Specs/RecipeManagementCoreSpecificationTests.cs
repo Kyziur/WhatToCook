@@ -314,6 +314,78 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
         );
     }
 
+    [Theory]
+    [InlineData("ingredients", "null")]
+    [InlineData("ingredients", "[null]")]
+    [InlineData("steps", "null")]
+    [InlineData("steps", "[null]")]
+    [InlineData("tags", "null")]
+    [InlineData("tags", "[null]")]
+    public async Task SaveRecipe_ShouldRejectExplicitNullCollectionsAndElements(
+        string field,
+        string invalidValue
+    )
+    {
+        using var client = factory.CreateClient();
+        var initial = await CreateRecipe(client, $"Before null validation {Guid.NewGuid():N}");
+        var ingredients =
+            field == "ingredients"
+                ? invalidValue
+                : """[{"name":"Pomidor","quantityText":"2","unit":"szt"}]""";
+        var steps = field == "steps" ? invalidValue : """["Wymieszaj składniki"]""";
+        var tags = field == "tags" ? invalidValue : """["obiad"]""";
+        var json = $$"""
+            {
+                "title": "Updated recipe",
+                "servings": 4,
+                "ingredients": {{ingredients}},
+                "steps": {{steps}},
+                "tags": {{tags}}
+            }
+            """;
+
+        using var create = await client.PostAsync(
+            "/api/recipes",
+            new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+        );
+        Assert.Equal(HttpStatusCode.BadRequest, create.StatusCode);
+
+        using var update = await client.PutAsync(
+            $"/api/recipes/{initial.Id}",
+            new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+        );
+        Assert.Equal(HttpStatusCode.BadRequest, update.StatusCode);
+
+        var persisted = await client.GetFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>(
+            $"/api/recipes/{initial.Id}",
+            JsonOptions
+        );
+        Assert.NotNull(persisted);
+        Assert.Equal(initial.Title, persisted.Title);
+        Assert.Equal(initial.Ingredients.Count, persisted.Ingredients.Count);
+    }
+
+    [Fact]
+    public async Task CreateRecipeWithOmittedOptionalTags_ShouldUseEmptyTags()
+    {
+        using var client = factory.CreateClient();
+        var title = $"Omitted tags {Guid.NewGuid():N}";
+        var json = $$"""
+            {
+                "title": "{{title}}",
+                "servings": 4,
+                "ingredients": [{"name":"Pomidor"}],
+                "steps": ["Gotuj"]
+            }
+            """;
+        using var response = await client.PostAsync(
+            "/api/recipes",
+            new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+        );
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
     [Fact]
     public async Task SaveRecipeWithMissingRequiredFields_ShouldReturnValidationProblem()
     {

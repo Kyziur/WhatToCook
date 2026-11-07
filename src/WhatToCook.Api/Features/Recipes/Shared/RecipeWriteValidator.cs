@@ -23,6 +23,48 @@ public static class RecipeWriteValidator
     {
         var errors = new Dictionary<string, string[]>();
 
+        // Explicit JSON nulls bypass non-nullable DTO annotations. Separate null guards
+        // let nullable flow analysis prove collections are safe to enumerate below.
+        if (request.Ingredients is null || request.Steps is null || request.Tags is null)
+        {
+            if (request.Ingredients is null)
+            {
+                errors[nameof(request.Ingredients)] = ["Ingredients must contain non-null items."];
+            }
+
+            if (request.Steps is null)
+            {
+                errors[nameof(request.Steps)] = ["Steps must contain non-null items."];
+            }
+
+            if (request.Tags is null)
+            {
+                errors[nameof(request.Tags)] = ["Tags must contain non-null items."];
+            }
+
+            return errors;
+        }
+
+        if (request.Ingredients.Any(x => x is null))
+        {
+            errors[nameof(request.Ingredients)] = ["Ingredients must contain non-null items."];
+        }
+
+        if (request.Steps.Any(x => x is null))
+        {
+            errors[nameof(request.Steps)] = ["Steps must contain non-null items."];
+        }
+
+        if (request.Tags.Any(x => x is null))
+        {
+            errors[nameof(request.Tags)] = ["Tags must contain non-null items."];
+        }
+
+        if (errors.Count > 0)
+        {
+            return errors;
+        }
+
         if (string.IsNullOrWhiteSpace(request.Title))
         {
             errors[nameof(request.Title)] = ["Title is required."];
