@@ -1,0 +1,105 @@
+name: Temporary verify latest PR heads before sequential merges
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/verify-before-merges.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify ${{ matrix.scope }} on merged PR 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scope: PR-2
+          - scope: PR-3
+          - scope: PR-7
+          - scope: COMBINED
+    steps:
+      - name: Checkout current main including merged PR 1
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Overlay latest changes, separately or combined
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "CI verification"
+          git config user.email "ci-verification@users.noreply.github.com"
+          case "${{ matrix.scope }}" in
+            PR-2) branches=(fix/cor-05-plan-name-limit) ;;
+            PR-3) branches=(fix/cor-06-manual-item-name-limit) ;;
+            PR-7) branches=(fix/cor-02-import-draft-bounds) ;;
+            COMBINED) branches=(
+              fix/cor-05-plan-name-limit
+              fix/cor-06-manual-item-name-limit
+              fix/cor-01-normalized-ingredient-tag-keys
+              fix/cor-08-recipe-null-input
+              chore/perf-02-remove-inactive-output-cache
+              fix/cor-02-import-draft-bounds
+              docs/align-openspec-product-context
+            ) ;;
+          esac
+          git fetch origin "refs/heads/main:refs/remotes/origin/main"
+          for branch in "${branches[@]}"; do
+            git fetch origin "refs/heads/${branch}:refs/remotes/origin/${branch}"
+            base="$(git merge-base origin/main "origin/${branch}")"
+            git diff --binary "$base" "origin/${branch}" | git apply --3way
+            git diff --check
+            git add -A
+            git commit -m "test: overlay ${branch}"
+          done
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore .NET tools and packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet tool restore
+          dotnet restore WhatToCook.slnx
+
+      - name: Build Release
+        run: dotnet build WhatToCook.slnx --no-restore --configuration Release
+
+      - name: .NET tests
+        run: dotnet test WhatToCook.slnx --no-build --configuration Release
+
+      - name: Check formatting
+        run: dotnet csharpier check .
+
+      - name: Setup Node for combined E2E
+        if: matrix.scope == 'COMBINED'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Playwright browsers
+        if: matrix.scope == 'COMBINED'
+        run: npm ci && npx playwright install --with-deps chromium
+
+      - name: Combined desktop and mobile Playwright
+        if: matrix.scope == 'COMBINED'
+        run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts
+        env:
+          PLAYWRIGHT_DOTNET_CONFIGURATION: Release
+
+      - name: Dependency audits
+        if: matrix.scope == 'COMBINED'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet list WhatToCook.slnx package --vulnerable --include-transitive
+          npm audit --audit-level=high
