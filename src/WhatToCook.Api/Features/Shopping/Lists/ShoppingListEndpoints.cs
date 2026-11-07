@@ -4,6 +4,8 @@ namespace WhatToCook.Api.Features.Shopping.Lists;
 
 public static class ShoppingListEndpoints
 {
+    private const int MaxManualItemNameLength = 200;
+
     public static IEndpointRouteBuilder MapShoppingListEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/shopping-lists").WithTags("Shopping");
@@ -110,6 +112,16 @@ public static class ShoppingListEndpoints
                 new Dictionary<string, string[]>
                 {
                     [nameof(AddManualItemRequest.Text)] = ["Text is required."],
+                }
+            );
+        }
+
+        if (request.Text.Trim().Length > MaxManualItemNameLength)
+        {
+            return Results.ValidationProblem(
+                new Dictionary<string, string[]>
+                {
+                    [nameof(AddManualItemRequest.Text)] = ["Text must be at most 200 characters."],
                 }
             );
         }
