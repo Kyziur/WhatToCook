@@ -124,9 +124,10 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
         Assert.Contains(saved.Ingredients, x => x.QuantityText == "2" && x.Unit == "kg");
         Assert.Single(saved.Ingredients.Select(x => x.Ingredient).Distinct());
 
-        var library = await client.GetFromJsonAsync<
-            List<RecipeApiContracts.RecipeSummaryDto>
-        >("/api/recipes", JsonOptions);
+        var library = await client.GetFromJsonAsync<List<RecipeApiContracts.RecipeSummaryDto>>(
+            "/api/recipes",
+            JsonOptions
+        );
         Assert.NotNull(library);
         var recipe = Assert.Single(library, x => x.Id == saved.Id);
         Assert.Single(recipe.Tags);
