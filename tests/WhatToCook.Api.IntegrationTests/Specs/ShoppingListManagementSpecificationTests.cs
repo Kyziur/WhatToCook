@@ -167,7 +167,10 @@ public sealed class ShoppingListManagementSpecificationTests(TestWebApplicationF
             }
         );
 
-        using var generate = await client.PostAsync($"/api/plans/{plan.Id}/shopping-generated", null);
+        using var generate = await client.PostAsync(
+            $"/api/plans/{plan.Id}/shopping-generated",
+            null
+        );
         Assert.Equal(HttpStatusCode.NoContent, generate.StatusCode);
         var generated = await client.GetFromJsonAsync<ShoppingListDto>(
             $"/api/shopping-lists/plan/{plan.Id}",
@@ -870,11 +873,13 @@ public sealed class ShoppingListManagementSpecificationTests(TestWebApplicationF
             new DateOnly(2026, 6, 1)
         );
         using var generatedResponse = await client.PostAsync(
-            $"/api/plans/{plan.Id}/shopping-generated", null
+            $"/api/plans/{plan.Id}/shopping-generated",
+            null
         );
         Assert.Equal(HttpStatusCode.NoContent, generatedResponse.StatusCode);
         var list = await client.GetFromJsonAsync<ShoppingListDto>(
-            $"/api/shopping-lists/plan/{plan.Id}", JsonOptions
+            $"/api/shopping-lists/plan/{plan.Id}",
+            JsonOptions
         );
         Assert.NotNull(list);
         Assert.Equal(2, list.Items.Count);
@@ -911,7 +916,8 @@ public sealed class ShoppingListManagementSpecificationTests(TestWebApplicationF
             }
         );
         var after = await client.GetFromJsonAsync<ShoppingListDto>(
-            $"/api/shopping-lists/plan/{plan.Id}", JsonOptions
+            $"/api/shopping-lists/plan/{plan.Id}",
+            JsonOptions
         );
         Assert.NotNull(after);
         var exact = Assert.Single(after.Items, x => x.QuantityText == "szczypta");

@@ -22,9 +22,6 @@ public partial class AddShoppingQuantityContext : Migration
 
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "QuantityContext",
-            table: "shopping_list_items"
-        );
+        migrationBuilder.DropColumn(name: "QuantityContext", table: "shopping_list_items");
     }
 }

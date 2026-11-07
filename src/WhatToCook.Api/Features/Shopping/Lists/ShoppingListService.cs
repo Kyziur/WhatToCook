@@ -547,11 +547,10 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
                 previous.QuantityContext = generated.QuantityContext;
                 previous.Unit = generated.Unit;
                 previous.SortOrder = index;
-                previous.RegenerationNote = match.KeepState
-                    ? null
-                    : amountChanged
-                        ? "Ilość uległa zmianie — sprawdź dostępność."
-                        : "Dopasowanie pozycji jest niejednoznaczne — sprawdź dostępność.";
+                previous.RegenerationNote =
+                    match.KeepState ? null
+                    : amountChanged ? "Ilość uległa zmianie — sprawdź dostępność."
+                    : "Dopasowanie pozycji jest niejednoznaczne — sprawdź dostępność.";
                 if (!match.KeepState)
                 {
                     previous.State = ChecklistState.NieMam;
@@ -566,8 +565,8 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
             dbContext.ShoppingListItems.Add(generated);
         }
 
-        var stale = shoppingList.Items
-            .Where(x => existingIds.Contains(x.Id) && !retainedIds.Contains(x.Id))
+        var stale = shoppingList
+            .Items.Where(x => existingIds.Contains(x.Id) && !retainedIds.Contains(x.Id))
             .ToList();
         dbContext.ShoppingListItems.RemoveRange(stale);
 
@@ -654,11 +653,11 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
 
     private static string ToDisplayText(ShoppingListItem item)
     {
-        var text = !string.IsNullOrWhiteSpace(item.QuantityText) && !string.IsNullOrWhiteSpace(item.Unit)
-            ? $"{item.QuantityText} {item.Unit} {item.Name}"
-            : !string.IsNullOrWhiteSpace(item.QuantityText)
-                ? $"{item.QuantityText} {item.Name}"
-                : item.Name;
+        var text =
+            !string.IsNullOrWhiteSpace(item.QuantityText) && !string.IsNullOrWhiteSpace(item.Unit)
+                ? $"{item.QuantityText} {item.Unit} {item.Name}"
+            : !string.IsNullOrWhiteSpace(item.QuantityText) ? $"{item.QuantityText} {item.Name}"
+            : item.Name;
 
         return item.QuantityContext is null ? text : $"{text} ({item.QuantityContext})";
     }
