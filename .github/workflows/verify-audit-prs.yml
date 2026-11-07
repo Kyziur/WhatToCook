@@ -95,3 +95,37 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm audit --audit-level=high
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  arm64-image-storage:
+    name: PR 1 image codec integration on native ARM64
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - name: Checkout PR 1 baseline
+        uses: actions/checkout@v4
+        with:
+          ref: docs/product-user-stories-2026-11-06
+
+      - name: Verify native architecture
+        shell: bash
+        run: |
+          test "$(uname -m)" = "aarch64"
+          echo "Testing SkiaSharp native image handling on $(uname -m)"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore packages
+        run: dotnet restore WhatToCook.slnx
+
+      - name: Build integration tests
+        run: dotnet build tests/WhatToCook.Api.IntegrationTests/WhatToCook.Api.IntegrationTests.csproj --no-restore --configuration Release
+
+      - name: Native ARM64 image upload integration tests
+        shell: bash
+        run: |
+          dotnet test tests/WhatToCook.Api.IntegrationTests/WhatToCook.Api.IntegrationTests.csproj \
+            --no-build --configuration Release \
+            --filter "FullyQualifiedName~UploadingSupportedRasterFormats|FullyQualifiedName~SaveRecipeWithUploadedPhoto_ShouldStoreMainPhotoPath|FullyQualifiedName~UploadingAnInvalidImageHeader_ShouldBeRejected"
