@@ -155,6 +155,43 @@ public sealed class RecipeLibraryAndDetailsTests
     }
 
     [Fact]
+    public void Library_ShouldNavigatePastFirstPageAndKeepFullCatalogFacets()
+    {
+        using var context = CreateContext();
+        var items = Enumerable.Range(1, 55)
+            .Select(index => new RecipeCatalogItem(
+                Guid.NewGuid(),
+                $"Przepis {index:00}",
+                2,
+                null,
+                null,
+                true,
+                [index == 55 ? "ostatni-tag" : "wspólny"],
+                [new RecipeCatalogIngredient(index == 55 ? "ostatni-składnik" : "pomidor", null, null)],
+                ["Krok"]
+            ))
+            .ToArray();
+        context.Services.AddSingleton<IRecipeCatalogService>(new FakeRecipeCatalogService(items));
+
+        var cut = context.Render<RecipeLibraryPage>();
+        Assert.Equal(24, cut.FindAll(".recipe-title-link").Count);
+        Assert.Contains("55 przepisów", cut.Find(".library-results-summary").TextContent);
+        cut.Find("#library-next-page").Click();
+        Assert.Contains("Strona 2 z 3", cut.Markup);
+        Assert.Equal(24, cut.FindAll(".recipe-title-link").Count);
+        cut.Find("#library-next-page").Click();
+        Assert.Contains("Strona 3 z 3", cut.Markup);
+        Assert.Equal(7, cut.FindAll(".recipe-title-link").Count);
+        Assert.Contains("Przepis 55", cut.Markup);
+
+        cut.Find("#tag-filter-search").Input("ostatni-tag");
+        Assert.Contains("ostatni-tag", cut.FindAll(".filter-chip-panel")[0].TextContent);
+        FindFilterButton(cut, "ostatni-tag").Click();
+        Assert.Single(cut.FindAll(".recipe-title-link"));
+        Assert.Contains("Przepis 55", cut.Markup);
+    }
+
+    [Fact]
     public void Library_ShouldLeadWithTitleSearchAndSummarizeResponsiveFilters()
     {
         using var context = CreateContext();
