@@ -1,0 +1,82 @@
+name: Verify next audit PR batch together
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/verify-audit-batch.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  combined:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Apply reviewed PR patches in dependency order
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Audit CI"
+          git config user.email "audit-ci@users.noreply.github.com"
+          for branch in \
+            refactor/shared-unicode-length-validation-20261107 \
+            fix/cor-07-concurrent-finalization-20261107 \
+            test/ci-07-compose-contract-20261107 \
+            fix/cor-04-quantity-aware-shopping-regeneration-20261107 \
+            feat/perf-01-paginated-catalog-20261107
+          do
+            git fetch origin "refs/heads/${branch}:refs/remotes/origin/${branch}"
+            base="$(git merge-base origin/main "origin/${branch}")"
+            git diff --binary "$base" "origin/${branch}" | git apply --3way
+            git diff --check
+            git add -A
+            git commit -m "test: overlay ${branch}"
+          done
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Restore
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet tool restore
+          dotnet restore WhatToCook.slnx
+
+      - name: Build Release
+        run: dotnet build WhatToCook.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test WhatToCook.slnx --configuration Release --no-build
+
+      - name: Playwright dependencies
+        run: npm ci && npx playwright install --with-deps chromium
+        shell: bash
+
+      - name: E2E Playwright
+        run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts
+        shell: bash
+        env:
+          PLAYWRIGHT_DOTNET_CONFIGURATION: Release
+
+      - name: Dependency audits
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet list WhatToCook.slnx package --vulnerable --include-transitive
+          npm audit --audit-level=high
+
+      - name: Formatting
+        run: dotnet csharpier check .
