@@ -1,3 +1,5 @@
+using WhatToCook.Api.Infrastructure.Validation;
+
 namespace WhatToCook.Api.Features.Recipes.Shared;
 
 public static class RecipeWriteValidator
@@ -69,7 +71,7 @@ public static class RecipeWriteValidator
         {
             errors[nameof(request.Title)] = ["Title is required."];
         }
-        else if (request.Title.Trim().Length > 200)
+        else if (UnicodeTextLength.ExceedsMax(request.Title, 200))
         {
             errors[nameof(request.Title)] = ["Title must be at most 200 characters."];
         }
@@ -95,7 +97,7 @@ public static class RecipeWriteValidator
 
         if (!string.IsNullOrWhiteSpace(request.Source))
         {
-            if (request.Source.Trim().Length > 500)
+            if (UnicodeTextLength.ExceedsMax(request.Source, 500))
             {
                 errors[nameof(request.Source)] = ["Source must be at most 500 characters."];
             }
@@ -119,9 +121,9 @@ public static class RecipeWriteValidator
 
         if (
             validIngredients.Any(x =>
-                x.Name.Trim().Length > 200
-                || x.QuantityText?.Trim().Length > 64
-                || x.Unit?.Trim().Length > 32
+                UnicodeTextLength.ExceedsMax(x.Name, 200)
+                || UnicodeTextLength.ExceedsMax(x.QuantityText, 64)
+                || UnicodeTextLength.ExceedsMax(x.Unit, 32)
             )
         )
         {
@@ -131,12 +133,12 @@ public static class RecipeWriteValidator
             ];
         }
 
-        if (request.Steps.Any(x => x.Trim().Length > 4000))
+        if (request.Steps.Any(x => UnicodeTextLength.ExceedsMax(x, 4000)))
         {
             errors[nameof(request.Steps)] = ["Steps must be at most 4000 characters each."];
         }
 
-        if (request.Tags.Any(x => x.Trim().Length > 100))
+        if (request.Tags.Any(x => UnicodeTextLength.ExceedsMax(x, 100)))
         {
             errors[nameof(request.Tags)] = ["Tags must be at most 100 characters each."];
         }

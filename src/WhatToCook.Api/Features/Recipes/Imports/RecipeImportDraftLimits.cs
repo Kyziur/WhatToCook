@@ -1,4 +1,4 @@
-using System.Text;
+using WhatToCook.Api.Infrastructure.Validation;
 
 namespace WhatToCook.Api.Features.Recipes.Imports;
 
@@ -16,12 +16,12 @@ internal static class RecipeImportDraftLimits
         string? rawContent = null
     )
     {
-        if (ExceedsMaxTrimmedLength(title, 200))
+        if (UnicodeTextLength.ExceedsMax(title, 200))
         {
             return "Draft title must be at most 200 characters.";
         }
 
-        if (ExceedsMaxTrimmedLength(source, 2000))
+        if (UnicodeTextLength.ExceedsMax(source, 2000))
         {
             return "Draft source must be at most 2000 characters.";
         }
@@ -39,9 +39,9 @@ internal static class RecipeImportDraftLimits
         if (
             ingredients.Any(x =>
                 x is null
-                || ExceedsMaxTrimmedLength(x.Name, 200)
-                || ExceedsMaxTrimmedLength(x.QuantityText, 64)
-                || ExceedsMaxTrimmedLength(x.Unit, 32)
+                || UnicodeTextLength.ExceedsMax(x.Name, 200)
+                || UnicodeTextLength.ExceedsMax(x.QuantityText, 64)
+                || UnicodeTextLength.ExceedsMax(x.Unit, 32)
             )
         )
         {
@@ -53,7 +53,7 @@ internal static class RecipeImportDraftLimits
             return "Draft steps must contain at most 100 entries.";
         }
 
-        if (steps.Any(x => x is null || ExceedsMaxTrimmedLength(x, 4000)))
+        if (steps.Any(x => x is null || UnicodeTextLength.ExceedsMax(x, 4000)))
         {
             return "Draft steps must be at most 4000 characters each.";
         }
@@ -63,7 +63,7 @@ internal static class RecipeImportDraftLimits
             return "Draft tags must contain at most 50 entries.";
         }
 
-        if (tags.Any(x => x is null || ExceedsMaxTrimmedLength(x, 100)))
+        if (tags.Any(x => x is null || UnicodeTextLength.ExceedsMax(x, 100)))
         {
             return "Draft tags must be at most 100 characters each.";
         }
@@ -72,22 +72,5 @@ internal static class RecipeImportDraftLimits
     }
 
     public static bool ExceedsMaxSourceUrlLength(string sourceUrl) =>
-        ExceedsMaxScalarCount(sourceUrl.AsSpan(), MaxSourceUrlLength);
-
-    private static bool ExceedsMaxTrimmedLength(string? value, int maxLength) =>
-        value is not null && ExceedsMaxScalarCount(value.AsSpan().Trim(), maxLength);
-
-    private static bool ExceedsMaxScalarCount(ReadOnlySpan<char> value, int maxLength)
-    {
-        var scalarCount = 0;
-        foreach (var _ in value.EnumerateRunes())
-        {
-            if (++scalarCount > maxLength)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        UnicodeTextLength.ExceedsMax(sourceUrl, MaxSourceUrlLength, trim: false);
 }
