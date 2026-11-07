@@ -14,8 +14,7 @@ public static class LibraryEndpoints
 
         group
             .MapGet("/", GetActiveRecipes)
-            .WithName("GetRecipeLibrary")
-            .CacheOutput(options => options.Cache());
+            .WithName("GetRecipeLibrary");
 
         return app;
     }
