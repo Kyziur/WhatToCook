@@ -177,6 +177,7 @@ public sealed class ShoppingListManagementSpecificationTests(TestWebApplicationF
         var salt = Assert.Single(generated.Items, x => x.Name == "Sól");
         Assert.Equal("szczypta", salt.QuantityText);
         Assert.Equal("wystąpienia: 2; suma mnożników: ×3", salt.QuantityContext);
+        Assert.NotNull(salt.QuantityContext);
         Assert.Contains(salt.QuantityContext, salt.DisplayText);
         var pepper = Assert.Single(generated.Items, x => x.Name == "Pieprz do smaku");
         Assert.Null(pepper.QuantityText);
