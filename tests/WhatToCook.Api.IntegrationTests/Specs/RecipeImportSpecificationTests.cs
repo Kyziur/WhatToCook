@@ -304,10 +304,7 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
             Title = "Updated title",
             Servings = 4,
             Source = url,
-            Ingredients =
-            [
-                new RecipeApiContracts.RecipeImportIngredientPayload("Mąka", "2", "g"),
-            ],
+            Ingredients = [new RecipeApiContracts.RecipeImportIngredientPayload("Mąka", "2", "g")],
             Steps = ["Wymieszaj"],
             Tags = ["Obiad"],
         };
