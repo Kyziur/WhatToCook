@@ -220,5 +220,4 @@ internal static class ShoppingQuantity
         value % 1 == 0
             ? value.ToString("0", CultureInfo.InvariantCulture)
             : value.ToString("0.##", CultureInfo.InvariantCulture);
-
 }
