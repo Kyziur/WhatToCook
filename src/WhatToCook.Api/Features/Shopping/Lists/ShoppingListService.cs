@@ -147,7 +147,10 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
             };
             dbContext.ShoppingLists.Add(existingShoppingList);
         }
-        var generatedItems = ShoppingListAggregation.BuildGeneratedItems(existingShoppingList.Id, mealPlan.PlannedRecipes);
+        var generatedItems = ShoppingListAggregation.BuildGeneratedItems(
+            existingShoppingList.Id,
+            mealPlan.PlannedRecipes
+        );
         MergeGeneratedItems(existingShoppingList, generatedItems);
         existingShoppingList.UpdatedAt = DateTimeOffset.UtcNow;
 
@@ -492,8 +495,6 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
         var text = string.Join(" ", parts);
         return item.QuantityContext is null ? text : $"{text} ({item.QuantityContext})";
     }
-
-
 }
 
 public sealed record ShoppingListView(
