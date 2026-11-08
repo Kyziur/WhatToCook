@@ -25,7 +25,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 - **IN REVIEW** means an unmerged PR exists; CI or actual host verification remains outstanding.
 - **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
 
-**Current count:** 27 DONE · CI, 6 PARTIAL, 36 open/conditional. The original audit's 69 findings remain unchanged.
+**Current count:** 27 DONE · CI, 7 PARTIAL, 35 open/conditional. The original audit's 69 findings remain unchanged.
 
 | Finding | Status | Merged evidence or outstanding work |
 | --- | --- | --- |
@@ -81,7 +81,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | PERF-07 | **DONE · CI** | [#30](https://github.com/Kyziur/WhatToCook/pull/30) — Endpoint now uses `AsSplitQuery()` after repeated synthetic PostgreSQL 100×100×2 stress measurements; HTTP completeness and full CI passed ([run](https://github.com/Kyziur/WhatToCook/actions/runs/42481352433)). Production p95 remains unmeasured |
 | ARC-01 | OPEN / CONDITIONAL | Conditional: split complex page only when changing affected flow |
 | ARC-02 | **DONE · CI** | [#35](https://github.com/Kyziur/WhatToCook/pull/35) — Pure shopping aggregation and shared numeric semantics extracted, DB-free tests added; final-head [CI 42508132586](https://github.com/Kyziur/WhatToCook/actions/runs/42508132586) green (120 API, 53 component, 98 browser). Transactions and checklist reconciliation remain unchanged |
-| ARC-03 | OPEN / CONDITIONAL | Optional: use-case extraction only where boundary improves |
+| ARC-03 | **PARTIAL · IN REVIEW** | Extracted the archived-recipe slot-retention rule from the planning endpoint into a DB-free policy; prevents moving/swapping an archived recipe under an existing plan entry ID. Focused policy and PostgreSQL HTTP regression tests added; entire transaction/use-case remains in the endpoint unless further extraction is justified. PR CI pending |
 | ARC-04 | **PARTIAL** | [#29](https://github.com/Kyziur/WhatToCook/pull/29) — Current trusted-LAN/Web/API/DB and identity ownership decision documented; actual homelab access matrix and pre-exposure user authorization decision still required |
 | ARC-05 | **DONE · CI** | [#40](https://github.com/Kyziur/WhatToCook/pull/40) — Actual Blazor `ApiMealPlanService` exercised against PostgreSQL-backed API for create/list/details, nested entries and decimal multiplier, regeneration-required conflict and confirmed save; final-head [CI 42525322218](https://github.com/Kyziur/WhatToCook/actions/runs/42525322218) green (122 API, 56 component, 98 browser). No runtime DTO centralization |
 | DOC-01 | **DONE · CI** | [#24](https://github.com/Kyziur/WhatToCook/pull/24) — Local developer start/test/troubleshooting quickstart |
