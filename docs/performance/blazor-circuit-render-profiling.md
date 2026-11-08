@@ -37,3 +37,9 @@ Each snapshot includes currently connected/active circuits, server process worki
 Review at least three repeat runs on a runner and, if possible, an equivalent 5/20 tab sample on the homelab host. If median/p95 render diff or per-session footprint is materially elevated, profile the specific interaction/component before adding a conditional render or extracting more components. Otherwise retain the existing UI; monitor `circuit.connected`, `circuit.active` and render histogram via the existing OTel collector.
 
 References: [ASP.NET Core 10 built-in Blazor metrics](https://learn.microsoft.com/en-us/aspnet/core/log-mon/metrics/built-in-components?view=aspnetcore-10.0), [Blazor performance guidance](https://learn.microsoft.com/en-us/aspnet/core/blazor/performance?view=aspnetcore-10.0).
+
+## Runtime meter naming discovered in CI
+
+The first 5-tab smoke observed real **5 connected circuits**, dropping to zero on closure, and the subsequent 20-tab cohort reached **20 connected circuits**. The inspected [CI artifact](https://github.com/Kyziur/WhatToCook/actions/runs/42505345186) enumerated the actual .NET 10 instrument as `aspnetcore.components.render_diff.duration` (under `Microsoft.AspNetCore.Components.Lifecycle`), even though the current Microsoft Learn metric reference calls it `aspnetcore.components.render_diff`. The profiler supports **both spellings** so it does not silently report missing render measurements across supported runtime/documentation naming differences.
+
+First-run working-set snapshots were approximately 139 MB at 5 tabs and 173 MB at 20 tabs, with approximately 9 MB and 24 MB of phase allocations respectively. These are **single-run process readings, not memory attributable to each tab**. The test must be repeated after fixing instrument-name compatibility to collect genuine server render p50/p95, if emitted by this runtime.

@@ -62,7 +62,7 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
                 {
                     Interlocked.Add(ref connectedCircuits, value);
                 }
-                else if (instrument.Name == "aspnetcore.components.render_diff")
+                else if (IsRenderDuration(instrument.Name))
                 {
                     RecordRender(value);
                 }
@@ -71,7 +71,7 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
         listener.SetMeasurementEventCallback<double>(
             (instrument, seconds, _, _) =>
             {
-                if (instrument.Name != "aspnetcore.components.render_diff")
+                if (!IsRenderDuration(instrument.Name))
                 {
                     return;
                 }
@@ -82,7 +82,7 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
         listener.SetMeasurementEventCallback<int>(
             (instrument, value, _, _) =>
             {
-                if (instrument.Name == "aspnetcore.components.render_diff")
+                if (IsRenderDuration(instrument.Name))
                 {
                     RecordRender(value);
                 }
@@ -162,6 +162,12 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
         }
     }
 
+    private static bool IsRenderDuration(string name)
+    {
+        return name == "aspnetcore.components.render_diff"
+            || name == "aspnetcore.components.render_diff.duration";
+    }
+
     private static bool ShouldObserve(Instrument instrument)
     {
         if (instrument.Meter.Name == CircuitMeter)
@@ -171,7 +177,7 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
         }
 
         return instrument.Meter.Name == LifecycleMeter
-            && instrument.Name == "aspnetcore.components.render_diff";
+            && IsRenderDuration(instrument.Name);
     }
 
     private string ReadPhase()

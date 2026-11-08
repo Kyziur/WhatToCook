@@ -2,7 +2,7 @@
 
 | Requirement | Verification | Evidence status |
 | --- | --- | --- |
-| Standard ASP.NET Core 10 circuit/render/SignalR meters registered | Web `Program.cs` OpenTelemetry registration + profiler receives live built-in metrics | Initial run 42504323632: real circuit counts pass; renderer histogram absent; re-run pending |
+| Standard ASP.NET Core 10 circuit/render/SignalR meters registered | Web `Program.cs` OpenTelemetry registration + profiler receives live built-in metrics | Initial run 42505345186: 5 and 20 circuits confirmed; discovered runtime render histogram suffix `.duration`; compatibility fix and final CI pending |
 | No production probe/HTTP endpoint | Development-only `AddHostedService` guard, static review of routes | Review pending |
 | Five and twenty interactive circuits | `tests/e2e/blazor-circuit-profile.spec.ts` Playwright real tab cohorts | CI pending |
 | Connected count drains after five tabs | Profile test checks `ConnectedCircuits == 0` between phases | CI pending |
