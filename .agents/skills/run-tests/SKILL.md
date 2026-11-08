@@ -32,11 +32,11 @@ Detect the test platform and framework, run tests, and apply filters using `dotn
 
 ## When Not to Use
 
-- User needs to write or generate test code (use `writing-mstest-tests` for MSTest, or general coding assistance for other frameworks)
-- User needs to migrate from VSTest to MTP (use `migrate-vstest-to-mtp`)
-- User wants to iterate on failing tests without rebuilding (use `mtp-hot-reload`)
-- User needs CI/CD pipeline configuration (use CI-specific skills)
-- User needs to debug a test (use debugging skills)
+- User needs to write or generate test code (follow the test project's existing framework conventions; this skill selects execution commands only)
+- User needs to migrate from VSTest to MTP (use the framework's migration documentation; migration is outside this execution skill)
+- User wants hot-reload test iteration (use the test framework's supported runner or tooling, not this command-selection guide)
+- User needs CI/CD pipeline configuration (review `.github/workflows/pr-ci.yml` and the relevant CI contracts)
+- User needs to debug a test (use the installed `systematic-debugging` skill)
 
 ## Inputs
 
@@ -102,7 +102,7 @@ Important:
 1. Run `dotnet --version` in the project directory to determine the SDK version. This accounts for `global.json` SDK pinning.
 2. Read `global.json` — on .NET SDK 10+, `"test": { "runner": "Microsoft.Testing.Platform" }` is the **authoritative MTP signal**. If present, the project uses MTP and SDK 10+ syntax (no `--` separator).
 3. Read `.csproj`, `Directory.Build.props`, **and** `Directory.Packages.props` for framework packages and MTP properties. **Always check all three files** — MTP properties are frequently set in `Directory.Build.props` rather than individual `.csproj` files.
-4. For full detection logic (SDK 8/9 signals, framework identification), see the `platform-detection` skill.
+4. For SDK 8/9 signals and framework identification, follow the detection tables and checks in this step; there is no separate installed detection skill.
 
 **What to look for in each file:**
 
@@ -234,7 +234,7 @@ These alternative invocations accept MTP command line arguments directly (no `--
 
 ### Step 3: Run filtered tests
 
-See the `filter-syntax` skill for the complete filter syntax for each platform and framework combination. Key points:
+For common framework-specific filter syntax, use the examples and rules in Step 3 below. Key points:
 
 - **VSTest** (MSTest, xUnit v2, NUnit): `dotnet test --filter <EXPRESSION>` with `=`, `!=`, `~`, `!~` operators
 - **MTP -- MSTest and NUnit**: Same `--filter` syntax as VSTest; pass after `--` on SDK 8/9, directly on SDK 10+
@@ -295,7 +295,7 @@ Common error messages and how to resolve them:
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `No test is available` or `No test matches the given testcase filter` | Wrong filter syntax for the platform/framework, or tests not discovered | Verify filter syntax matches the platform (see `filter-syntax` skill). For discovery issues, check that the test SDK and adapter packages are installed |
+| `No test is available` or `No test matches the given testcase filter` | Wrong filter syntax for the platform/framework, or tests not discovered | Verify filter syntax matches the platform (see Step 3 in this skill). For discovery issues, check that the test SDK and adapter packages are installed |
 | `The --report-trx option is unrecognized` | MTP extension package not referenced, or using MTP flag on a VSTest project | Add `<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />` for MTP, or use `--logger trx` for VSTest |
 | `The --blame-hang-timeout option is unrecognized` | Missing HangDump extension on MTP | Add `<PackageReference Include="Microsoft.Testing.Extensions.HangDump" />` |
 | `error NETSDK1045: The current .NET SDK does not support targeting .NET X.0` | SDK version in `global.json` doesn't match the project's target framework | Update `global.json` SDK version or install the required SDK |
