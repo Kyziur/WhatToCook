@@ -1,3 +1,4 @@
+using OpenTelemetry.Metrics;
 using WhatToCook.Web;
 using WhatToCook.Web.Components;
 using WhatToCook.Web.Components.Features.Planning.Services;
@@ -6,12 +7,37 @@ using WhatToCook.Web.Components.Features.Recipes.Import.Services;
 using WhatToCook.Web.Components.Features.Recipes.Shared;
 using WhatToCook.Web.Components.Features.Shopping.Services;
 using WhatToCook.Web.Components.Shared;
+using WhatToCook.Web.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+
+// .NET 10 publishes these meters; only the Web host owns Blazor circuits.
+// ServiceDefaults already handles OTLP export when configured.
+builder
+    .Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics.AddMeter("Microsoft.AspNetCore.Components");
+        metrics.AddMeter("Microsoft.AspNetCore.Components.Lifecycle");
+        metrics.AddMeter("Microsoft.AspNetCore.Components.Server.Circuits");
+        metrics.AddMeter("Microsoft.AspNetCore.Http.Connections");
+    });
+
+// Opt-in local/CI profiler: no HTTP diagnostic endpoint or production file writer.
+var profileOutput = builder.Configuration["PERF05_PROFILE_PATH"];
+var profilePhase = builder.Configuration["PERF05_PHASE_PATH"];
+if (
+    builder.Environment.IsDevelopment()
+    && !string.IsNullOrWhiteSpace(profileOutput)
+    && !string.IsNullOrWhiteSpace(profilePhase)
+)
+{
+    builder.Services.AddHostedService(_ => new BlazorCircuitProfiler(profileOutput, profilePhase));
+}
 builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
 builder.Services.AddApiHttpClient<IRecipeEditorService, ApiRecipeEditorService>();
 builder.Services.AddApiHttpClient<IRecipeImportService, ApiRecipeImportService>();

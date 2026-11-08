@@ -47,6 +47,12 @@ export default defineConfig({
         ASPNETCORE_ENVIRONMENT: "Development",
         ASPNETCORE_DETAILEDERRORS: "true",
         "Api__BaseUrl": "http://127.0.0.1:5181",
+        ...(process.env.PERF05_PROFILE === "1"
+          ? {
+              PERF05_PROFILE_PATH: path.join(e2eTempDir, "perf05-metrics.jsonl"),
+              PERF05_PHASE_PATH: path.join(e2eTempDir, "perf05-phase.txt"),
+            }
+          : {}),
       },
     },
   ],
