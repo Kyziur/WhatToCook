@@ -1,0 +1,35 @@
+name: Temporary OBS-04 CSharpier formatting
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/temp-obs-import-format-20261108.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet tool restore
+      - name: Apply pinned CSharpier formatter and commit exact changed files
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet csharpier format .
+          git diff --check
+          git add -- '*.cs'
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "style(imports): apply CSharpier to test fixture"
+          git push origin HEAD:"${{ github.head_ref }}"
