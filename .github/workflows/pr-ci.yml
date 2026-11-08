@@ -29,6 +29,12 @@ jobs:
         run: dotnet tool restore
 
       # Fail quickly on style regressions instead of waiting for the full Testcontainers + Playwright suite.
+      - name: Show ARC-05 CSharpier formatting diff (temporary)
+        run: |
+          dotnet csharpier format .
+          git --no-pager diff -- tests/WhatToCook.Api.IntegrationTests/Specs/RecipeCatalogClientContractTests.cs tests/WhatToCook.Web.ComponentTests/RecipeCatalogHttpContractTests.cs
+          exit 1
+
       - name: Check formatting
         run: dotnet csharpier check .
 
