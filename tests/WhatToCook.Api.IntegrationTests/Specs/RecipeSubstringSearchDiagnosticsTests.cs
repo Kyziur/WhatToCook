@@ -147,9 +147,7 @@ public sealed class RecipeSubstringSearchDiagnosticsTests(
 
         var countPlan = await ExplainAsync(db, needle, countQuery: true);
         var pagePlan = await ExplainAsync(db, needle, countQuery: false);
-        output.WriteLine(
-            $"PERF-03 size={size} phrase={needle} index={variant} results={count}"
-        );
+        output.WriteLine($"PERF-03 size={size} phrase={needle} index={variant} results={count}");
         output.WriteLine($"PERF-03 COUNT {Format(countPlan)}");
         output.WriteLine($"PERF-03 PAGE {Format(pagePlan)}");
 
@@ -171,9 +169,7 @@ public sealed class RecipeSubstringSearchDiagnosticsTests(
         bool countQuery
     )
     {
-        var select = countQuery
-            ? "SELECT count(*) FROM recipes"
-            : """SELECT "Id" FROM recipes""";
+        var select = countQuery ? "SELECT count(*) FROM recipes" : """SELECT "Id" FROM recipes""";
         var suffix = countQuery
             ? string.Empty
             : """ ORDER BY "NormalizedTitle", "Title", "Id" LIMIT 50""";
@@ -212,9 +208,7 @@ public sealed class RecipeSubstringSearchDiagnosticsTests(
         var type = node.GetProperty("Node Type").GetString() ?? string.Empty;
         if (type.Contains("Scan", StringComparison.Ordinal))
         {
-            var index = node.TryGetProperty("Index Name", out var name)
-                ? name.GetString()
-                : null;
+            var index = node.TryGetProperty("Index Name", out var name) ? name.GetString() : null;
             scans.Add(index is null ? type : $"{type} [{index}]");
         }
 
