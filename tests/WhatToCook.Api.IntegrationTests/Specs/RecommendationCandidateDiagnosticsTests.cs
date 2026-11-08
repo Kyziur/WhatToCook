@@ -149,9 +149,8 @@ public sealed class RecommendationCandidateDiagnosticsTests(
             .Select(x => new Candidate(
                 x.Id,
                 x.Title,
-                x.Ingredients.Select(ri =>
-                    new IngredientName(ri.Ingredient.NormalizedName)
-                ).ToList()
+                x.Ingredients.Select(ri => new IngredientName(ri.Ingredient.NormalizedName))
+                    .ToList()
             ))
             .ToListAsync();
         var elapsedMs = Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds;
