@@ -47,11 +47,27 @@ jobs:
         env:
           PLAYWRIGHT_DOTNET_CONFIGURATION: Release
 
+      - name: Test NuGet audit policy
+        run: node --test tests/ci/nuget-audit-gate.test.mjs
+
       - name: Audit .NET dependencies
-        run: dotnet list WhatToCook.slnx package --vulnerable --include-transitive
+        run: |
+          dotnet package list --project WhatToCook.slnx --vulnerable --include-transitive --no-restore --format json --output-version 1 > nuget-audit.json
+          node scripts/ci/check-nuget-audit.mjs nuget-audit.json
 
       - name: Audit npm dependencies
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --json > npm-audit.json
+
+      - name: Preserve dependency audit reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audits
+          path: |
+            nuget-audit.json
+            npm-audit.json
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Check formatting
         run: dotnet csharpier check .
