@@ -1,3 +1,5 @@
+using System.Net.Http.Json;
+
 extern alias WhatToCookWeb;
 
 using WhatToCookWeb::WhatToCook.Web.Components.Features.Planning.Services;
@@ -41,6 +43,39 @@ public sealed class MealPlanWebApiContractTests(TestWebApplicationFactory factor
         Assert.Equal(created.DateFrom, fetched.DateFrom);
         Assert.Equal(created.DateTo, fetched.DateTo);
         Assert.Empty(fetched.Entries);
+
+        using var recipeResponse = await httpClient.PostAsJsonAsync(
+            "/api/recipes",
+            RecipeApiContracts.CreateRecipePayload($"Contract recipe {Guid.NewGuid():N}")
+        );
+        recipeResponse.EnsureSuccessStatusCode();
+        var recipe = await recipeResponse.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>();
+        Assert.NotNull(recipe);
+
+        var withEntry = await client.SavePlanAsync(
+            created.Id,
+            new MealPlanSaveRequest(
+                name,
+                from,
+                to,
+                false,
+                [new MealPlanEntry(null, recipe.Id, recipe.Title, true, from, 1.5m, 0)]
+            )
+        );
+        Assert.True(withEntry.IsSuccess, withEntry.ErrorMessage);
+        Assert.NotNull(withEntry.Plan);
+        var mappedEntry = Assert.Single(withEntry.Plan.Entries);
+        Assert.NotNull(mappedEntry.Id);
+        Assert.Equal(recipe.Id, mappedEntry.RecipeId);
+        Assert.Equal(recipe.Title, mappedEntry.RecipeTitle);
+        Assert.True(mappedEntry.RecipeIsActive);
+        Assert.Equal(from, mappedEntry.PlannedDate);
+        Assert.Equal(1.5m, mappedEntry.Multiplier);
+        Assert.Equal(0, mappedEntry.SortOrder);
+
+        var refreshedWithEntry = await client.GetPlanAsync(created.Id);
+        Assert.NotNull(refreshedWithEntry);
+        Assert.Equal(mappedEntry, Assert.Single(refreshedWithEntry.Entries));
 
         Assert.True(await client.MarkShoppingGeneratedAsync(created.Id));
 
