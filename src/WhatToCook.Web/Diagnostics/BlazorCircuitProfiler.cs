@@ -176,8 +176,7 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
                 || instrument.Name == "aspnetcore.components.circuit.connected";
         }
 
-        return instrument.Meter.Name == LifecycleMeter
-            && IsRenderDuration(instrument.Name);
+        return instrument.Meter.Name == LifecycleMeter && IsRenderDuration(instrument.Name);
     }
 
     private string ReadPhase()
