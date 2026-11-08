@@ -31,12 +31,15 @@ public sealed class ShoppingListAggregationTests
         var items = ShoppingListAggregation.BuildGeneratedItems(shoppingListId, entries);
 
         Assert.Equal(3, items.Count);
-        Assert.All(items, item =>
-        {
-            Assert.Equal(shoppingListId, item.ShoppingListId);
-            Assert.False(item.IsManual);
-            Assert.Equal(WhatToCook.Api.Domain.Shopping.ChecklistState.NieMam, item.State);
-        });
+        Assert.All(
+            items,
+            item =>
+            {
+                Assert.Equal(shoppingListId, item.ShoppingListId);
+                Assert.False(item.IsManual);
+                Assert.Equal(WhatToCook.Api.Domain.Shopping.ChecklistState.NieMam, item.State);
+            }
+        );
 
         var tomato = Assert.Single(items, item => item.Name == "Pomidor");
         Assert.Equal("7", tomato.QuantityText);
@@ -81,17 +84,20 @@ public sealed class ShoppingListAggregationTests
             Recipe = new Recipe
             {
                 Ingredients = ingredients
-                    .Select((ingredient, index) => new RecipeIngredient
-                    {
-                        SortOrder = index,
-                        Ingredient = new Ingredient
-                        {
-                            DisplayName = ingredient.Name,
-                            NormalizedName = ingredient.Name.ToLowerInvariant(),
-                        },
-                        QuantityText = ingredient.Quantity,
-                        Unit = ingredient.Unit,
-                    })
+                    .Select(
+                        (ingredient, index) =>
+                            new RecipeIngredient
+                            {
+                                SortOrder = index,
+                                Ingredient = new Ingredient
+                                {
+                                    DisplayName = ingredient.Name,
+                                    NormalizedName = ingredient.Name.ToLowerInvariant(),
+                                },
+                                QuantityText = ingredient.Quantity,
+                                Unit = ingredient.Unit,
+                            }
+                    )
                     .ToList(),
             },
         };
