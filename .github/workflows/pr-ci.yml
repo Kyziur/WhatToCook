@@ -37,6 +37,13 @@ jobs:
       - name: Test
         run: dotnet test WhatToCook.slnx --no-build --configuration Release
 
+      - name: Profile recipe details query shape (non-gating timings)
+        run: |
+          dotnet test tests/WhatToCook.Api.IntegrationTests/WhatToCook.Api.IntegrationTests.csproj \
+            --no-build --configuration Release \
+            --filter "FullyQualifiedName~RecipeDetailsQueryDiagnosticsTests" \
+            --logger "console;verbosity=detailed"
+
       - name: Install Playwright dependencies
         run: npm ci && npx playwright install --with-deps chromium
         shell: bash
