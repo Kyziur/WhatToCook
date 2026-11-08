@@ -48,7 +48,21 @@ public sealed class ApiRecipeCatalogServiceTests
         Assert.Equal(2, handler.Requests.Count);
     }
 
-    private sealed class PagedCatalogHandler(int totalCount, int? emptyPage = null)
+    [Fact]
+    public async Task PlannerCatalog_ShouldFailOnShortNonemptyPageRatherThanHideRecipes()
+    {
+        using var handler = new PagedCatalogHandler(80, shortPage: 1);
+        using var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("http://localhost"),
+        };
+        var service = new ApiRecipeCatalogService(httpClient);
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => service.GetActiveRecipesAsync());
+        Assert.Equal(2, handler.Requests.Count);
+    }
+
+    private sealed class PagedCatalogHandler(int totalCount, int? emptyPage = null, int? shortPage = null)
         : HttpMessageHandler
     {
         public List<Dictionary<string, string>> Requests { get; } = [];
@@ -74,6 +88,10 @@ public sealed class ApiRecipeCatalogServiceTests
             var start = (page - 1) * pageSize + 1;
             var count =
                 page == emptyPage ? 0 : Math.Max(0, Math.Min(pageSize, totalCount - start + 1));
+            if (page == shortPage)
+            {
+                count = Math.Min(count, 20);
+            }
             var items = Enumerable
                 .Range(start, count)
                 .Select(index => new
