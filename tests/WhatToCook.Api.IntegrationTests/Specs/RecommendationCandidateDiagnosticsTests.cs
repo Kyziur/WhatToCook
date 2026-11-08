@@ -131,7 +131,7 @@ public sealed class RecommendationCandidateDiagnosticsTests(
                     .ToArray();
                 var matches = ingredients.Count(x => x.NormalizedName == ownedKey);
                 var coverage = ingredients.Length == 0 ? 0m : (decimal)matches / ingredients.Length;
-                return new { row.Id, row.Title, Matches = matches, Coverage = coverage };
+                return new RankingRow(row.Id, row.Title, matches, coverage);
             })
             .Where(x => x.Matches > 0 && x.Coverage >= 0.3m)
             .OrderByDescending(x => x.Matches)
@@ -213,6 +213,8 @@ public sealed class RecommendationCandidateDiagnosticsTests(
         await db.Database.ExecuteSqlRawAsync("ANALYZE recipes");
         await db.Database.ExecuteSqlRawAsync("ANALYZE recipe_ingredients");
     }
+
+    private sealed record RankingRow(Guid Id, string Title, int Matches, decimal Coverage);
 
     private sealed record IngredientName(string NormalizedName);
 
