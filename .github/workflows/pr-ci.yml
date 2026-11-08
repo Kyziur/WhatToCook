@@ -69,6 +69,11 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+      - name: Diagnose formatting of OBS-05 regression (temporary)
+        run: |
+          dotnet csharpier format tests/WhatToCook.Api.IntegrationTests/Specs/RecipeLoggingPrivacySpecificationTests.cs
+          git diff -- tests/WhatToCook.Api.IntegrationTests/Specs/RecipeLoggingPrivacySpecificationTests.cs
+
       - name: Check formatting
         run: dotnet csharpier check .
 
