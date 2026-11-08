@@ -51,7 +51,8 @@ public sealed record ShoppingListItem(
     bool IsManual,
     int SortOrder,
     string DisplayText,
-    string? QuantityContext = null
+    string? QuantityContext = null,
+    string? RegenerationNote = null
 );
 
 public sealed record RecipeRecommendation(

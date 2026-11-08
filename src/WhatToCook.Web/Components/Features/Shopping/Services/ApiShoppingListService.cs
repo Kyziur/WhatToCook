@@ -147,7 +147,8 @@ public sealed class ApiShoppingListService(HttpClient httpClient) : IShoppingLis
                     x.IsManual,
                     x.SortOrder,
                     x.DisplayText,
-                    x.QuantityContext
+                    x.QuantityContext,
+                    x.RegenerationNote
                 ))
                 .ToList()
         );
@@ -177,6 +178,7 @@ public sealed class ApiShoppingListService(HttpClient httpClient) : IShoppingLis
         public int SortOrder { get; init; }
         public string DisplayText { get; init; } = string.Empty;
         public string? QuantityContext { get; init; }
+        public string? RegenerationNote { get; init; }
     }
 
     private sealed class RecipeRecommendationsDto
