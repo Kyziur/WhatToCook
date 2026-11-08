@@ -1,7 +1,6 @@
-using System.Net.Http.Json;
-
 extern alias WhatToCookWeb;
 
+using System.Net.Http.Json;
 using WhatToCookWeb::WhatToCook.Web.Components.Features.Planning.Services;
 
 namespace WhatToCook.Api.IntegrationTests.Specs;
