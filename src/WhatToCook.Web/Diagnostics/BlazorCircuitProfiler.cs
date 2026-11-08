@@ -40,9 +40,9 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
             {
                 lock (sync)
                 {
-                    knownInstruments.Add(
-                        instrument.Meter.Name + "/" + instrument.Name + "/" + instrument.GetType().Name
-                    );
+                    var instrumentType = instrument.GetType().Name;
+                    var identifier = $"{instrument.Meter.Name}/{instrument.Name}/{instrumentType}";
+                    knownInstruments.Add(identifier);
                 }
             }
 
