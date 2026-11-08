@@ -10,6 +10,8 @@ test.describe("UX-02: focused keyboard accessibility smoke", () => {
     await expect(toggle).toBeVisible();
     await expect(toggle).toHaveAttribute("aria-controls", "library-filter-panel");
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await expect(page.locator("#library-search")).toHaveAttribute("data-interactive", "true");
+    await expect(page.locator(".recipe-card").first()).toBeVisible();
 
     await toggle.focus();
     await expect(toggle).toBeFocused();

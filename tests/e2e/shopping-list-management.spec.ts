@@ -90,6 +90,7 @@ test.describe("OpenSpec: shopping-list-management", () => {
     await expect(item).toBeFocused();
     await page.keyboard.press("Space");
     await expect(item).toHaveAttribute("aria-pressed", "true");
+    await expect(item).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(item).toHaveAttribute("aria-pressed", "false");
   });
