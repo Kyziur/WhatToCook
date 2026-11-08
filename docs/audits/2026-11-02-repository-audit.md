@@ -25,7 +25,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 - **IN REVIEW** means an unmerged PR exists; CI or actual host verification remains outstanding.
 - **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
 
-**Current count:** 26 DONE · CI, 6 PARTIAL, 37 open/conditional. The original audit's 69 findings remain unchanged.
+**Current count:** 26 DONE · CI, 6 PARTIAL, 1 IN REVIEW, 36 open/conditional. The original audit's 69 findings remain unchanged.
 
 | Finding | Status | Merged evidence or outstanding work |
 | --- | --- | --- |
@@ -83,7 +83,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | ARC-02 | **DONE · CI** | [#35](https://github.com/Kyziur/WhatToCook/pull/35) — Pure shopping aggregation and shared numeric semantics extracted, DB-free tests added; final-head [CI 42508132586](https://github.com/Kyziur/WhatToCook/actions/runs/42508132586) green (120 API, 53 component, 98 browser). Transactions and checklist reconciliation remain unchanged |
 | ARC-03 | OPEN / CONDITIONAL | Optional: use-case extraction only where boundary improves |
 | ARC-04 | **PARTIAL** | [#29](https://github.com/Kyziur/WhatToCook/pull/29) — Current trusted-LAN/Web/API/DB and identity ownership decision documented; actual homelab access matrix and pre-exposure user authorization decision still required |
-| ARC-05 | OPEN / CONDITIONAL | Optional: API contract tests without central DTO rewrite |
+| ARC-05 | **IN REVIEW** | [#40](https://github.com/Kyziur/WhatToCook/pull/40) — Real Blazor `ApiMealPlanService` HTTP contract test against PostgreSQL API for plan create/list/entries and regeneration conflict; pending final-head CI and review; no DTO centralization |
 | DOC-01 | **DONE · CI** | [#24](https://github.com/Kyziur/WhatToCook/pull/24) — Local developer start/test/troubleshooting quickstart |
 | DOC-02 | OPEN / CONDITIONAL | Conditional: short architecture map if repeated review confusion |
 | DOC-03 | OPEN / CONDITIONAL | Conditional: product status note only if owners need it |
