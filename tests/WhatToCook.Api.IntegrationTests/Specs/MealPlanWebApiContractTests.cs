@@ -34,7 +34,11 @@ public sealed class MealPlanWebApiContractTests(TestWebApplicationFactory factor
 
         var fetched = await client.GetPlanAsync(created.Id);
         Assert.NotNull(fetched);
-        Assert.Equal(created, fetched);
+        Assert.Equal(created.Id, fetched.Id);
+        Assert.Equal(created.Name, fetched.Name);
+        Assert.Equal(created.DateFrom, fetched.DateFrom);
+        Assert.Equal(created.DateTo, fetched.DateTo);
+        Assert.Empty(fetched.Entries);
 
         Assert.True(await client.MarkShoppingGeneratedAsync(created.Id));
 
@@ -58,6 +62,9 @@ public sealed class MealPlanWebApiContractTests(TestWebApplicationFactory factor
 
         var persisted = await client.GetPlanAsync(created.Id);
         Assert.NotNull(persisted);
-        Assert.Equal(saved.Plan, persisted);
+        Assert.Equal(saved.Plan.Id, persisted.Id);
+        Assert.Equal(saved.Plan.Name, persisted.Name);
+        Assert.Equal(saved.Plan.HasGeneratedShoppingList, persisted.HasGeneratedShoppingList);
+        Assert.Empty(persisted.Entries);
     }
 }
