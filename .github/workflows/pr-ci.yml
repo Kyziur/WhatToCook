@@ -29,13 +29,6 @@ jobs:
         run: dotnet tool restore
 
       # Fail quickly on style regressions instead of waiting for the full Testcontainers + Playwright suite.
-      # Temporary ARC-02 diagnostic; remove after applying the formatter patch.
-      - name: Print CSharpier ARC-02 formatting diff
-        run: |
-          dotnet csharpier format .
-          git --no-pager diff -- src/WhatToCook.Api/Features/Shopping/Lists/ShoppingListAggregation.cs src/WhatToCook.Api/Features/Shopping/Lists/ShoppingListService.cs tests/WhatToCook.Api.IntegrationTests/Specs/ShoppingListAggregationTests.cs
-          exit 1
-
       - name: Check formatting
         run: dotnet csharpier check .
 
