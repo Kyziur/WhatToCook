@@ -25,7 +25,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 - **IN REVIEW** means an unmerged PR exists; CI or actual host verification remains outstanding.
 - **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
 
-**Current count:** 19 DONE · CI, 6 PARTIAL, 1 IN REVIEW, 43 open/conditional. The original audit's 69 findings remain unchanged.
+**Current count:** 20 DONE · CI, 6 PARTIAL, 43 open/conditional. The original audit's 69 findings remain unchanged.
 
 | Finding | Status | Merged evidence or outstanding work |
 | --- | --- | --- |
@@ -78,7 +78,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | PERF-04 | OPEN / CONDITIONAL | Optional: recommendation candidates after catalog measurements |
 | PERF-05 | OPEN / CONDITIONAL | Optional: Blazor circuit/render profiling |
 | PERF-06 | OPEN / CONDITIONAL | Optional: image variants after network measurements |
-| PERF-07 | **IN REVIEW** | [#30](https://github.com/Kyziur/WhatToCook/pull/30) — Testcontainers benchmark measured 301.2 ms single vs 9.5 ms split in a 100×100×2 synthetic fixture; targeted `AsSplitQuery()` fix and HTTP completeness regression under final CI |
+| PERF-07 | **DONE · CI** | [#30](https://github.com/Kyziur/WhatToCook/pull/30) — Endpoint now uses `AsSplitQuery()` after repeated synthetic PostgreSQL 100×100×2 stress measurements; HTTP completeness and full CI passed ([run](https://github.com/Kyziur/WhatToCook/actions/runs/42481352433)). Production p95 remains unmeasured |
 | ARC-01 | OPEN / CONDITIONAL | Conditional: split complex page only when changing affected flow |
 | ARC-02 | OPEN / CONDITIONAL | Conditional: split shopping service only for proven maintenance need |
 | ARC-03 | OPEN / CONDITIONAL | Optional: use-case extraction only where boundary improves |
