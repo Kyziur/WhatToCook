@@ -42,6 +42,10 @@ These commands run the .NET tests, install the pinned Node dependencies, install
 
 Repository change conventions and verification requirements are in [`AGENTS.md`](AGENTS.md); product requirements are in [`openspec/specs`](openspec/specs).
 
+## Architecture and trust boundary
+
+[Trust-boundary decision](docs/architecture/trust-boundary.md) explains how browsers, Blazor Web, the internal API and PostgreSQL are separated, and which access-control decisions are required **before** enabling external users or public routes. It does not change deployment or introduce authentication.
+
 ## Production deployment
 
 Production deployment is owned by the homelab repository and Komodo. This repository provides the application Compose contract in `deploy/docker-compose.yml`; it does not contain production secret values or the Komodo configuration.
