@@ -130,9 +130,7 @@ public sealed class RecommendationCandidateDiagnosticsTests(
                     .Ingredients.DistinctBy(x => x.NormalizedName, StringComparer.Ordinal)
                     .ToArray();
                 var matches = ingredients.Count(x => x.NormalizedName == ownedKey);
-                var coverage = ingredients.Length == 0
-                    ? 0m
-                    : (decimal)matches / ingredients.Length;
+                var coverage = ingredients.Length == 0 ? 0m : (decimal)matches / ingredients.Length;
                 return new { row.Id, row.Title, Matches = matches, Coverage = coverage };
             })
             .Where(x => x.Matches > 0 && x.Coverage >= 0.3m)
