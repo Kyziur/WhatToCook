@@ -191,30 +191,78 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
     }
 
     [Fact]
-    public void DeploymentDocumentation_ShouldCoverSelfHostedOperationalFlow()
+    public async Task DeploymentComposeConfig_ShouldEnforceServiceStorageAndNetworkContract()
     {
-        var repositoryRoot = ResolveRepositoryRoot();
-        var documentationPath = Path.Combine(repositoryRoot, "docs", "self-hosted-deployment.md");
+        var deployDirectory = Path.Combine(ResolveRepositoryRoot(), "deploy");
+        var composeFile = Path.Combine(deployDirectory, "docker-compose.yml");
+        var dataRoot = Path.Combine(Path.GetTempPath(), $"wtc-contract-{Guid.NewGuid():N}");
+        var projectName = $"wtccontract{Guid.NewGuid():N}"[..20];
+        var env = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["DATA_ROOT"] = dataRoot,
+            ["POSTGRES_PASSWORD"] = "test-only-password",
+            ["DOCKER_PLATFORM"] = "linux/amd64",
+        };
 
-        Assert.True(File.Exists(documentationPath));
-        var document = File.ReadAllText(documentationPath);
-
-        Assert.Contains("local network", document, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Komodo", document, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Bitwarden", document, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("DATA_ROOT", document, StringComparison.Ordinal);
-        Assert.Contains("POSTGRES_PASSWORD", document, StringComparison.Ordinal);
-        Assert.Contains("BWS workload secret", document, StringComparison.Ordinal);
-        Assert.Contains("homelab-workloads", document, StringComparison.Ordinal);
-        Assert.Contains(
-            "The application contract does not require `BWS_ACCESS_TOKEN`.",
-            document,
-            StringComparison.Ordinal
+        var rendered = await RunProcessAsync(
+            "docker",
+            $"compose -f \"{composeFile}\" --project-name {projectName} config --format json",
+            deployDirectory,
+            env,
+            timeoutMs: 30_000
         );
-        Assert.Contains("Compose-owned internals", document, StringComparison.Ordinal);
-        Assert.Contains("POSTGRES_DB=whattocook", document, StringComparison.Ordinal);
-        Assert.Contains("1654:1654", document, StringComparison.Ordinal);
-        Assert.Contains("Interactive Server", document, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(0, rendered.ExitCode);
+
+        using var document = JsonDocument.Parse(rendered.Output);
+        var root = document.RootElement;
+        Assert.Equal(projectName, root.GetProperty("name").GetString());
+        var services = root.GetProperty("services");
+        var api = services.GetProperty("api");
+        var web = services.GetProperty("web");
+        var postgres = services.GetProperty("postgres");
+
+        var apiNetworks = api.GetProperty("networks");
+        var webNetworks = web.GetProperty("networks");
+        Assert.False(apiNetworks.TryGetProperty("edge", out _));
+        Assert.True(webNetworks.TryGetProperty("edge", out _));
+        Assert.False(postgres.GetProperty("networks").TryGetProperty("edge", out _));
+
+        Assert.False(api.TryGetProperty("ports", out _));
+        Assert.False(postgres.TryGetProperty("ports", out _));
+        Assert.Equal(
+            "http://api:8080",
+            web.GetProperty("environment").GetProperty("Api__BaseUrl").GetString()
+        );
+        Assert.Equal(
+            "/data/recipe-images",
+            api.GetProperty("environment").GetProperty("Storage__RecipeImagesPath").GetString()
+        );
+        Assert.Contains(
+            api.GetProperty("volumes").EnumerateArray(),
+            volume =>
+                volume.GetProperty("target").GetString() == "/data/recipe-images"
+                && volume.GetProperty("source").GetString()
+                    == Path.Combine(dataRoot, "recipe-images")
+                && volume.GetProperty("type").GetString() == "bind"
+        );
+        var postgresDataVolume = postgres
+            .GetProperty("volumes")
+            .EnumerateArray()
+            .Single(x => x.GetProperty("target").GetString() == "/var/lib/postgresql/data");
+        Assert.Equal("volume", postgresDataVolume.GetProperty("type").GetString());
+
+        var missingMount = new Dictionary<string, string?>(env, StringComparer.Ordinal)
+        {
+            ["DATA_ROOT"] = "",
+        };
+        var invalid = await RunProcessAsync(
+            "docker",
+            $"compose -f \"{composeFile}\" --project-name {projectName} config --quiet",
+            deployDirectory,
+            missingMount,
+            timeoutMs: 30_000
+        );
+        Assert.NotEqual(0, invalid.ExitCode);
     }
 
     [Fact]
