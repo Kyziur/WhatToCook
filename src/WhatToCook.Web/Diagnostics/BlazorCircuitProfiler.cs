@@ -34,13 +34,7 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
 
         listener.InstrumentPublished = (instrument, listener) =>
         {
-            var isCircuitMetric = instrument.Meter.Name == CircuitMeter
-                && instrument.Name
-                    is "aspnetcore.components.circuit.active"
-                        or "aspnetcore.components.circuit.connected";
-            var isRenderMetric = instrument.Meter.Name == LifecycleMeter
-                && instrument.Name == "aspnetcore.components.render_diff";
-            if (isCircuitMetric || isRenderMetric)
+            if (ShouldObserve(instrument))
             {
                 listener.EnableMeasurementEvents(instrument);
             }
@@ -125,6 +119,18 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
         {
             // Normal teardown after the Playwright run.
         }
+    }
+
+    private static bool ShouldObserve(Instrument instrument)
+    {
+        if (instrument.Meter.Name == CircuitMeter)
+        {
+            return instrument.Name == "aspnetcore.components.circuit.active"
+                || instrument.Name == "aspnetcore.components.circuit.connected";
+        }
+
+        return instrument.Meter.Name == LifecycleMeter
+            && instrument.Name == "aspnetcore.components.render_diff";
     }
 
     private string ReadPhase()
