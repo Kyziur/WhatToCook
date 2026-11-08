@@ -28,6 +28,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\WhatToCook.Api\WhatToCook.Api.csproj" />
-    <ProjectReference Include="..\..\src\WhatToCook.Web\WhatToCook.Web.csproj" />
+    <ProjectReference Include="..\..\src\WhatToCook.Web\WhatToCook.Web.csproj" Aliases="WhatToCookWeb" />
   </ItemGroup>
 </Project>
