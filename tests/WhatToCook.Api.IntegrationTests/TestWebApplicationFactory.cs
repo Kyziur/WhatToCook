@@ -27,6 +27,9 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
     public Dictionary<string, string> ImportedPagesByUrl { get; } =
         new(StringComparer.OrdinalIgnoreCase);
 
+    public Dictionary<string, Exception> ImportFailuresByUrl { get; } =
+        new(StringComparer.OrdinalIgnoreCase);
+
     protected virtual bool EnableSeedData => false;
     protected virtual string? SeedDataProfile => null;
 
@@ -73,7 +76,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
                 options.UseNpgsql(postgresContainer.GetConnectionString())
             );
             services.AddSingleton<IRecipeImportPageFetcher>(
-                new FakeRecipeImportPageFetcher(ImportedPagesByUrl)
+                new FakeRecipeImportPageFetcher(ImportedPagesByUrl, ImportFailuresByUrl)
             );
 
             using var scope = services.BuildServiceProvider().CreateScope();
@@ -104,11 +107,18 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         }
     }
 
-    private sealed class FakeRecipeImportPageFetcher(Dictionary<string, string> pagesByUrl)
-        : IRecipeImportPageFetcher
+    private sealed class FakeRecipeImportPageFetcher(
+        Dictionary<string, string> pagesByUrl,
+        Dictionary<string, Exception> failuresByUrl
+    ) : IRecipeImportPageFetcher
     {
         public Task<string> FetchAsync(Uri uri, CancellationToken cancellationToken)
         {
+            if (failuresByUrl.TryGetValue(uri.ToString(), out var failure))
+            {
+                throw failure;
+            }
+
             if (pagesByUrl.TryGetValue(uri.ToString(), out var html))
             {
                 return Task.FromResult(html);
