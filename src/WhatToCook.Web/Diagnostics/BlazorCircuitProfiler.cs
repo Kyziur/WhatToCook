@@ -11,6 +11,7 @@ namespace WhatToCook.Web.Diagnostics;
 internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath) : BackgroundService
 {
     private const int MaxRenderSamples = 100_000;
+    private const string BlazorMeterPrefix = "Microsoft.AspNetCore.Components";
     private const string CircuitMeter = "Microsoft.AspNetCore.Components.Server.Circuits";
     private const string LifecycleMeter = "Microsoft.AspNetCore.Components.Lifecycle";
     private readonly MeterListener listener = new();
@@ -35,7 +36,7 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
 
         listener.InstrumentPublished = (instrument, listener) =>
         {
-            if (instrument.Meter.Name.StartsWith("Microsoft.AspNetCore.Components", StringComparison.Ordinal))
+            if (instrument.Meter.Name.StartsWith(BlazorMeterPrefix, StringComparison.Ordinal))
             {
                 lock (sync)
                 {
