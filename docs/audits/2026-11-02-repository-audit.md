@@ -25,7 +25,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 - **IN REVIEW** means an unmerged PR exists; CI or actual host verification remains outstanding.
 - **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
 
-**Current count:** 27 DONE · CI, 6 PARTIAL, 36 open/conditional. The original audit's 69 findings remain unchanged.
+**Current count:** 27 DONE · CI, 7 PARTIAL, 35 open/conditional. The original audit's 69 findings remain unchanged.
 
 | Finding | Status | Merged evidence or outstanding work |
 | --- | --- | --- |
@@ -77,7 +77,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | PERF-03 | **DONE · CI** | [#32](https://github.com/Kyziur/WhatToCook/pull/32) — PostgreSQL 1k/10k `EXPLAIN (ANALYZE, BUFFERS)` comparisons show no justified `pg_trgm` migration at household scale; synthetic index and matching regression tests only, production latency remains unmeasured |
 | PERF-04 | **DONE · CI** | [#33](https://github.com/Kyziur/WhatToCook/pull/33) — PostgreSQL 100/1k/10k candidate benchmark and ranking parity; SQL `EXISTS` prefilter avoids materializing unmatched recipes (10k synthetic: 9,999→499), with no pre-rank limit; full CI [42491096130](https://github.com/Kyziur/WhatToCook/actions/runs/42491096130) green. Production p95 unmeasured |
 | PERF-05 | **DONE · CI** | [#34](https://github.com/Kyziur/WhatToCook/pull/34) — Development-only Blazor circuit/render metrics and 5/20-tab diagnostics merged, final-head [CI 42506756813](https://github.com/Kyziur/WhatToCook/actions/runs/42506756813) green. Single-run server render p95 51.66/77.16 ms on shared runner; no production p95 or demonstrated need for UI refactor. Optional host repeats remain |
-| PERF-06 | OPEN / CONDITIONAL | Optional: image variants after network measurements |
+| PERF-06 | **PARTIAL · IN REVIEW** | Web image proxy forwards ETag/Last-Modified validators and returns upstream 304 with `private, no-cache`; Playwright upload/read/revalidation regression added. This fixes a confirmed header omission, **not** evidence that 320/640 px variants are needed. Full image transfer baseline and optional variants still require real representative images/network measurements. PR CI pending |
 | PERF-07 | **DONE · CI** | [#30](https://github.com/Kyziur/WhatToCook/pull/30) — Endpoint now uses `AsSplitQuery()` after repeated synthetic PostgreSQL 100×100×2 stress measurements; HTTP completeness and full CI passed ([run](https://github.com/Kyziur/WhatToCook/actions/runs/42481352433)). Production p95 remains unmeasured |
 | ARC-01 | OPEN / CONDITIONAL | Conditional: split complex page only when changing affected flow |
 | ARC-02 | **DONE · CI** | [#35](https://github.com/Kyziur/WhatToCook/pull/35) — Pure shopping aggregation and shared numeric semantics extracted, DB-free tests added; final-head [CI 42508132586](https://github.com/Kyziur/WhatToCook/actions/runs/42508132586) green (120 API, 53 component, 98 browser). Transactions and checklist reconciliation remain unchanged |
