@@ -14,4 +14,6 @@ The diagnostic asserts identical selected candidate IDs, distinct ingredient sco
 
 Add only the database-side `EXISTS` filter for at least one owned normalized ingredient. Retain every child ingredient for retained recipes and the existing in-memory coverage/ranking implementation; do not `Take` before ranking.
 
-**Open check:** final-head CI must pass after production predicate is added. No database migration/DDL or changed ranking is intended.
+**Final regression:** [CI run 42491096130](https://github.com/Kyziur/WhatToCook/actions/runs/42491096130) on optimized source passed full .NET tests, repeated PostgreSQL diagnostics, browser Playwright suite, ARM64 smoke, dependency audit gates and CSharpier. No production migrations/DDL, new cutoff, or changed ranking were introduced.
+
+The feature-scoped review found no evidence that an additional service extraction or database index was necessary. The SQL prefilter is the only behavioral query-shape change. Production p95 latency remains unknown.

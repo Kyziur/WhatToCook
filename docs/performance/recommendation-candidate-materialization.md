@@ -42,3 +42,7 @@ The 100-row timings include query-startup overhead and should not be compared to
 **Decision:** apply the safe SQL candidate predicate to `ShoppingListService.GetRecipeRecommendationsAsync`. The predicate is only `EXISTS` with a possessed normalized ingredient name; it cannot discard a recipe that the existing scorer could accept, because that scorer requires at least one match. It preserves all ingredients for every retained recipe, the existing 30% coverage computation, full ranking and the post-ranking `Take(limit)` cutoff. Planned and inactive exclusions remain unchanged.
 
 **Boundary:** this optimization does not reduce work when most recipes share a possessed ingredient and does not push coverage/rank to SQL. Production p50/p95 latency and PostgreSQL transfer size remain unmeasured. Avoid interpreting the synthetic allocation numbers as network bytes.
+
+## Final CI verification
+
+The optimized production service passed [GitHub Actions run 42491096130](https://github.com/Kyziur/WhatToCook/actions/runs/42491096130), including PostgreSQL integration tests, ranking regression, the diagnostic benchmark, Playwright, ARM64, dependency policy and CSharpier. This verifies application behavior on test fixtures, **not** production latency.

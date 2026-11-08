@@ -5,7 +5,7 @@ The system SHALL retain the existing recommendation eligibility and ranking rule
 
 #### Scenario: Exclude recipes without any possessed ingredient
 - **WHEN** a meal plan has at least one non-manual shopping item in state MAM
-- **THEN** an optimized candidate query may discard unplanned active recipes with no ingredient whose normalized name matches an owned item, without changing the recommended items
+- **THEN** the SQL candidate query only materializes unplanned active recipes with at least one ingredient whose normalized name matches an owned item, without changing the recommended items
 
 #### Scenario: Preserve score, coverage, and cutoff after filtering candidates
 - **WHEN** qualifying recipes differ in matched-ingredient count, duplicate ingredient names, total distinct ingredient count and title
