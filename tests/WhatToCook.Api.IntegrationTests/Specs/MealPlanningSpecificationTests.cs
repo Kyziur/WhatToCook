@@ -449,6 +449,29 @@ public sealed class MealPlanningSpecificationTests(TestWebApplicationFactory fac
         Assert.NotNull(detailsAfterArchive);
         Assert.False(detailsAfterArchive!.Entries.Single().RecipeIsActive);
 
+        // Keeping an archived recipe in its original slot remains supported.
+        var preserved = await client.PutAsJsonAsync(
+            $"/api/plans/{plan.Id}",
+            new SavePlanPayload
+            {
+                Name = saved.Name,
+                DateFrom = saved.DateFrom,
+                DateTo = saved.DateTo,
+                Entries =
+                [
+                    new SavePlanEntryPayload
+                    {
+                        Id = saved.Entries.Single().Id,
+                        RecipeId = recipe.Id,
+                        PlannedDate = new DateOnly(2026, 5, 1),
+                        Multiplier = 2m,
+                        SortOrder = 0,
+                    },
+                ],
+            }
+        );
+        Assert.Equal(HttpStatusCode.OK, preserved.StatusCode);
+
         var response = await client.PutAsJsonAsync(
             $"/api/plans/{plan.Id}",
             new SavePlanPayload
@@ -479,6 +502,82 @@ public sealed class MealPlanningSpecificationTests(TestWebApplicationFactory fac
         );
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ArchivedRecipe_CannotBeReassignedByReusingAPlanEntryId(bool swapRecipe)
+    {
+        using var client = factory.CreateClient();
+        var original = await CreateRecipe(client, $"Original {Guid.NewGuid():N}");
+        var archived = swapRecipe
+            ? await CreateRecipe(client, $"Archived replacement {Guid.NewGuid():N}")
+            : original;
+        var from = new DateOnly(2026, 5, 1);
+        var to = new DateOnly(2026, 5, 7);
+        var plan = await CreatePlan(client, $"Historical {Guid.NewGuid():N}", from, to);
+
+        var saved = await SavePlan(
+            client,
+            plan.Id,
+            new SavePlanPayload
+            {
+                Name = plan.Name,
+                DateFrom = from,
+                DateTo = to,
+                Entries =
+                [
+                    new SavePlanEntryPayload
+                    {
+                        RecipeId = original.Id,
+                        PlannedDate = from,
+                        Multiplier = 1m,
+                        SortOrder = 0,
+                    },
+                ],
+            }
+        );
+
+        using var archiveResponse = await client.PostAsync(
+            $"/api/recipes/{archived.Id}/archive",
+            null
+        );
+        Assert.Equal(HttpStatusCode.NoContent, archiveResponse.StatusCode);
+
+        // Attempt to replace the existing recipe, or move the same archived
+        // recipe to another day while retaining the old row's GUID.
+        using var response = await client.PutAsJsonAsync(
+            $"/api/plans/{plan.Id}",
+            new SavePlanPayload
+            {
+                Name = saved.Name,
+                DateFrom = from,
+                DateTo = to,
+                Entries =
+                [
+                    new SavePlanEntryPayload
+                    {
+                        Id = saved.Entries.Single().Id,
+                        RecipeId = archived.Id,
+                        PlannedDate = swapRecipe ? from : from.AddDays(1),
+                        Multiplier = 1m,
+                        SortOrder = 0,
+                    },
+                ],
+            }
+        );
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var persisted = await client.GetFromJsonAsync<PlanDetailsDto>(
+            $"/api/plans/{plan.Id}",
+            JsonOptions
+        );
+        Assert.NotNull(persisted);
+        var retained = Assert.Single(persisted.Entries);
+        Assert.Equal(original.Id, retained.RecipeId);
+        Assert.Equal(from, retained.PlannedDate);
+        Assert.Equal(saved.Entries.Single().Id, retained.Id);
     }
 
     [Fact]

@@ -25,7 +25,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 - **IN REVIEW** means an unmerged PR exists; CI or actual host verification remains outstanding.
 - **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
 
-**Current count:** 25 DONE · CI, 6 PARTIAL, 1 IN REVIEW, 37 open/conditional. The original audit's 69 findings remain unchanged.
+**Current count:** 27 DONE · CI, 8 PARTIAL, 34 open/conditional. The original audit's 69 findings remain unchanged.
 
 | Finding | Status | Merged evidence or outstanding work |
 | --- | --- | --- |
@@ -77,13 +77,13 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | PERF-03 | **DONE · CI** | [#32](https://github.com/Kyziur/WhatToCook/pull/32) — PostgreSQL 1k/10k `EXPLAIN (ANALYZE, BUFFERS)` comparisons show no justified `pg_trgm` migration at household scale; synthetic index and matching regression tests only, production latency remains unmeasured |
 | PERF-04 | **DONE · CI** | [#33](https://github.com/Kyziur/WhatToCook/pull/33) — PostgreSQL 100/1k/10k candidate benchmark and ranking parity; SQL `EXISTS` prefilter avoids materializing unmatched recipes (10k synthetic: 9,999→499), with no pre-rank limit; full CI [42491096130](https://github.com/Kyziur/WhatToCook/actions/runs/42491096130) green. Production p95 unmeasured |
 | PERF-05 | **DONE · CI** | [#34](https://github.com/Kyziur/WhatToCook/pull/34) — Development-only Blazor circuit/render metrics and 5/20-tab diagnostics merged, final-head [CI 42506756813](https://github.com/Kyziur/WhatToCook/actions/runs/42506756813) green. Single-run server render p95 51.66/77.16 ms on shared runner; no production p95 or demonstrated need for UI refactor. Optional host repeats remain |
-| PERF-06 | OPEN / CONDITIONAL | Optional: image variants after network measurements |
+| PERF-06 | **PARTIAL · CI** | [#41](https://github.com/Kyziur/WhatToCook/pull/41) — Web proxy now forwards conditional validators and preserves 304/ETag/Last-Modified with private revalidation; final-head [CI 42527840882](https://github.com/Kyziur/WhatToCook/actions/runs/42527840882) green (122 API, 56 component, 98 browser; ARM64 passed). Image variants remain **conditional on representative photo and network-transfer measurements**, not assumed necessary |
 | PERF-07 | **DONE · CI** | [#30](https://github.com/Kyziur/WhatToCook/pull/30) — Endpoint now uses `AsSplitQuery()` after repeated synthetic PostgreSQL 100×100×2 stress measurements; HTTP completeness and full CI passed ([run](https://github.com/Kyziur/WhatToCook/actions/runs/42481352433)). Production p95 remains unmeasured |
 | ARC-01 | OPEN / CONDITIONAL | Conditional: split complex page only when changing affected flow |
 | ARC-02 | **DONE · CI** | [#35](https://github.com/Kyziur/WhatToCook/pull/35) — Pure shopping aggregation and shared numeric semantics extracted, DB-free tests added; final-head [CI 42508132586](https://github.com/Kyziur/WhatToCook/actions/runs/42508132586) green (120 API, 53 component, 98 browser). Transactions and checklist reconciliation remain unchanged |
-| ARC-03 | OPEN / CONDITIONAL | Optional: use-case extraction only where boundary improves |
+| ARC-03 | **PARTIAL · CI** | [#42](https://github.com/Kyziur/WhatToCook/pull/42) — Fixed archived-recipe row-ID reuse bug with pure rule (same entry ID, recipe ID and date); DB-free + PostgreSQL HTTP regressions for keep/move/swap. Final-head [CI 42528747845](https://github.com/Kyziur/WhatToCook/actions/runs/42528747845) green (125 API, 56 component, 98 browser; ARM64 passed). Broader use-case extraction remains optional unless a concrete boundary benefit emerges |
 | ARC-04 | **PARTIAL** | [#29](https://github.com/Kyziur/WhatToCook/pull/29) — Current trusted-LAN/Web/API/DB and identity ownership decision documented; actual homelab access matrix and pre-exposure user authorization decision still required |
-| ARC-05 | **IN REVIEW** | [#38](https://github.com/Kyziur/WhatToCook/pull/38) — Targeted recipe page/details API-Web consumer checks: required JSON fields, paging metadata, HTTP integration and negative contract tests. Final-head CI and independent review pending; other API flows remain outside this narrow scope |
+| ARC-05 | **DONE · CI** | [#40](https://github.com/Kyziur/WhatToCook/pull/40) — Planner Blazor client uses PostgreSQL-backed API; final-head [CI 42525322218](https://github.com/Kyziur/WhatToCook/actions/runs/42525322218) green. Supplementary [#38](https://github.com/Kyziur/WhatToCook/pull/38) **IN REVIEW** — recipe catalog/details client validates required JSON fields, null fields and paging metadata, with negative tests and live API response checks. No DTO centralization; separate recipe-contract PR CI pending |
 | DOC-01 | **DONE · CI** | [#24](https://github.com/Kyziur/WhatToCook/pull/24) — Local developer start/test/troubleshooting quickstart |
 | DOC-02 | OPEN / CONDITIONAL | Conditional: short architecture map if repeated review confusion |
 | DOC-03 | OPEN / CONDITIONAL | Conditional: product status note only if owners need it |
@@ -95,7 +95,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | AGENT-03 | **DONE · CI** | [#36](https://github.com/Kyziur/WhatToCook/pull/36) — Five dead skill references and incorrect SDK10 VSTest/MTP guidance fixed with Node contract checks; final-head [CI 42508393599](https://github.com/Kyziur/WhatToCook/actions/runs/42508393599) green. No blanket deduplication of otherwise consistent harness instructions |
 | AGENT-04 | **PARTIAL** | [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Machine-specific Windows path removed and CI contract test passed; real MCP client smoke from second checkout/WSL still required |
 | AGENT-05 | **DONE · CI** | [#8](https://github.com/Kyziur/WhatToCook/pull/8), [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Aligned agent/OpenSpec product assumptions and corrected stale MAUI implementation example |
-| AGENT-06 | OPEN / CONDITIONAL | Optional: harness commands treated as adapters |
+| AGENT-06 | **DONE · CI** | [#39](https://github.com/Kyziur/WhatToCook/pull/39) — Both OMP and `.agents` OpenSpec apply/archive wrappers retain critical shared safety invariants under focused Node tests; final-head [CI 42524327434](https://github.com/Kyziur/WhatToCook/actions/runs/42524327434) green (121 API, 56 component, 98 browser). Harness-specific invocation and generated files left intact; broader semantic parity not claimed |
 | AGENT-07 | OPEN / CONDITIONAL | Optional: add deployment-specific skill only for demonstrated gap |
 | AGENT-08 | OPEN / CONDITIONAL | Optional: reduce skill selection cost when measurable |
 
