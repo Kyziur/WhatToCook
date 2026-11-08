@@ -155,12 +155,7 @@ public sealed class RecommendationCandidateDiagnosticsTests(
             .ToListAsync();
         var elapsedMs = Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds;
         var allocatedBytes = GC.GetTotalAllocatedBytes(precise: false) - before;
-        return new Observation(
-            rows,
-            rows.Sum(x => x.Ingredients.Count),
-            elapsedMs,
-            allocatedBytes
-        );
+        return new Observation(rows, rows.Sum(x => x.Ingredients.Count), elapsedMs, allocatedBytes);
     }
 
     private static async Task SeedAsync(
