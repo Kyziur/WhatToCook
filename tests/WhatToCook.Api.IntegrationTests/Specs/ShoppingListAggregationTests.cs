@@ -38,16 +38,16 @@ public sealed class ShoppingListAggregationTests
             Assert.Equal(WhatToCook.Api.Domain.Shopping.ChecklistState.NieMam, item.State);
         });
 
-        var tomato = Assert.Single(items.Where(item => item.Name == "Pomidor"));
+        var tomato = Assert.Single(items, item => item.Name == "Pomidor");
         Assert.Equal("7", tomato.QuantityText);
         Assert.Equal("szt", tomato.Unit);
         Assert.Null(tomato.QuantityContext);
 
-        var salt = Assert.Single(items.Where(item => item.Name == "Sól"));
+        var salt = Assert.Single(items, item => item.Name == "Sól");
         Assert.Equal("szczypta", salt.QuantityText);
         Assert.Equal("wystąpienia: 2; suma mnożników: ×3", salt.QuantityContext);
 
-        var pepper = Assert.Single(items.Where(item => item.Name == "Pieprz"));
+        var pepper = Assert.Single(items, item => item.Name == "Pieprz");
         Assert.Null(pepper.QuantityText);
         Assert.Equal("wystąpienia: 2; suma mnożników: ×3", pepper.QuantityContext);
         Assert.Equal(new[] { 0, 1, 2 }, items.Select(item => item.SortOrder));
@@ -64,8 +64,8 @@ public sealed class ShoppingListAggregationTests
 
         var items = ShoppingListAggregation.BuildGeneratedItems(Guid.NewGuid(), entries);
         Assert.Equal(2, items.Count);
-        Assert.Equal("2", Assert.Single(items.Where(item => item.Unit == "kg")).QuantityText);
-        Assert.Equal("250", Assert.Single(items.Where(item => item.Unit == "g")).QuantityText);
+        Assert.Equal("2", Assert.Single(items, item => item.Unit == "kg").QuantityText);
+        Assert.Equal("250", Assert.Single(items, item => item.Unit == "g").QuantityText);
     }
 
     private static PlannedRecipe Entry(
