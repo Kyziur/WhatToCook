@@ -171,6 +171,39 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
         }
     }
 
+    [Fact]
+    public async Task PagedLibrary_ShouldSkipFacetsOnlyWhenExplicitlyRequested()
+    {
+        using var client = factory.CreateClient();
+        var suffix = Guid.NewGuid().ToString("N");
+        var title = $"Facets{suffix}";
+        var tag = $"FacetsTag{suffix}";
+        var payload = RecipeApiContracts.CreateRecipePayload(title);
+        payload.Tags = [tag];
+
+        using var created = await client.PostAsJsonAsync("/api/recipes", payload);
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+
+        var withoutFacets = await client.GetFromJsonAsync<PagedLibraryDto>(
+            $"/api/recipes/page?q={title}&includeFacets=false",
+            JsonOptions
+        );
+        Assert.NotNull(withoutFacets);
+        Assert.Equal(title, Assert.Single(withoutFacets.Items).Title);
+        Assert.Empty(withoutFacets.Tags);
+        Assert.Empty(withoutFacets.Ingredients);
+        Assert.Empty(withoutFacets.TagUsage);
+
+        var withFacets = await client.GetFromJsonAsync<PagedLibraryDto>(
+            $"/api/recipes/page?q={title}",
+            JsonOptions
+        );
+        Assert.NotNull(withFacets);
+        Assert.Equal(title, Assert.Single(withFacets.Items).Title);
+        Assert.Contains(tag, withFacets.Tags);
+        Assert.Contains(tag, withFacets.TagUsage.Keys);
+    }
+
     private sealed class PagedLibraryDto
     {
         public List<RecipeApiContracts.RecipeSummaryDto> Items { get; set; } = [];
