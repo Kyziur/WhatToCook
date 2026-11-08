@@ -573,8 +573,16 @@
         }
     </div>;
 
-    private static string FormatItemQuantity(ShoppingListItem item) =>
-        string.Join(" ", new[] { item.QuantityText, item.Unit }.Where(x => !string.IsNullOrWhiteSpace(x)));
+    private static string FormatItemQuantity(ShoppingListItem item)
+    {
+        var quantity = string.Join(
+            " ",
+            new[] { item.QuantityText, item.Unit }.Where(x => !string.IsNullOrWhiteSpace(x))
+        );
+        return item.QuantityContext is null
+            ? quantity
+            : $"{quantity} ({item.QuantityContext})";
+    }
 
     private static string GetPlanChipLabel(MealPlanSummary plan) =>
         $"{plan.Name} ({FormatPlanDateRange(plan.DateFrom, plan.DateTo)})";

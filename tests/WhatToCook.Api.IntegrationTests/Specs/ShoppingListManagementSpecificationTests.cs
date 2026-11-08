@@ -111,6 +111,94 @@ public sealed class ShoppingListManagementSpecificationTests(TestWebApplicationF
     }
 
     [Fact]
+    public async Task DescriptiveQuantities_ShouldRetainOccurrencesAndPlanMultipliers()
+    {
+        using var client = factory.CreateClient();
+        var first = await CreateRecipe(
+            client,
+            $"Descriptor A {Guid.NewGuid():N}"[..25],
+            [
+                new RecipeApiContracts.RecipeIngredientPayload("Sól", "szczypta", null),
+                new RecipeApiContracts.RecipeIngredientPayload("Pieprz do smaku", null, null),
+                new RecipeApiContracts.RecipeIngredientPayload("Pomidor", "2", "szt"),
+            ]
+        );
+        var second = await CreateRecipe(
+            client,
+            $"Descriptor B {Guid.NewGuid():N}"[..25],
+            [
+                new RecipeApiContracts.RecipeIngredientPayload("Sól", "szczypta", null),
+                new RecipeApiContracts.RecipeIngredientPayload("Pieprz do smaku", null, null),
+                new RecipeApiContracts.RecipeIngredientPayload("Pomidor", "3", "szt"),
+            ]
+        );
+        var plan = await CreatePlan(
+            client,
+            $"Descriptor plan {Guid.NewGuid():N}",
+            new DateOnly(2026, 6, 1),
+            new DateOnly(2026, 6, 7)
+        );
+        await SavePlan(
+            client,
+            plan.Id,
+            new SavePlanPayload
+            {
+                Name = plan.Name,
+                DateFrom = plan.DateFrom,
+                DateTo = plan.DateTo,
+                RegenerateShoppingList = false,
+                Entries =
+                [
+                    new SavePlanEntryPayload
+                    {
+                        RecipeId = first.Id,
+                        PlannedDate = new DateOnly(2026, 6, 1),
+                        Multiplier = 2m,
+                        SortOrder = 0,
+                    },
+                    new SavePlanEntryPayload
+                    {
+                        RecipeId = second.Id,
+                        PlannedDate = new DateOnly(2026, 6, 2),
+                        Multiplier = 1m,
+                        SortOrder = 0,
+                    },
+                ],
+            }
+        );
+
+        using var generate = await client.PostAsync(
+            $"/api/plans/{plan.Id}/shopping-generated",
+            null
+        );
+        Assert.Equal(HttpStatusCode.NoContent, generate.StatusCode);
+        var generated = await client.GetFromJsonAsync<ShoppingListDto>(
+            $"/api/shopping-lists/plan/{plan.Id}",
+            JsonOptions
+        );
+        Assert.NotNull(generated);
+        var salt = Assert.Single(generated.Items, x => x.Name == "Sól");
+        Assert.Equal("szczypta", salt.QuantityText);
+        Assert.Equal("wystąpienia: 2; suma mnożników: ×3", salt.QuantityContext);
+        Assert.NotNull(salt.QuantityContext);
+        Assert.Contains(salt.QuantityContext, salt.DisplayText);
+        var pepper = Assert.Single(generated.Items, x => x.Name == "Pieprz do smaku");
+        Assert.Null(pepper.QuantityText);
+        Assert.Equal("wystąpienia: 2; suma mnożników: ×3", pepper.QuantityContext);
+        var tomato = Assert.Single(generated.Items, x => x.Name == "Pomidor");
+        Assert.Equal("7", tomato.QuantityText);
+        Assert.Null(tomato.QuantityContext);
+
+        var copy = await client.GetFromJsonAsync<CopyTextDto>(
+            $"/api/shopping-lists/plan/{plan.Id}/copy-text",
+            JsonOptions
+        );
+        Assert.NotNull(copy);
+        Assert.Contains("szczypta Sól (wystąpienia: 2; suma mnożników: ×3)", copy.Text);
+        Assert.Contains("Pieprz do smaku (wystąpienia: 2; suma mnożników: ×3)", copy.Text);
+    }
+
+    [Fact]
     public async Task KeepSeparateItemsForDifferentUnits_ShouldNotMerge()
     {
         using var client = factory.CreateClient();
@@ -1008,6 +1096,8 @@ public sealed class ShoppingListManagementSpecificationTests(TestWebApplicationF
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? QuantityText { get; set; }
+        public string? QuantityContext { get; set; }
+        public string DisplayText { get; set; } = string.Empty;
         public string? Unit { get; set; }
         public string State { get; set; } = "NIE_MAM";
         public bool IsManual { get; set; }
