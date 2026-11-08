@@ -6,7 +6,7 @@ UX-03 was a verify-first finding: Blazor Interactive Server has a reconnect UI, 
 
 - Exercise a real Chromium browser going offline for at least ten seconds and coming back without reloading.
 - Cover recipe-editor and new-plan draft fields, reconnect overlay state, ability to save, and a single persisted result.
-- Reuse existing Playwright bootstrap and form helpers; do not add new persistence mechanisms unless tests demonstrate an actual loss.
+- Reuse existing Playwright bootstrap and form helpers. CI reproduction demonstrated that a focused recipe step retains its DOM text but not the server model because InputTextArea normally binds on blur; add a small oninput update for steps without a separate persistence layer.
 
 ## Non-Goals
 

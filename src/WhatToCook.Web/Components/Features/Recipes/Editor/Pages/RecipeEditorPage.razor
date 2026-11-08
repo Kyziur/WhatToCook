@@ -155,6 +155,7 @@
                                 aria-invalid="@IsFirstStepInvalid(step).ToString().ToLowerInvariant()"
                                 aria-describedby="@(IsFirstStepInvalid(step) ? "steps-error" : null)"
                                 @bind-Value="step.Text"
+                                @oninput="args => OnStepInput(args, step)"
                                 rows="3" />
                             <div class="actions-row">
                                 <button type="button" class="chip" @onclick="() => MoveStepUp(step.Id)">W górę</button>
