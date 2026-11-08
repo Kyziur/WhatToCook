@@ -57,9 +57,16 @@ public sealed class ShoppingListService(AppDbContext dbContext, ILogger<Shopping
         }
 
         var plannedRecipeIds = plan.PlannedRecipes.Select(x => x.RecipeId).ToHashSet();
+        var possessedIngredientKeys = possessedIngredientNames.ToArray();
         var recipes = await dbContext
             .Recipes.AsNoTracking()
-            .Where(x => x.IsActive && !plannedRecipeIds.Contains(x.Id))
+            .Where(x =>
+                x.IsActive
+                && !plannedRecipeIds.Contains(x.Id)
+                && x.Ingredients.Any(ingredient =>
+                    possessedIngredientKeys.Contains(ingredient.Ingredient.NormalizedName)
+                )
+            )
             .Select(x => new
             {
                 x.Id,

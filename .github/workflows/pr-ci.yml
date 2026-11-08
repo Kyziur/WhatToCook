@@ -55,6 +55,13 @@ jobs:
             --filter "FullyQualifiedName~RecipeSubstringSearchDiagnosticsTests" \
             --logger "console;verbosity=detailed"
 
+      - name: Inspect shopping recommendation candidate materialization (non-gating timings)
+        run: |
+          dotnet test tests/WhatToCook.Api.IntegrationTests/WhatToCook.Api.IntegrationTests.csproj \
+            --no-build --configuration Release \
+            --filter "FullyQualifiedName~RecommendationCandidateDiagnosticsTests" \
+            --logger "console;verbosity=detailed"
+
       - name: Install Playwright dependencies
         run: npm ci && npx playwright install --with-deps chromium
         shell: bash
