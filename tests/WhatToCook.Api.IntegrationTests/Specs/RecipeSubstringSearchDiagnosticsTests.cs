@@ -175,8 +175,7 @@ public sealed class RecipeSubstringSearchDiagnosticsTests(
             : """ ORDER BY "NormalizedTitle", "Title", "Id" LIMIT 50""";
 
         await using DbCommand command = db.Database.GetDbConnection().CreateCommand();
-        command.CommandText =
-            $"""
+        command.CommandText = $"""
             EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
             {select}
             WHERE "IsActive" AND "NormalizedTitle" LIKE '%' || @needle || '%'
