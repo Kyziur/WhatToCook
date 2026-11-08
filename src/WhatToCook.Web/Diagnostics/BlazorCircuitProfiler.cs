@@ -34,14 +34,13 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
 
         listener.InstrumentPublished = (instrument, listener) =>
         {
-            if (
-                (instrument.Meter.Name == CircuitMeter
-                    && instrument.Name
-                        is "aspnetcore.components.circuit.active"
-                            or "aspnetcore.components.circuit.connected")
-                || (instrument.Meter.Name == LifecycleMeter
-                    && instrument.Name == "aspnetcore.components.render_diff")
-            )
+            var isCircuitMetric = instrument.Meter.Name == CircuitMeter
+                && instrument.Name
+                    is "aspnetcore.components.circuit.active"
+                        or "aspnetcore.components.circuit.connected";
+            var isRenderMetric = instrument.Meter.Name == LifecycleMeter
+                && instrument.Name == "aspnetcore.components.render_diff";
+            if (isCircuitMetric || isRenderMetric)
             {
                 listener.EnableMeasurementEvents(instrument);
             }

@@ -1,5 +1,4 @@
 using OpenTelemetry.Metrics;
-using WhatToCook.Web.Diagnostics;
 using WhatToCook.Web;
 using WhatToCook.Web.Components;
 using WhatToCook.Web.Components.Features.Planning.Services;
@@ -8,6 +7,7 @@ using WhatToCook.Web.Components.Features.Recipes.Import.Services;
 using WhatToCook.Web.Components.Features.Recipes.Shared;
 using WhatToCook.Web.Components.Features.Shopping.Services;
 using WhatToCook.Web.Components.Shared;
+using WhatToCook.Web.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
