@@ -90,6 +90,24 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
                 $"/api/recipes/page?{string.Join("&", fields)}",
                 cancellationToken
             ) ?? throw new HttpRequestException("Catalog page response is missing.");
+        // JsonRequired guards missing properties, not present-but-null values.
+        // Never treat malformed required data as an empty recipe library.
+        if (
+            page.Items is null
+            || page.Tags is null
+            || page.Ingredients is null
+            || page.TagUsage is null
+            || page.Items.Any(item =>
+                item is null
+                || item.Title is null
+                || item.Tags is null
+                || item.Ingredients is null
+            )
+        )
+        {
+            throw new HttpRequestException("Catalog page contains null required fields.");
+        }
+
         if (page.Page != query.Page || page.PageSize != query.PageSize)
         {
             throw new HttpRequestException(
@@ -115,7 +133,25 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
             $"/api/recipes/{recipeId}",
             cancellationToken
         );
-        return details is null ? null : MapToCatalogItem(details);
+        if (details is null)
+        {
+            return null;
+        }
+
+        if (
+            details.Title is null
+            || details.Tags is null
+            || details.Ingredients is null
+            || details.Steps is null
+            || details.Ingredients.Any(ingredient =>
+                ingredient is null || ingredient.Ingredient is null
+            )
+        )
+        {
+            throw new HttpRequestException("Recipe details contain null required fields.");
+        }
+
+        return MapToCatalogItem(details);
     }
 
     public async Task<bool> ArchiveAsync(
