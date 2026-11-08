@@ -130,12 +130,7 @@ public sealed class RecipeSubstringSearchDiagnosticsTests(
         await db.Database.ExecuteSqlRawAsync("ANALYZE recipes");
     }
 
-    private async Task<Probe> CaptureAsync(
-        AppDbContext db,
-        int size,
-        string needle,
-        string variant
-    )
+    private async Task<Probe> CaptureAsync(AppDbContext db, int size, string needle, string variant)
     {
         var query = db
             .Recipes.AsNoTracking()
