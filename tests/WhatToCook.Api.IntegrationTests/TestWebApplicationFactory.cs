@@ -110,8 +110,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
     private sealed class FakeRecipeImportPageFetcher(
         Dictionary<string, string> pagesByUrl,
         Dictionary<string, Exception> failuresByUrl
-    )
-        : IRecipeImportPageFetcher
+    ) : IRecipeImportPageFetcher
     {
         public Task<string> FetchAsync(Uri uri, CancellationToken cancellationToken)
         {
