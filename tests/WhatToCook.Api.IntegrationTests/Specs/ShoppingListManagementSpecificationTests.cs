@@ -831,9 +831,101 @@ public sealed class ShoppingListManagementSpecificationTests(TestWebApplicationF
         );
         Assert.NotNull(regenerated);
         Assert.Equal(2, regenerated!.Items.Count(x => x.IsManual && x.Name == "Mleko"));
-        Assert.Contains(regenerated.Items, x => x.Name == "Pomidor" && x.State == "MAM");
+        Assert.Contains(
+            regenerated.Items,
+            x => x.Name == "Pomidor" && x.State == "NIE_MAM" && x.RegenerationNote != null
+        );
         Assert.Contains(regenerated.Items, x => x.Name == "Pomidor" && x.QuantityText == "2");
         Assert.DoesNotContain(regenerated.Items, x => x.Name == "Ogórek");
+    }
+
+    [Fact]
+    public async Task Regeneration_ShouldPreserveAnExactDescriptorAndResetAChangedDescriptor()
+    {
+        using var client = factory.CreateClient();
+        var initial = await CreateRecipe(
+            client,
+            $"Descriptor before {Guid.NewGuid():N}"[..24],
+            [
+                new RecipeApiContracts.RecipeIngredientPayload("Sól", "szczypta", null),
+                new RecipeApiContracts.RecipeIngredientPayload("Sól", "do smaku", null),
+            ]
+        );
+        var replacement = await CreateRecipe(
+            client,
+            $"Descriptor after {Guid.NewGuid():N}"[..24],
+            [
+                new RecipeApiContracts.RecipeIngredientPayload("Sól", "szczypta", null),
+                new RecipeApiContracts.RecipeIngredientPayload("Sól", "według uznania", null),
+            ]
+        );
+        var plan = await CreatePlan(
+            client,
+            $"Descriptor regen {Guid.NewGuid():N}",
+            new DateOnly(2026, 6, 1),
+            new DateOnly(2026, 6, 7)
+        );
+        var saved = await SavePlanWithSingleEntry(
+            client,
+            plan,
+            initial.Id,
+            1m,
+            new DateOnly(2026, 6, 1)
+        );
+        using var generatedResponse = await client.PostAsync(
+            $"/api/plans/{plan.Id}/shopping-generated",
+            null
+        );
+        Assert.Equal(HttpStatusCode.NoContent, generatedResponse.StatusCode);
+        var list = await client.GetFromJsonAsync<ShoppingListDto>(
+            $"/api/shopping-lists/plan/{plan.Id}",
+            JsonOptions
+        );
+        Assert.NotNull(list);
+        Assert.Equal(2, list.Items.Count);
+        foreach (var item in list.Items)
+        {
+            using var stateResponse = await client.PutAsJsonAsync(
+                $"/api/shopping-lists/plan/{plan.Id}/items/{item.Id}/state",
+                new SetStatePayload { State = "MAM" }
+            );
+            Assert.Equal(HttpStatusCode.OK, stateResponse.StatusCode);
+        }
+
+        var previousEntry = saved.Entries.Single();
+        await SavePlan(
+            client,
+            plan.Id,
+            new SavePlanPayload
+            {
+                Name = saved.Name,
+                DateFrom = saved.DateFrom,
+                DateTo = saved.DateTo,
+                RegenerateShoppingList = true,
+                Entries =
+                [
+                    new SavePlanEntryPayload
+                    {
+                        Id = previousEntry.Id,
+                        RecipeId = replacement.Id,
+                        PlannedDate = previousEntry.PlannedDate,
+                        Multiplier = 1m,
+                        SortOrder = 0,
+                    },
+                ],
+            }
+        );
+        var after = await client.GetFromJsonAsync<ShoppingListDto>(
+            $"/api/shopping-lists/plan/{plan.Id}",
+            JsonOptions
+        );
+        Assert.NotNull(after);
+        var exact = Assert.Single(after.Items, x => x.QuantityText == "szczypta");
+        Assert.Equal("MAM", exact.State);
+        Assert.Null(exact.RegenerationNote);
+        var changed = Assert.Single(after.Items, x => x.QuantityText == "według uznania");
+        Assert.Equal("NIE_MAM", changed.State);
+        Assert.NotNull(changed.RegenerationNote);
     }
 
     [Fact]
@@ -1097,6 +1189,7 @@ public sealed class ShoppingListManagementSpecificationTests(TestWebApplicationF
         public string Name { get; set; } = string.Empty;
         public string? QuantityText { get; set; }
         public string? QuantityContext { get; set; }
+        public string? RegenerationNote { get; set; }
         public string DisplayText { get; set; } = string.Empty;
         public string? Unit { get; set; }
         public string State { get; set; } = "NIE_MAM";

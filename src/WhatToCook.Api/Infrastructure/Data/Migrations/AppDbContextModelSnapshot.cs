@@ -466,6 +466,10 @@ namespace WhatToCook.Api.Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("RegenerationNote")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("QuantityText")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
