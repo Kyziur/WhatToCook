@@ -1,4 +1,9 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { evaluateNuGetAudit } from "../../scripts/ci/check-nuget-audit.mjs";
 
@@ -60,5 +65,35 @@ test("empty, malformed, and changed-schema results fail closed", () => {
         reportWith([{ id: "Package", resolvedVersion: "1", vulnerabilities: {} }]),
     ]) {
         assert.throws(() => evaluateNuGetAudit(report));
+    }
+});
+
+test("CLI exits nonzero for blocking and unreadable reports, but zero for clean ones", () => {
+    const dir = mkdtempSync(join(tmpdir(), "wtc-audit-gate-"));
+    const script = fileURLToPath(
+        new URL("../../scripts/ci/check-nuget-audit.mjs", import.meta.url)
+    );
+    try {
+        for (const [name, report, expectedExit] of [
+            ["clean", JSON.stringify(reportWith()), 0],
+            ["high", JSON.stringify(reportWith([vulnerable("High")])), 1],
+            ["malformed", "{bad-json", 1],
+        ]) {
+            const path = join(dir, `${name}.json`);
+            writeFileSync(path, report);
+            const result = spawnSync(process.execPath, [script, path], {
+                encoding: "utf8",
+            });
+            assert.equal(
+                result.status,
+                expectedExit,
+                `Unexpected exit for ${name}: ${result.stderr}`
+            );
+            if (expectedExit) {
+                assert.match(result.stderr, /NuGet dependency audit gate failed/);
+            }
+        }
+    } finally {
+        rmSync(dir, { recursive: true, force: true });
     }
 });
