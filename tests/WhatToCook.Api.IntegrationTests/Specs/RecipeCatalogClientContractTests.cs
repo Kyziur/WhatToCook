@@ -16,18 +16,14 @@ public sealed class RecipeCatalogClientContractTests(TestWebApplicationFactory f
 
         using var created = await client.PostAsJsonAsync("/api/recipes", payload);
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
-        using var createdDocument = JsonDocument.Parse(
-            await created.Content.ReadAsStringAsync()
-        );
+        using var createdDocument = JsonDocument.Parse(await created.Content.ReadAsStringAsync());
         var id = createdDocument.RootElement.GetProperty("id").GetGuid();
 
         using var pageResponse = await client.GetAsync(
             $"/api/recipes/page?q={Uri.EscapeDataString(title)}&page=1&pageSize=1"
         );
         Assert.Equal(HttpStatusCode.OK, pageResponse.StatusCode);
-        using var pageDocument = JsonDocument.Parse(
-            await pageResponse.Content.ReadAsStringAsync()
-        );
+        using var pageDocument = JsonDocument.Parse(await pageResponse.Content.ReadAsStringAsync());
         var page = pageDocument.RootElement;
         AssertProperty(page, "items", JsonValueKind.Array);
         AssertProperty(page, "totalCount", JsonValueKind.Number);
@@ -72,7 +68,10 @@ public sealed class RecipeCatalogClientContractTests(TestWebApplicationFactory f
 
     private static void AssertProperty(JsonElement source, string name, JsonValueKind kind)
     {
-        Assert.True(source.TryGetProperty(name, out var value), $"Missing HTTP contract field: {name}");
+        Assert.True(
+            source.TryGetProperty(name, out var value),
+            $"Missing HTTP contract field: {name}"
+        );
         Assert.Equal(kind, value.ValueKind);
     }
 }
