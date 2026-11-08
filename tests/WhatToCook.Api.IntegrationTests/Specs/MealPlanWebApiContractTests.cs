@@ -1,4 +1,6 @@
-using WhatToCook.Web.Components.Features.Planning.Services;
+extern alias WhatToCookWeb;
+
+using WhatToCookWeb::WhatToCook.Web.Components.Features.Planning.Services;
 
 namespace WhatToCook.Api.IntegrationTests.Specs;
 
