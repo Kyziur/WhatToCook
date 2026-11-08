@@ -82,18 +82,26 @@ public static class LibraryEndpoints
         );
 
         // Facets represent the whole active catalog, not just the current result page.
-        var tagUsage = await dbContext
-            .RecipeTags.AsNoTracking()
-            .Where(x => x.Recipe.IsActive)
-            .GroupBy(x => x.Tag.DisplayName)
-            .Select(group => new { Tag = group.Key, Count = group.Count() })
-            .ToDictionaryAsync(x => x.Tag, x => x.Count, cancellationToken);
-        var allIngredients = await dbContext
-            .Ingredients.AsNoTracking()
-            .Where(x => x.RecipeIngredients.Any(ri => ri.Recipe.IsActive))
-            .OrderBy(x => x.DisplayName)
-            .Select(x => x.DisplayName)
-            .ToListAsync(cancellationToken);
+        // The planner traverses all pages without facets; avoid recalculating these
+        // full-catalog queries once for every 50 recipes.
+        var tagUsage =
+            request.IncludeFacets == false
+                ? new Dictionary<string, int>()
+                : await dbContext
+                    .RecipeTags.AsNoTracking()
+                    .Where(x => x.Recipe.IsActive)
+                    .GroupBy(x => x.Tag.DisplayName)
+                    .Select(group => new { Tag = group.Key, Count = group.Count() })
+                    .ToDictionaryAsync(x => x.Tag, x => x.Count, cancellationToken);
+        var allIngredients =
+            request.IncludeFacets == false
+                ? new List<string>()
+                : await dbContext
+                    .Ingredients.AsNoTracking()
+                    .Where(x => x.RecipeIngredients.Any(ri => ri.Recipe.IsActive))
+                    .OrderBy(x => x.DisplayName)
+                    .Select(x => x.DisplayName)
+                    .ToListAsync(cancellationToken);
 
         return Results.Ok(
             new RecipeLibraryPageResponse(
@@ -140,6 +148,9 @@ public static class LibraryEndpoints
 
         [FromQuery(Name = "sort")]
         public string? Sort { get; init; }
+
+        [FromQuery(Name = "includeFacets")]
+        public bool? IncludeFacets { get; init; }
     }
 
     private sealed record RecipeLibraryPageResponse(

@@ -8,17 +8,54 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
         CancellationToken cancellationToken = default
     )
     {
-        var summaries =
-            await httpClient.GetFromJsonAsync<List<RecipeSummaryDto>>(
-                "/api/recipes",
+        // The planner needs the complete active catalog. The legacy /api/recipes
+        // endpoint caps at 500, so traverse the bounded API pages instead.
+        // Facets are for the library filter UI, not the planner; skip their
+        // full-catalog SQL queries on every traversed page.
+        const int pageSize = 50;
+        var results = new List<RecipeCatalogItem>();
+        for (var page = 1; ; page++)
+        {
+            var response = await GetPageAsync(
+                new CatalogQuery(
+                    page,
+                    pageSize,
+                    string.Empty,
+                    [],
+                    [],
+                    true,
+                    "TitleAscending",
+                    false
+                ),
                 cancellationToken
-            ) ?? [];
+            );
+            if (response.Items.Count == 0)
+            {
+                if (results.Count < response.TotalCount)
+                {
+                    throw new HttpRequestException(
+                        "The paged recipe catalog ended before all recipes were received."
+                    );
+                }
 
-        return summaries
-            .Where(x => x.IsActive)
-            .OrderBy(x => x.Title)
-            .Select(MapSummaryToCatalogItem)
-            .ToList();
+                break;
+            }
+
+            results.AddRange(response.Items.Where(item => item.IsActive));
+            if ((long)page * pageSize >= response.TotalCount)
+            {
+                if (results.Count < response.TotalCount)
+                {
+                    throw new HttpRequestException(
+                        "The paged recipe catalog returned fewer items than its declared total."
+                    );
+                }
+
+                break;
+            }
+        }
+
+        return results.OrderBy(x => x.Title).ToList();
     }
 
     public async Task<CatalogPage> GetPageAsync(
@@ -32,6 +69,7 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
             $"pageSize={query.PageSize}",
             $"sort={Uri.EscapeDataString(query.Sort)}",
             $"matchAllIngredients={query.MatchAllIngredients.ToString().ToLowerInvariant()}",
+            $"includeFacets={query.IncludeFacets.ToString().ToLowerInvariant()}",
         };
         if (!string.IsNullOrWhiteSpace(query.Title))
         {
