@@ -17,7 +17,16 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
         for (var page = 1; ; page++)
         {
             var response = await GetPageAsync(
-                new CatalogQuery(page, pageSize, string.Empty, [], [], true, "TitleAscending", false),
+                new CatalogQuery(
+                    page,
+                    pageSize,
+                    string.Empty,
+                    [],
+                    [],
+                    true,
+                    "TitleAscending",
+                    false
+                ),
                 cancellationToken
             );
             if (response.Items.Count == 0)
