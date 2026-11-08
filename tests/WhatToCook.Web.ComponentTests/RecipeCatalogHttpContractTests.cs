@@ -7,7 +7,15 @@ namespace WhatToCook.Web.ComponentTests;
 
 public sealed class RecipeCatalogHttpContractTests
 {
-    private static readonly CatalogQuery FirstPage = new(1, 24, string.Empty, [], [], true, "TitleAscending");
+    private static readonly CatalogQuery FirstPage = new(
+        1,
+        24,
+        string.Empty,
+        [],
+        [],
+        true,
+        "TitleAscending"
+    );
 
     [Fact]
     public async Task PagedCatalog_MissingTotalCount_ShouldFailInsteadOfShowingAnEmptyLibrary()
@@ -100,10 +108,7 @@ public sealed class RecipeCatalogHttpContractTests
     }
 
     private static HttpClient CreateClient(HttpMessageHandler handler) =>
-        new(handler, disposeHandler: false)
-        {
-            BaseAddress = new Uri("http://localhost"),
-        };
+        new(handler, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
 
     private sealed class FixedJsonHandler(string json) : HttpMessageHandler
     {
