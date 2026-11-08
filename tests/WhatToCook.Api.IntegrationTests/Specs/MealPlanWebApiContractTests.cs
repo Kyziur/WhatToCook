@@ -48,7 +48,8 @@ public sealed class MealPlanWebApiContractTests(TestWebApplicationFactory factor
             RecipeApiContracts.CreateRecipePayload($"Contract recipe {Guid.NewGuid():N}")
         );
         recipeResponse.EnsureSuccessStatusCode();
-        var recipe = await recipeResponse.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>();
+        var recipe =
+            await recipeResponse.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>();
         Assert.NotNull(recipe);
 
         var withEntry = await client.SavePlanAsync(
