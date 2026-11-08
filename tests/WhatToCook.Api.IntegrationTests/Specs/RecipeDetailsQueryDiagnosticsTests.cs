@@ -75,14 +75,11 @@ public sealed class RecipeDetailsQueryDiagnosticsTests(
 
         // Upper-bound join multiplicity for this fixture (not network rows or benchmark results).
         var estimatedCartesianRows = single.Ingredients * single.Steps * Math.Max(single.Tags, 1);
-        output.WriteLine(
-            $"PERF-07 fixture: ingredients={single.Ingredients} steps={single.Steps} " +
-            $"tags={single.Tags} single-query join upper bound={estimatedCartesianRows}"
-        );
-        output.WriteLine(
-            $"PERF-07 observed elapsed (CI is noisy): single={single.ElapsedMs:F1}ms; " +
-            $"split={split.ElapsedMs:F1}ms. No performance threshold is enforced."
-        );
+        output.WriteLine($"PERF-07 ingredients: {single.Ingredients}");
+        output.WriteLine($"PERF-07 steps: {single.Steps}");
+        output.WriteLine($"PERF-07 tags: {single.Tags}");
+        output.WriteLine($"PERF-07 joined-row upper bound: {estimatedCartesianRows}");
+        output.WriteLine($"PERF-07 single: {single.ElapsedMs:F1}ms; split: {split.ElapsedMs:F1}ms");
     }
 
     private static async Task<QueryObservation> MeasureAsync(IQueryable<Recipe> query)
