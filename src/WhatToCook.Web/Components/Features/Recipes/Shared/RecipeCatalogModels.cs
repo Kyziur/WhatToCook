@@ -21,7 +21,8 @@ public sealed record CatalogQuery(
     IReadOnlyList<string> Tags,
     IReadOnlyList<string> Ingredients,
     bool MatchAllIngredients,
-    string Sort
+    string Sort,
+    bool IncludeFacets = true
 );
 
 public sealed record CatalogPage(
