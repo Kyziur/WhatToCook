@@ -170,9 +170,13 @@ public static class PlansEndpoints
                 );
             }
 
-            var isExistingEntry =
-                entry.Id.HasValue && existingEntriesById.ContainsKey(entry.Id.Value);
-            if (!recipe.IsActive && !isExistingEntry)
+            var isRetainedAssignment = MealPlanMutationRules.IsRetainedInactiveAssignment(
+                entry.Id,
+                entry.RecipeId,
+                entry.PlannedDate,
+                existingEntriesById
+            );
+            if (!recipe.IsActive && !isRetainedAssignment)
             {
                 return Results.ValidationProblem(
                     new Dictionary<string, string[]>
