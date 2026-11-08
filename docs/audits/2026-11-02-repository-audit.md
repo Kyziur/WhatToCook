@@ -80,7 +80,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | PERF-06 | OPEN / CONDITIONAL | Optional: image variants after network measurements |
 | PERF-07 | **DONE · CI** | [#30](https://github.com/Kyziur/WhatToCook/pull/30) — Endpoint now uses `AsSplitQuery()` after repeated synthetic PostgreSQL 100×100×2 stress measurements; HTTP completeness and full CI passed ([run](https://github.com/Kyziur/WhatToCook/actions/runs/42481352433)). Production p95 remains unmeasured |
 | ARC-01 | OPEN / CONDITIONAL | Conditional: split complex page only when changing affected flow |
-| ARC-02 | OPEN / CONDITIONAL | Conditional: split shopping service only for proven maintenance need |
+| ARC-02 | **IN REVIEW** | [#35](https://github.com/Kyziur/WhatToCook/pull/35) — Extracted pure aggregation for DB-free quantity/multiplier tests; implementation CI [42507447247](https://github.com/Kyziur/WhatToCook/actions/runs/42507447247) green (120 API, 53 component, 98 browser tests). Documentation-only final-head CI and independent review still required; no API/checklist contract change |
 | ARC-03 | OPEN / CONDITIONAL | Optional: use-case extraction only where boundary improves |
 | ARC-04 | **PARTIAL** | [#29](https://github.com/Kyziur/WhatToCook/pull/29) — Current trusted-LAN/Web/API/DB and identity ownership decision documented; actual homelab access matrix and pre-exposure user authorization decision still required |
 | ARC-05 | OPEN / CONDITIONAL | Optional: API contract tests without central DTO rewrite |
