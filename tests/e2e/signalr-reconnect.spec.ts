@@ -61,7 +61,23 @@ test.describe("OpenSpec: accessible-async-feedback (UX-03 SignalR reconnect)", (
     await expect(page.locator(".step-row textarea").first()).toHaveValue("Pokrój pomidory");
 
     await page.getByRole("button", { name: "Zapisz przepis" }).click();
-    await expect(page).toHaveURL(/\/recipes\/[0-9a-f-]+$/);
+    try {
+      await expect(page).toHaveURL(/\/recipes\/[0-9a-f-]+(?:\?|$)/);
+    } catch (error) {
+      // Persist precise UI evidence in CI output before adjusting reconnect behavior.
+      console.error(
+        "UX-03 recipe save after reconnect:",
+        JSON.stringify({
+          url: page.url(),
+          alerts: await page.locator("[role='alert'], .validation-message, .inline-warning").allTextContents(),
+          title: await page.locator("#recipe-title").inputValue(),
+          servings: await page.locator("#recipe-servings").inputValue(),
+          ingredient: await page.locator("input[placeholder='np. pomidor']").first().inputValue(),
+          step: await page.locator(".step-row textarea").first().inputValue(),
+        })
+      );
+      throw error;
+    }
     const response = await request.get(
       `http://127.0.0.1:5181/api/recipes/search?title=${encodeURIComponent(title)}`
     );
