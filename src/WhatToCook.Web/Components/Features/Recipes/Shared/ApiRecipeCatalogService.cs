@@ -44,6 +44,13 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
             results.AddRange(response.Items.Where(item => item.IsActive));
             if ((long)page * pageSize >= response.TotalCount)
             {
+                if (results.Count < response.TotalCount)
+                {
+                    throw new HttpRequestException(
+                        "The paged recipe catalog returned fewer items than its declared total."
+                    );
+                }
+
                 break;
             }
         }
