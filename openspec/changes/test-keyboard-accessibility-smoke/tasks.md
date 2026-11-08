@@ -4,4 +4,4 @@
 - [x] Cover tab order for recipe editor inputs.
 - [x] Cover shopping item Enter/Space controls using the existing scenario.
 - [x] Preserve focus during pending shopping mutations and item reordering without enabling duplicate requests.
-- [ ] Validate full CI and review before merge.
+- [x] Validate full CI and review before merge.
