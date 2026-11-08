@@ -25,7 +25,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 - **IN REVIEW** means an unmerged PR exists; CI or actual host verification remains outstanding.
 - **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
 
-**Current count:** 19 DONE · CI, 3 PARTIAL, 2 IN REVIEW, 45 open/conditional. The original audit's 69 findings remain unchanged.
+**Current count:** 20 DONE · CI, 6 PARTIAL, 43 open/conditional. The original audit's 69 findings remain unchanged.
 
 | Finding | Status | Merged evidence or outstanding work |
 | --- | --- | --- |
@@ -78,11 +78,11 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | PERF-04 | OPEN / CONDITIONAL | Optional: recommendation candidates after catalog measurements |
 | PERF-05 | OPEN / CONDITIONAL | Optional: Blazor circuit/render profiling |
 | PERF-06 | OPEN / CONDITIONAL | Optional: image variants after network measurements |
-| PERF-07 | OPEN / CONDITIONAL | Optional: recipe-detail SQL shape after profiling |
+| PERF-07 | **DONE · CI** | [#30](https://github.com/Kyziur/WhatToCook/pull/30) — Endpoint now uses `AsSplitQuery()` after repeated synthetic PostgreSQL 100×100×2 stress measurements; HTTP completeness and full CI passed ([run](https://github.com/Kyziur/WhatToCook/actions/runs/42481352433)). Production p95 remains unmeasured |
 | ARC-01 | OPEN / CONDITIONAL | Conditional: split complex page only when changing affected flow |
 | ARC-02 | OPEN / CONDITIONAL | Conditional: split shopping service only for proven maintenance need |
 | ARC-03 | OPEN / CONDITIONAL | Optional: use-case extraction only where boundary improves |
-| ARC-04 | OPEN / CONDITIONAL | Before exposure change: document trust boundary and data ownership |
+| ARC-04 | **PARTIAL** | [#29](https://github.com/Kyziur/WhatToCook/pull/29) — Current trusted-LAN/Web/API/DB and identity ownership decision documented; actual homelab access matrix and pre-exposure user authorization decision still required |
 | ARC-05 | OPEN / CONDITIONAL | Optional: API contract tests without central DTO rewrite |
 | DOC-01 | **DONE · CI** | [#24](https://github.com/Kyziur/WhatToCook/pull/24) — Local developer start/test/troubleshooting quickstart |
 | DOC-02 | OPEN / CONDITIONAL | Conditional: short architecture map if repeated review confusion |
@@ -90,11 +90,11 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | DOC-04 | **DONE · CI** | [#8](https://github.com/Kyziur/WhatToCook/pull/8) — Corrected product-specific documentation context |
 | DOC-05 | OPEN / CONDITIONAL | Optional: preserve deployment note, dedupe only if necessary |
 | DOC-06 | OPEN / CONDITIONAL | Ongoing practice: docs updated with behavior changes |
-| AGENT-01 | **IN REVIEW** | PR pending: manual instructions prioritize current source over stale generated Repowise snapshot; live tool freshness check remains task-specific |
+| AGENT-01 | **PARTIAL** | [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Manual instructions now prioritize live source/freshness over older generated Repowise section; each task must still verify its live index status |
 | AGENT-02 | OPEN / CONDITIONAL | Ongoing practice: right-size agent review and evidence |
 | AGENT-03 | OPEN / CONDITIONAL | Optional: consolidate instructions only on observed conflict |
-| AGENT-04 | **IN REVIEW** | PR pending: portable path-free Repowise configuration and CI contract test; actual second-checkout MCP host smoke still required |
-| AGENT-05 | **DONE · CI** | [#8](https://github.com/Kyziur/WhatToCook/pull/8) — Aligned agent and OpenSpec context with actual stack |
+| AGENT-04 | **PARTIAL** | [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Machine-specific Windows path removed and CI contract test passed; real MCP client smoke from second checkout/WSL still required |
+| AGENT-05 | **DONE · CI** | [#8](https://github.com/Kyziur/WhatToCook/pull/8), [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Aligned agent/OpenSpec product assumptions and corrected stale MAUI implementation example |
 | AGENT-06 | OPEN / CONDITIONAL | Optional: harness commands treated as adapters |
 | AGENT-07 | OPEN / CONDITIONAL | Optional: add deployment-specific skill only for demonstrated gap |
 | AGENT-08 | OPEN / CONDITIONAL | Optional: reduce skill selection cost when measurable |
