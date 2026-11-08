@@ -1,22 +1,43 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, type WebSocketRoute, test } from "@playwright/test";
 import {
   fillRecipeEditorWithMinimumValidData,
   gotoAndWaitForApp,
   uniqueSuffix,
 } from "./helpers";
 
-async function interruptCircuitThenReconnect(page: Page): Promise<void> {
-  const dialog = page.locator("#components-reconnect-modal");
-  await page.context().setOffline(true);
-  try {
-    // Offline emulation severs browser WebSockets without killing the test server or database.
-    await expect(dialog).toBeVisible({ timeout: 20_000 });
-    await page.waitForTimeout(10_000);
-  } finally {
-    // Always restore connectivity, including when an assertion fails.
-    await page.context().setOffline(false);
-  }
-  await expect(dialog).toBeHidden({ timeout: 25_000 });
+async function installBlazorNetworkInterruption(page: Page): Promise<() => Promise<void>> {
+  let activeSocket: WebSocketRoute | undefined;
+  let blockNewSockets = false;
+
+  // Route before navigation: Playwright cannot retroactively intercept an established WebSocket.
+  await page.routeWebSocket(/\/_blazor(?:\?|$)/, (socket) => {
+    if (blockNewSockets) {
+      void socket.close({ code: 1001, reason: "Simulated connection loss" });
+      return;
+    }
+    activeSocket = socket;
+    socket.connectToServer();
+  });
+
+  return async () => {
+    if (!activeSocket) {
+      throw new Error("Blazor WebSocket was not intercepted before navigation.");
+    }
+    const dialog = page.locator("#components-reconnect-modal");
+    blockNewSockets = true;
+    await page.context().setOffline(true);
+    try {
+      // Offline emulation alone may not close an already established Chromium WebSocket.
+      // Explicitly end the routed socket and block reconnect attempts for ten seconds.
+      await activeSocket.close({ code: 1001, reason: "Simulated connection loss" });
+      await expect(dialog).toBeVisible({ timeout: 15_000 });
+      await page.waitForTimeout(10_000);
+    } finally {
+      blockNewSockets = false;
+      await page.context().setOffline(false);
+    }
+    await expect(dialog).toBeHidden({ timeout: 30_000 });
+  };
 }
 
 test.describe("OpenSpec: accessible-async-feedback (UX-03 SignalR reconnect)", () => {
@@ -27,10 +48,11 @@ test.describe("OpenSpec: accessible-async-feedback (UX-03 SignalR reconnect)", (
     request,
   }) => {
     const title = `Reconnect recipe ${uniqueSuffix()}`;
+    const interruptConnection = await installBlazorNetworkInterruption(page);
     await gotoAndWaitForApp(page, "/recipes/new");
     await fillRecipeEditorWithMinimumValidData(page, title);
 
-    await interruptCircuitThenReconnect(page);
+    await interruptConnection();
 
     await expect(page).toHaveURL(/\/recipes\/new$/);
     await expect(page.locator("#recipe-title")).toHaveValue(title);
@@ -52,6 +74,7 @@ test.describe("OpenSpec: accessible-async-feedback (UX-03 SignalR reconnect)", (
     page,
   }) => {
     const name = `Reconnect plan ${uniqueSuffix()}`;
+    const interruptConnection = await installBlazorNetworkInterruption(page);
     await gotoAndWaitForApp(page, "/planning");
     const nameField = page.locator("#new-plan-name");
     if (!(await nameField.isVisible())) {
@@ -67,7 +90,7 @@ test.describe("OpenSpec: accessible-async-feedback (UX-03 SignalR reconnect)", (
     await page.locator("#new-date-to").fill("2027-03-07");
     await nameField.fill(name);
 
-    await interruptCircuitThenReconnect(page);
+    await interruptConnection();
 
     await expect(nameField).toHaveValue(name);
     await expect(page.locator("#new-date-from")).toHaveValue("2027-03-01");
