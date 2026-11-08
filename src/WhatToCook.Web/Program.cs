@@ -17,13 +17,15 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 // .NET 10 publishes these meters; only the Web host owns Blazor circuits.
 // ServiceDefaults already handles OTLP export when configured.
-builder.Services.AddOpenTelemetry().WithMetrics(metrics =>
-{
-    metrics.AddMeter("Microsoft.AspNetCore.Components");
-    metrics.AddMeter("Microsoft.AspNetCore.Components.Lifecycle");
-    metrics.AddMeter("Microsoft.AspNetCore.Components.Server.Circuits");
-    metrics.AddMeter("Microsoft.AspNetCore.Http.Connections");
-});
+builder
+    .Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics.AddMeter("Microsoft.AspNetCore.Components");
+        metrics.AddMeter("Microsoft.AspNetCore.Components.Lifecycle");
+        metrics.AddMeter("Microsoft.AspNetCore.Components.Server.Circuits");
+        metrics.AddMeter("Microsoft.AspNetCore.Http.Connections");
+    });
 
 // Opt-in local/CI profiler: no HTTP diagnostic endpoint or production file writer.
 var profileOutput = builder.Configuration["PERF05_PROFILE_PATH"];

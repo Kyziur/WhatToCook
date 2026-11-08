@@ -39,32 +39,36 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
                 listener.EnableMeasurementEvents(instrument);
             }
         };
-        listener.SetMeasurementEventCallback<long>((instrument, value, _, _) =>
-        {
-            if (instrument.Name == "aspnetcore.components.circuit.active")
+        listener.SetMeasurementEventCallback<long>(
+            (instrument, value, _, _) =>
             {
-                Interlocked.Add(ref activeCircuits, value);
-            }
-            else if (instrument.Name == "aspnetcore.components.circuit.connected")
-            {
-                Interlocked.Add(ref connectedCircuits, value);
-            }
-        });
-        listener.SetMeasurementEventCallback<double>((instrument, seconds, _, _) =>
-        {
-            if (instrument.Name != "aspnetcore.components.render_diff")
-            {
-                return;
-            }
-
-            lock (sync)
-            {
-                if (renderSamples.Count < MaxRenderSamples)
+                if (instrument.Name == "aspnetcore.components.circuit.active")
                 {
-                    renderSamples.Add(seconds * 1000);
+                    Interlocked.Add(ref activeCircuits, value);
+                }
+                else if (instrument.Name == "aspnetcore.components.circuit.connected")
+                {
+                    Interlocked.Add(ref connectedCircuits, value);
                 }
             }
-        });
+        );
+        listener.SetMeasurementEventCallback<double>(
+            (instrument, seconds, _, _) =>
+            {
+                if (instrument.Name != "aspnetcore.components.render_diff")
+                {
+                    return;
+                }
+
+                lock (sync)
+                {
+                    if (renderSamples.Count < MaxRenderSamples)
+                    {
+                        renderSamples.Add(seconds * 1000);
+                    }
+                }
+            }
+        );
         listener.Start();
 
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
