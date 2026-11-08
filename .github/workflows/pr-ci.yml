@@ -28,6 +28,10 @@ jobs:
       - name: Restore .NET tools
         run: dotnet tool restore
 
+      # Fail quickly on style regressions instead of waiting for the full Testcontainers + Playwright suite.
+      - name: Check formatting
+        run: dotnet csharpier check .
+
       - name: Restore .NET packages
         run: dotnet restore WhatToCook.slnx
 
@@ -85,9 +89,6 @@ jobs:
             npm-audit.json
           if-no-files-found: warn
           retention-days: 14
-
-      - name: Check formatting
-        run: dotnet csharpier check .
 
   arm64-image-storage:
     name: ARM64 recipe image upload smoke
