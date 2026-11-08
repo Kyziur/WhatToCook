@@ -25,7 +25,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 - **IN REVIEW** means an unmerged PR exists; CI or actual host verification remains outstanding.
 - **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
 
-**Current count:** 21 DONE · CI, 6 PARTIAL, 42 open/conditional. The original audit's 69 findings remain unchanged.
+**Current count:** 22 DONE · CI, 6 PARTIAL, 41 open/conditional. The original audit's 69 findings remain unchanged.
 
 | Finding | Status | Merged evidence or outstanding work |
 | --- | --- | --- |
@@ -75,7 +75,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | PERF-01 | **DONE · CI** | [#17](https://github.com/Kyziur/WhatToCook/pull/17) — Server-side paging and full-catalog filter semantics |
 | PERF-02 | **DONE · CI** | [#6](https://github.com/Kyziur/WhatToCook/pull/6) — Removed inactive output-cache annotation |
 | PERF-03 | **DONE · CI** | [#32](https://github.com/Kyziur/WhatToCook/pull/32) — PostgreSQL 1k/10k `EXPLAIN (ANALYZE, BUFFERS)` comparisons show no justified `pg_trgm` migration at household scale; synthetic index and matching regression tests only, production latency remains unmeasured |
-| PERF-04 | OPEN / CONDITIONAL | Optional: recommendation candidates after catalog measurements |
+| PERF-04 | **DONE · CI** | [#33](https://github.com/Kyziur/WhatToCook/pull/33) — PostgreSQL 100/1k/10k candidate benchmark and ranking parity; SQL `EXISTS` prefilter avoids materializing unmatched recipes (10k synthetic: 9,999→499), with no pre-rank limit. Production p95 unmeasured |
 | PERF-05 | OPEN / CONDITIONAL | Optional: Blazor circuit/render profiling |
 | PERF-06 | OPEN / CONDITIONAL | Optional: image variants after network measurements |
 | PERF-07 | **DONE · CI** | [#30](https://github.com/Kyziur/WhatToCook/pull/30) — Endpoint now uses `AsSplitQuery()` after repeated synthetic PostgreSQL 100×100×2 stress measurements; HTTP completeness and full CI passed ([run](https://github.com/Kyziur/WhatToCook/actions/runs/42481352433)). Production p95 remains unmeasured |

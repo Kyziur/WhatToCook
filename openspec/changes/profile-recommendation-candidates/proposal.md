@@ -7,7 +7,7 @@ PERF-04 identified a full active-catalog ingredient materialization in recommend
 - Measure materialized recipe and ingredient rows, approximate .NET allocations and timings at 100/1,000/10,000 recipes with real PostgreSQL Testcontainers.
 - Compare the current query with a SQL `EXISTS` candidate filter for a possessed ingredient, without limiting the pre-rank candidate set.
 - Assert exact eligible candidate IDs and sorted top recommendations against the old behavior and the public API.
-- Only consider changing the service query after measurements and regression evidence.
+- After the first green CI run demonstrated about 95% fewer materialized candidates in the sparse 10k fixture and exact ranking parity, push only the shared-ingredient candidate filter into the SQL query. Retain complete client-side ranking and post-rank limit.
 
 ## Non-Goals
 
