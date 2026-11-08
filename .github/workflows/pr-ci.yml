@@ -28,6 +28,10 @@ jobs:
       - name: Restore .NET tools
         run: dotnet tool restore
 
+      # Fail quickly on style regressions instead of waiting for the full Testcontainers + Playwright suite.
+      - name: Check formatting
+        run: dotnet csharpier check .
+
       - name: Restore .NET packages
         run: dotnet restore WhatToCook.slnx
 
@@ -42,6 +46,13 @@ jobs:
           dotnet test tests/WhatToCook.Api.IntegrationTests/WhatToCook.Api.IntegrationTests.csproj \
             --no-build --configuration Release \
             --filter "FullyQualifiedName~RecipeDetailsQueryDiagnosticsTests" \
+            --logger "console;verbosity=detailed"
+
+      - name: Inspect title substring PostgreSQL plans (non-gating timings)
+        run: |
+          dotnet test tests/WhatToCook.Api.IntegrationTests/WhatToCook.Api.IntegrationTests.csproj \
+            --no-build --configuration Release \
+            --filter "FullyQualifiedName~RecipeSubstringSearchDiagnosticsTests" \
             --logger "console;verbosity=detailed"
 
       - name: Install Playwright dependencies
@@ -78,9 +89,6 @@ jobs:
             npm-audit.json
           if-no-files-found: warn
           retention-days: 14
-
-      - name: Check formatting
-        run: dotnet csharpier check .
 
   arm64-image-storage:
     name: ARM64 recipe image upload smoke
