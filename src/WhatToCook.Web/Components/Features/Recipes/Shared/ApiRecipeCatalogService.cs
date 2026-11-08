@@ -98,10 +98,7 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
             || page.Ingredients is null
             || page.TagUsage is null
             || page.Items.Any(item =>
-                item is null
-                || item.Title is null
-                || item.Tags is null
-                || item.Ingredients is null
+                item is null || item.Title is null || item.Tags is null || item.Ingredients is null
             )
         )
         {
