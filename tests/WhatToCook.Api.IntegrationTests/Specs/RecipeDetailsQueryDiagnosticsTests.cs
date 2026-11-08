@@ -68,10 +68,10 @@ public sealed class RecipeDetailsQueryDiagnosticsTests(
 
         using var details = await client.GetAsync($"/api/recipes/{created.Id}");
         Assert.Equal(HttpStatusCode.OK, details.StatusCode);
-        var actual = await details.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>();
-        Assert.NotNull(actual);
-        Assert.Equal(100, actual.Ingredients.Count);
-        Assert.Equal(100, actual.Steps.Count);
+        var actual = await details.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        Assert.Equal(100, actual.GetProperty("ingredients").GetArrayLength());
+        Assert.Equal(100, actual.GetProperty("steps").GetArrayLength());
+        Assert.Equal(2, actual.GetProperty("tags").GetArrayLength());
 
         // Upper-bound join multiplicity for this fixture (not network rows or benchmark results).
         var estimatedCartesianRows = single.Ingredients * single.Steps * Math.Max(single.Tags, 1);
