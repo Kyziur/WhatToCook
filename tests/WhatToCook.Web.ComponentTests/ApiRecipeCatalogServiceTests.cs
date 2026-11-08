@@ -22,16 +22,16 @@ public sealed class ApiRecipeCatalogServiceTests
         Assert.Equal("Przepis 0001", recipes[0].Title);
         Assert.Equal("Przepis 0551", recipes[^1].Title);
         Assert.Equal(12, handler.Requests.Count);
-        Assert.Equal(
-            Enumerable.Range(1, 12),
-            handler.Requests.Select(x => int.Parse(x["page"]))
+        Assert.Equal(Enumerable.Range(1, 12), handler.Requests.Select(x => int.Parse(x["page"])));
+        Assert.All(
+            handler.Requests,
+            x =>
+            {
+                Assert.Equal("50", x["pageSize"]);
+                Assert.Equal("false", x["includeFacets"]);
+                Assert.Equal("TitleAscending", x["sort"]);
+            }
         );
-        Assert.All(handler.Requests, x =>
-        {
-            Assert.Equal("50", x["pageSize"]);
-            Assert.Equal("false", x["includeFacets"]);
-            Assert.Equal("TitleAscending", x["sort"]);
-        });
     }
 
     [Fact]
@@ -59,7 +59,8 @@ public sealed class ApiRecipeCatalogServiceTests
         )
         {
             Assert.Equal("/api/recipes/page", request.RequestUri?.AbsolutePath);
-            var fields = request.RequestUri!.Query.TrimStart('?')
+            var fields = request
+                .RequestUri!.Query.TrimStart('?')
                 .Split('&', StringSplitOptions.RemoveEmptyEntries)
                 .Select(part => part.Split('=', 2))
                 .ToDictionary(
@@ -71,10 +72,10 @@ public sealed class ApiRecipeCatalogServiceTests
             var page = int.Parse(fields["page"]);
             var pageSize = int.Parse(fields["pageSize"]);
             var start = (page - 1) * pageSize + 1;
-            var count = page == emptyPage
-                ? 0
-                : Math.Max(0, Math.Min(pageSize, totalCount - start + 1));
-            var items = Enumerable.Range(start, count)
+            var count =
+                page == emptyPage ? 0 : Math.Max(0, Math.Min(pageSize, totalCount - start + 1));
+            var items = Enumerable
+                .Range(start, count)
                 .Select(index => new
                 {
                     id = Guid.NewGuid(),
@@ -91,14 +92,16 @@ public sealed class ApiRecipeCatalogServiceTests
             return Task.FromResult(
                 new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = JsonContent.Create(new
-                    {
-                        items,
-                        totalCount,
-                        tags = Array.Empty<string>(),
-                        ingredients = Array.Empty<string>(),
-                        tagUsage = new Dictionary<string, int>(),
-                    }),
+                    Content = JsonContent.Create(
+                        new
+                        {
+                            items,
+                            totalCount,
+                            tags = Array.Empty<string>(),
+                            ingredients = Array.Empty<string>(),
+                            tagUsage = new Dictionary<string, int>(),
+                        }
+                    ),
                 }
             );
         }
