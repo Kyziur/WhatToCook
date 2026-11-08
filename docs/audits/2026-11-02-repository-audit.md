@@ -2,7 +2,7 @@
 
 - **Audit snapshot:** [`4eb64d7e3de01faa7bef32db74da94e7e1c50913`](https://github.com/Kyziur/WhatToCook/tree/4eb64d7e3de01faa7bef32db74da94e7e1c50913), audited on 2026-11-02.
 - **Assessment:** recommendations reviewed against the repository on 2026-11-06. A finding's priority below is the assessment's recommendation, not necessarily the original audit's priority.
-- **Status:** backlog, not evidence that a fix, deployment, backup, or mitigation has been completed. Recheck current code and operational state before implementing an item.
+- **Status:** historical findings and priorities; see the implementation tracker below for merged work, open work and required operational verification.
 
 ## Decision
 
@@ -16,6 +16,97 @@ The audit contains 69 original finding IDs. Their assessments, including optiona
 
 Each chapter identifies a recommended action, evidence or the limit of available evidence, and a verification approach. Optional items include the condition under which the work is worthwhile; an unmeasured cost or an unverified exposure is not recorded as a production incident.
 
+## Implementation tracker (updated 2026-11-08)
+
+This is the **live implementation tracker** for the 69 original findings. It is separate from the historical 2026-11-02 static audit and 2026-11-06 assessment.
+
+- **DONE · CI** means source/tests were merged to `main` and relevant GitHub PR CI passed. It does **not** establish production/homelab readiness.
+- **PARTIAL** means only a clearly scoped piece was implemented.
+- **IN REVIEW** means a PR exists but is not counted as completed or merged. CI/PR review and remaining work are explicit.
+- **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
+
+**Current count:** 18 DONE · CI, 4 partial/in review, 47 open/conditional. The original audit's 69 findings remain unchanged.
+
+| Finding | Status | Merged evidence or outstanding work |
+| --- | --- | --- |
+| COR-01 | **DONE · CI** | [#4](https://github.com/Kyziur/WhatToCook/pull/4) — Lossless normalized ingredient/tag collisions |
+| COR-02 | **DONE · CI** | [#7](https://github.com/Kyziur/WhatToCook/pull/7), [#12](https://github.com/Kyziur/WhatToCook/pull/12) — Bound import drafts and Unicode scalar length |
+| COR-03 | **DONE · CI** | [#15](https://github.com/Kyziur/WhatToCook/pull/15) — Display descriptive quantities, repetitions and factors |
+| COR-04 | **DONE · CI** | [#16](https://github.com/Kyziur/WhatToCook/pull/16) — Reset checklist state when amount semantics change |
+| COR-05 | **DONE · CI** | [#2](https://github.com/Kyziur/WhatToCook/pull/2) — Validate plan name length on create and update |
+| COR-06 | **DONE · CI** | [#3](https://github.com/Kyziur/WhatToCook/pull/3) — Validate manual shopping item length |
+| COR-07 | **DONE · CI** | [#13](https://github.com/Kyziur/WhatToCook/pull/13) — Atomic concurrent draft finalization |
+| COR-08 | **DONE · CI** | [#5](https://github.com/Kyziur/WhatToCook/pull/5) — Controlled HTTP validation of explicit nulls |
+| COR-09 | OPEN / CONDITIONAL | Optional: document catalog-level normalized-title uniqueness |
+| CI-01 | **DONE · CI** | [#1](https://github.com/Kyziur/WhatToCook/pull/1) — Release E2E processes match the CI build |
+| CI-02 | **DONE · CI** | [#1](https://github.com/Kyziur/WhatToCook/pull/1) — Native-command exit codes no longer masked |
+| CI-03 | OPEN / CONDITIONAL | Optional: split CI only after duration evidence |
+| CI-04 | OPEN / CONDITIONAL | Pre-rollout: deployed PostgreSQL and recipe-photo write/read proof |
+| CI-05 | **DONE · CI** | [#2](https://github.com/Kyziur/WhatToCook/pull/2), [#3](https://github.com/Kyziur/WhatToCook/pull/3), [#4](https://github.com/Kyziur/WhatToCook/pull/4), [#5](https://github.com/Kyziur/WhatToCook/pull/5), [#7](https://github.com/Kyziur/WhatToCook/pull/7), [#12](https://github.com/Kyziur/WhatToCook/pull/12) — Targeted HTTP input-boundary regressions for correctness changes |
+| CI-06 | OPEN / CONDITIONAL | Optional: coverage reporting after baseline |
+| CI-07 | **DONE · CI** | [#14](https://github.com/Kyziur/WhatToCook/pull/14) — Compose contract assertions instead of documentation phrasing |
+| UX-01 | OPEN / CONDITIONAL | Optional: split large UI state only for concrete maintenance cost |
+| UX-02 | **PARTIAL** | [#20](https://github.com/Kyziur/WhatToCook/pull/20) — Keyboard/accessibility smoke delivered; axe-based and broader focus tests outstanding |
+| UX-03 | **IN REVIEW** | [#25](https://github.com/Kyziur/WhatToCook/pull/25) — In review: 10-second SignalR disconnect/reconnect and unsaved-form E2E; not yet CI accepted |
+| UX-04 | OPEN / CONDITIONAL | Optional: establish mobile performance budget from measurements |
+| UX-05 | OPEN / CONDITIONAL | Conditional: actionable import errors if generic recovery messages prove insufficient |
+| SEC-01 | OPEN / CONDITIONAL | Pre-rollout: real API authorization and access boundary verification |
+| SEC-02 | OPEN / CONDITIONAL | Pre-rollout: actual network reachability/isolation |
+| SEC-03 | OPEN / CONDITIONAL | Conditional: resolve effective DNS/proxy egress path before importer exposure |
+| SEC-04 | OPEN / CONDITIONAL | Before browser-auth/exposure change: CSRF review |
+| SEC-05 | OPEN / CONDITIONAL | Conditional: photo EXIF policy based on exposure/privacy |
+| SEC-06 | OPEN / CONDITIONAL | Conditional: API abuse limits if untrusted clients can reach it |
+| SEC-07 | OPEN / CONDITIONAL | Optional: OpenAPI exposure policy |
+| SEC-08 | **PARTIAL** | [#23](https://github.com/Kyziur/WhatToCook/pull/23) — NuGet/npm severity gates and retained reports delivered; inventory of other GitHub security controls unverified |
+| OPS-01 | OPEN / CONDITIONAL | Before schema release: single migrator/rollback proof |
+| OPS-02 | OPEN / CONDITIONAL | Pre-rollout: isolated PostgreSQL + image restore drill |
+| OPS-03 | OPEN / CONDITIONAL | Pre-rollout: preserve Compose project and PostgreSQL volume identity |
+| OPS-04 | OPEN / CONDITIONAL | Pre-rollout: verify UID/GID 1654 image mount write/read |
+| OPS-05 | OPEN / CONDITIONAL | Conditional: immutable images for reproducible release/rollback |
+| OPS-06 | OPEN / CONDITIONAL | Pre-rollout: external Docker networks and allowed directions |
+| OPS-07 | OPEN / CONDITIONAL | Pre-rollout: verified backup, rollback and release gate |
+| OPS-08 | OPEN / CONDITIONAL | Optional: tune host resources only after profiling |
+| OBS-01 | OPEN / CONDITIONAL | Optional: extra workflow spans only if standard traces inadequate |
+| OBS-02 | OPEN / CONDITIONAL | Pre-rollout: DB and image storage readiness against deployment |
+| OBS-03 | OPEN / CONDITIONAL | Operational: SLI/SLO and alert ownership if monitored |
+| OBS-04 | **DONE · CI** | [#21](https://github.com/Kyziur/WhatToCook/pull/21) — Bounded import-failure categories without source-content logging |
+| OBS-05 | **IN REVIEW** | [#26](https://github.com/Kyziur/WhatToCook/pull/26) — In review: application log minimization; collector redaction/retention/cardinality still unverified |
+| OBS-06 | OPEN / CONDITIONAL | Operational: verify OTLP export-to-backend if telemetry enabled |
+| PERF-01 | **DONE · CI** | [#17](https://github.com/Kyziur/WhatToCook/pull/17) — Server-side paging and full-catalog filter semantics |
+| PERF-02 | **DONE · CI** | [#6](https://github.com/Kyziur/WhatToCook/pull/6) — Removed inactive output-cache annotation |
+| PERF-03 | OPEN / CONDITIONAL | Optional: SQL substring index after EXPLAIN |
+| PERF-04 | OPEN / CONDITIONAL | Optional: recommendation candidates after catalog measurements |
+| PERF-05 | OPEN / CONDITIONAL | Optional: Blazor circuit/render profiling |
+| PERF-06 | OPEN / CONDITIONAL | Optional: image variants after network measurements |
+| PERF-07 | OPEN / CONDITIONAL | Optional: recipe-detail SQL shape after profiling |
+| ARC-01 | OPEN / CONDITIONAL | Conditional: split complex page only when changing affected flow |
+| ARC-02 | OPEN / CONDITIONAL | Conditional: split shopping service only for proven maintenance need |
+| ARC-03 | OPEN / CONDITIONAL | Optional: use-case extraction only where boundary improves |
+| ARC-04 | OPEN / CONDITIONAL | Before exposure change: document trust boundary and data ownership |
+| ARC-05 | OPEN / CONDITIONAL | Optional: API contract tests without central DTO rewrite |
+| DOC-01 | **DONE · CI** | [#24](https://github.com/Kyziur/WhatToCook/pull/24) — Local developer start/test/troubleshooting quickstart |
+| DOC-02 | OPEN / CONDITIONAL | Conditional: short architecture map if repeated review confusion |
+| DOC-03 | OPEN / CONDITIONAL | Conditional: product status note only if owners need it |
+| DOC-04 | **DONE · CI** | [#8](https://github.com/Kyziur/WhatToCook/pull/8) — Corrected product-specific documentation context |
+| DOC-05 | OPEN / CONDITIONAL | Optional: preserve deployment note, dedupe only if necessary |
+| DOC-06 | OPEN / CONDITIONAL | Ongoing practice: docs updated with behavior changes |
+| AGENT-01 | OPEN / CONDITIONAL | Optional: use live Repowise freshness not stale historical index |
+| AGENT-02 | OPEN / CONDITIONAL | Ongoing practice: right-size agent review and evidence |
+| AGENT-03 | OPEN / CONDITIONAL | Optional: consolidate instructions only on observed conflict |
+| AGENT-04 | OPEN / CONDITIONAL | Conditional: portable MCP config only if multiple checkout paths needed |
+| AGENT-05 | **DONE · CI** | [#8](https://github.com/Kyziur/WhatToCook/pull/8) — Aligned agent and OpenSpec context with actual stack |
+| AGENT-06 | OPEN / CONDITIONAL | Optional: harness commands treated as adapters |
+| AGENT-07 | OPEN / CONDITIONAL | Optional: add deployment-specific skill only for demonstrated gap |
+| AGENT-08 | OPEN / CONDITIONAL | Optional: reduce skill selection cost when measurable |
+
+### Immediate operational prerequisites (not proven by PR CI)
+
+Before claiming WhatToCook production-ready, capture evidence from the **homelab** for `SEC-01`, `SEC-02`, `CI-04`, `OPS-02`, `OPS-03`, `OPS-04`, `OPS-06`, `OPS-07`, and `OBS-02`. These require actual effective access controls, deployed storage, backup/restore, volume identity, network reachability and database+image write/read. GitHub-hosted Testcontainers/ARM64 checks cannot substitute for the live environment.
+
+### Maintenance rule
+
+After every merged audit PR, update the corresponding row, keep its linked evidence, and distinguish **application implementation** from **operational verification**. Do not mark conditional observations fixed solely because documentation changed. Re-review old snapshot evidence against current code before implementing another item.
+
 ## Priority and ownership
 
 - **P1:** address first. For rollout-gated items, the prerequisite is a verified operational outcome, not necessarily an application-code change.
@@ -25,7 +116,7 @@ Each chapter identifies a recommended action, evidence or the limit of available
 
 The application repository owns application code, images, and the passive Compose contract. The homelab owns host preparation, Komodo/Periphery, secret injection, shared networks, routing, and backups. Preserve the existing BWS workload scope and approved wrapper; the application must not require `BWS_ACCESS_TOKEN`. See the [self-hosted deployment contract](../self-hosted-deployment.md).
 
-## Recommended sequence
+## Originally recommended sequence (2026-11-06)
 
 1. **CI:** align Release builds with both Playwright server processes while preserving local Debug use; propagate the exit code of each PowerShell command. Validate on a clean runner. `CI-01`, `CI-02`.
 2. **Input correctness:** handle normalized-key collisions, draft limits, plan and manual-item limits, and explicit nulls with controlled API behavior. Keep regression coverage at the relevant HTTP boundary. `COR-01`, `COR-02`, `COR-05`, `COR-06`, `COR-08`, `CI-05`.
