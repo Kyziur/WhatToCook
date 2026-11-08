@@ -8,7 +8,7 @@ WhatToCook runs the API and Blazor Web as separate deployable services with feat
 
 - Add `[JsonRequired]` only to mandatory fields of the Web's private recipe page/summary/details DTOs. Keep optional source/photo fields optional.
 - Verify `page` and `pageSize` returned by the server match the requested page. This also prevents the planner's multi-page traversal from silently treating the wrong page as correct.
-- Add focused negative tests for omitted required fields and wrong page metadata. Update the existing planner HTTP fixture to include explicit page metadata.
+- Add focused negative tests for omitted required fields, present-but-null required collections and mismatched page metadata. Update the existing planner HTTP fixture to include explicit page metadata.
 - Add one live API HTTP integration test for the fields and JSON shapes consumed by the Web's recipe catalog and details flows.
 
 ## Non-goals
@@ -17,4 +17,4 @@ No shared DTO assembly, SDK-generated global client, database migration, route c
 
 ## Risk and verification
 
-The API currently produces the required properties. `[JsonRequired]` detects **missing properties**; it does not by itself guarantee non-null values. Invalid JSON remains an error surfaced by existing client error handling. Run existing full CI including Playwright to verify normal responses keep deserializing.
+The API currently produces the required properties. `[JsonRequired]` detects **missing properties**; explicit client guards reject null required data. Invalid JSON remains an error surfaced by existing client error handling. Run existing full CI including Playwright to verify normal responses keep deserializing.
