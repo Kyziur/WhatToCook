@@ -22,9 +22,10 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 
 - **DONE · CI** means source/tests were merged to `main` and relevant GitHub PR CI passed. It does **not** establish production/homelab readiness.
 - **PARTIAL** means only a clearly scoped piece was implemented.
+- **IN REVIEW** means an unmerged PR exists; CI or actual host verification remains outstanding.
 - **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
 
-**Current count:** 19 DONE · CI, 3 PARTIAL, 47 open/conditional. The original audit's 69 findings remain unchanged.
+**Current count:** 19 DONE · CI, 3 PARTIAL, 2 IN REVIEW, 45 open/conditional. The original audit's 69 findings remain unchanged.
 
 | Finding | Status | Merged evidence or outstanding work |
 | --- | --- | --- |
@@ -89,10 +90,10 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | DOC-04 | **DONE · CI** | [#8](https://github.com/Kyziur/WhatToCook/pull/8) — Corrected product-specific documentation context |
 | DOC-05 | OPEN / CONDITIONAL | Optional: preserve deployment note, dedupe only if necessary |
 | DOC-06 | OPEN / CONDITIONAL | Ongoing practice: docs updated with behavior changes |
-| AGENT-01 | OPEN / CONDITIONAL | Optional: use live Repowise freshness not stale historical index |
+| AGENT-01 | **IN REVIEW** | PR pending: manual instructions prioritize current source over stale generated Repowise snapshot; live tool freshness check remains task-specific |
 | AGENT-02 | OPEN / CONDITIONAL | Ongoing practice: right-size agent review and evidence |
 | AGENT-03 | OPEN / CONDITIONAL | Optional: consolidate instructions only on observed conflict |
-| AGENT-04 | OPEN / CONDITIONAL | Conditional: portable MCP config only if multiple checkout paths needed |
+| AGENT-04 | **IN REVIEW** | PR pending: portable path-free Repowise configuration and CI contract test; actual second-checkout MCP host smoke still required |
 | AGENT-05 | **DONE · CI** | [#8](https://github.com/Kyziur/WhatToCook/pull/8) — Aligned agent and OpenSpec context with actual stack |
 | AGENT-06 | OPEN / CONDITIONAL | Optional: harness commands treated as adapters |
 | AGENT-07 | OPEN / CONDITIONAL | Optional: add deployment-specific skill only for demonstrated gap |
