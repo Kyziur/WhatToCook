@@ -36,29 +36,19 @@ public static class EditorEndpoints
         var result = await recipeWriteService.CreateAsync(request, cancellationToken);
         if (result.Status == RecipeWriteStatus.ValidationFailure)
         {
-            logger.LogWarning(
-                "Recipe create request failed validation for title {Title}.",
-                request.Title
-            );
+            logger.LogWarning("Recipe create request failed validation.");
             return Results.ValidationProblem(result.ValidationErrors);
         }
 
         if (result.Status == RecipeWriteStatus.Conflict)
         {
-            logger.LogWarning(
-                "Recipe create request rejected because normalized title {NormalizedTitle} already exists.",
-                TextNormalizer.Normalize(request.Title)
-            );
+            logger.LogWarning("Recipe create request rejected because the title conflicts.");
             return Results.Conflict(
                 new { message = result.ErrorMessage ?? "Recipe title must be unique." }
             );
         }
 
-        logger.LogInformation(
-            "Created recipe {RecipeId} with title {Title}.",
-            result.Recipe!.Id,
-            result.Recipe.Title
-        );
+        logger.LogInformation("Created recipe {RecipeId}.", result.Recipe!.Id);
 
         return Results.Created($"/api/recipes/{result.Recipe.Id}", result.Recipe);
     }
@@ -93,8 +83,8 @@ public static class EditorEndpoints
         if (result.Status == RecipeWriteStatus.Conflict)
         {
             logger.LogWarning(
-                "Recipe update request rejected because normalized title {NormalizedTitle} already exists.",
-                TextNormalizer.Normalize(request.Title)
+                "Recipe update request rejected because recipe {RecipeId} has a title conflict.",
+                recipeId
             );
             return Results.Conflict(
                 new { message = result.ErrorMessage ?? "Recipe title must be unique." }
@@ -194,22 +184,17 @@ public static class EditorEndpoints
             {
                 await imageStorage.DeleteAsync(previousPath, cancellationToken);
             }
-            catch (IOException exception)
+            catch (IOException)
             {
+                // File-system exceptions can contain sensitive host paths; retain a bounded outcome.
                 logger.LogWarning(
-                    exception,
-                    "Could not remove replaced recipe photo {PhotoPath} for recipe {RecipeId}.",
-                    previousPath,
+                    "Could not remove replaced recipe photo for recipe {RecipeId}.",
                     recipeId
                 );
             }
         }
 
-        logger.LogInformation(
-            "Uploaded main photo for recipe {RecipeId} to path {StoredPath}.",
-            recipeId,
-            storedPath
-        );
+        logger.LogInformation("Uploaded main photo for recipe {RecipeId}.", recipeId);
 
         return Results.Ok(new { mainPhotoPath = storedPath });
     }
