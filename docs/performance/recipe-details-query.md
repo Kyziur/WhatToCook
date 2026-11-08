@@ -18,4 +18,10 @@ This runs the focused integration test and prints the two observed elapsed times
 
 Review CI output and, if latency is material, capture representative SQL plus `EXPLAIN (ANALYZE, BUFFERS)` on expected production-like data. Compare *query count*, rows/bytes transferred, allocations and p50/p95, ideally with more than one recipe size and repeated runs. A split query may reduce row multiplication but adds round trips and consistency considerations; a projection can also reduce columns. Do not switch to `AsSplitQuery()` based solely on this synthetic fixture or a single CI time.
 
-**Status:** measurement harness established. No endpoint optimization claimed until evidence supports a specific change; baseline results are not a performance gate.
+## Targeted query change
+
+The first GitHub PR run [42479513091](https://github.com/Kyziur/WhatToCook/actions/runs/42479513091) measured a warmed 100-ingredient/100-step/2-tag synthetic PostgreSQL query at **301.2 ms** for `AsSingleQuery()` and **9.5 ms** for `AsSplitQuery()`. This is one uncontrolled shared-runner comparison, **not** a production p95 or a universal 30× speedup. The original endpoint was still using the single-query include shape during that run.
+
+Because this fixture is at the documented maximum collection size and the join upper bound is about 20,000 rows, the endpoint now explicitly uses `AsSplitQuery()`. The HTTP regression tests ensure all 100 ingredients and steps remain in the response, and the diagnostic comparison keeps both variants visible. Split mode can perform more DB round trips and may observe non-atomic child collection changes if concurrent writers modify the recipe; the existing API never promised a snapshot across multiple statements. Keep the single-query baseline diagnostic for future decisions.
+
+**Status:** targeted worst-case query-shape improvement made, to be accepted only after post-change CI. The comparative timings are evidence for this synthetic fixture, not proof of general production performance. Further SQL `EXPLAIN`, allocations and representative load measurements remain optional monitoring work, not blockers for this bounded change.

@@ -74,8 +74,7 @@ public sealed class RecipeDetailsQueryDiagnosticsTests(
         Assert.Equal(100, actual.Steps.Count);
 
         // Upper-bound join multiplicity for this fixture (not network rows or benchmark results).
-        var estimatedCartesianRows =
-            single.Ingredients * single.Steps * Math.Max(single.Tags, 1);
+        var estimatedCartesianRows = single.Ingredients * single.Steps * Math.Max(single.Tags, 1);
         output.WriteLine(
             $"PERF-07 fixture: ingredients={single.Ingredients} steps={single.Steps} " +
             $"tags={single.Tags} single-query join upper bound={estimatedCartesianRows}"

@@ -23,6 +23,8 @@ public static class DetailsEndpoints
     {
         var recipe = await dbContext
             .Recipes.AsNoTracking()
+            // Avoid multiplying up to 100 ingredients × 100 steps × tags into joined rows.
+            .AsSplitQuery()
             .Include(x => x.RecipeTags)
                 .ThenInclude(x => x.Tag)
             .Include(x => x.Ingredients)
