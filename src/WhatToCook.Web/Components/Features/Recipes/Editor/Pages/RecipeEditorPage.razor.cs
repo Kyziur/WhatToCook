@@ -466,6 +466,13 @@ public partial class RecipeEditorPage : IAsyncDisposable
         await RefreshIngredientSuggestionsAsync(ingredient.Name);
     }
 
+    private void OnStepInput(ChangeEventArgs args, StepRow step)
+    {
+        // InputTextArea binds on change; persist edits before a focused field loses its circuit.
+        step.Text = args.Value?.ToString() ?? string.Empty;
+        IsDirty = true;
+    }
+
     private async Task OnNewTagInput(ChangeEventArgs args)
     {
         NewTag = args.Value?.ToString() ?? string.Empty;
