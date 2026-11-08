@@ -107,6 +107,69 @@ public sealed class RecipeCatalogHttpContractTests
         await Assert.ThrowsAsync<JsonException>(() => service.GetByIdAsync(Guid.NewGuid()));
     }
 
+    [Fact]
+    public async Task PagedCatalog_PresentButNullItems_ShouldFailInsteadOfRenderingAnEmptyPage()
+    {
+        const string json = """
+            {
+              "items": null,
+              "totalCount": 0,
+              "page": 1,
+              "pageSize": 24,
+              "tags": [],
+              "ingredients": [],
+              "tagUsage": {}
+            }
+            """;
+        using var handler = new FixedJsonHandler(json);
+        using var client = CreateClient(handler);
+        var service = new ApiRecipeCatalogService(client);
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => service.GetPageAsync(FirstPage));
+    }
+
+    [Fact]
+    public async Task RecipeDetails_PresentButNullSteps_ShouldFailInsteadOfHidingInstructions()
+    {
+        const string json = """
+            {
+              "id": "11111111-1111-1111-1111-111111111111",
+              "title": "Test recipe",
+              "servings": 4,
+              "isActive": true,
+              "tags": [],
+              "ingredients": [],
+              "steps": null
+            }
+            """;
+        using var handler = new FixedJsonHandler(json);
+        using var client = CreateClient(handler);
+        var service = new ApiRecipeCatalogService(client);
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => service.GetByIdAsync(Guid.NewGuid()));
+    }
+
+    [Fact]
+    public async Task RecipeDetails_MissingNestedIngredientName_ShouldFailDeserialization()
+    {
+        const string json = """
+            {
+              "id": "11111111-1111-1111-1111-111111111111",
+              "title": "Test recipe",
+              "servings": 4,
+              "isActive": true,
+              "tags": [],
+              "ingredients": [{ "quantityText": "2", "unit": "szt" }],
+              "steps": ["Test step"]
+            }
+            """;
+        using var handler = new FixedJsonHandler(json);
+        using var client = CreateClient(handler);
+        var service = new ApiRecipeCatalogService(client);
+
+        await Assert.ThrowsAsync<JsonException>(() => service.GetByIdAsync(Guid.NewGuid()));
+    }
+
     private static HttpClient CreateClient(HttpMessageHandler handler) =>
         new(handler, disposeHandler: false) { BaseAddress = new Uri("http://localhost") };
 
