@@ -13,6 +13,47 @@ public sealed class RecipeManagementCoreSpecificationTests(TestWebApplicationFac
         PropertyNameCaseInsensitive = true,
     };
 
+    [Theory]
+    [InlineData(200, true)]
+    [InlineData(201, false)]
+    public async Task CreateRecipe_ShouldValidateUnicodeScalarLimitsAtDatabaseBoundary(
+        int length,
+        bool accepted
+    )
+    {
+        using var client = factory.CreateClient();
+        var uniqueSuffix = Guid.NewGuid().ToString("N");
+        var title =
+            string.Concat(Enumerable.Repeat("😀", length - uniqueSuffix.Length)) + uniqueSuffix;
+        var payload = RecipeApiContracts.CreateRecipePayload(title);
+        payload.Ingredients =
+        [
+            new RecipeApiContracts.RecipeIngredientPayload(
+                string.Concat(Enumerable.Repeat("😀", length - uniqueSuffix.Length)) + uniqueSuffix,
+                "1",
+                "szt"
+            ),
+        ];
+
+        using var response = await client.PostAsJsonAsync("/api/recipes", payload);
+        Assert.Equal(
+            accepted ? HttpStatusCode.Created : HttpStatusCode.BadRequest,
+            response.StatusCode
+        );
+
+        if (accepted)
+        {
+            var created =
+                await response.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>(
+                    JsonOptions
+                );
+            Assert.NotNull(created);
+            Assert.Equal(title, created.Title);
+            Assert.Single(created.Ingredients);
+            Assert.Equal(payload.Ingredients[0].Name, created.Ingredients[0].Ingredient);
+        }
+    }
+
     [Fact]
     public async Task SaveNewRecipeWithCompleteCoreFields_ShouldPersistRecipe()
     {
