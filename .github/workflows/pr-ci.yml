@@ -89,7 +89,7 @@ jobs:
           PLAYWRIGHT_DOTNET_CONFIGURATION: Release
 
       - name: Validate agent MCP configuration
-        run: node --test tests/ci/repowise-config.test.mjs tests/ci/agent-skill-references.test.mjs
+        run: node --test tests/ci/repowise-config.test.mjs tests/ci/agent-skill-references.test.mjs tests/ci/openspec-harness-contract.test.mjs
 
       - name: Test NuGet audit policy
         run: node --test tests/ci/nuget-audit-gate.test.mjs

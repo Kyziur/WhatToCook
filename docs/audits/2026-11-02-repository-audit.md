@@ -25,7 +25,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 - **IN REVIEW** means an unmerged PR exists; CI or actual host verification remains outstanding.
 - **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
 
-**Current count:** 25 DONE · CI, 6 PARTIAL, 38 open/conditional. The original audit's 69 findings remain unchanged.
+**Current count:** 25 DONE · CI, 6 PARTIAL, 1 IN REVIEW, 37 open/conditional. The original audit's 69 findings remain unchanged.
 
 | Finding | Status | Merged evidence or outstanding work |
 | --- | --- | --- |
@@ -95,7 +95,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | AGENT-03 | **DONE · CI** | [#36](https://github.com/Kyziur/WhatToCook/pull/36) — Five dead skill references and incorrect SDK10 VSTest/MTP guidance fixed with Node contract checks; final-head [CI 42508393599](https://github.com/Kyziur/WhatToCook/actions/runs/42508393599) green. No blanket deduplication of otherwise consistent harness instructions |
 | AGENT-04 | **PARTIAL** | [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Machine-specific Windows path removed and CI contract test passed; real MCP client smoke from second checkout/WSL still required |
 | AGENT-05 | **DONE · CI** | [#8](https://github.com/Kyziur/WhatToCook/pull/8), [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Aligned agent/OpenSpec product assumptions and corrected stale MAUI implementation example |
-| AGENT-06 | OPEN / CONDITIONAL | Optional: harness commands treated as adapters |
+| AGENT-06 | **IN REVIEW** | Shared OpenSpec apply/archive safety invariants verified across OMP commands and `.agents` skills in a focused Node PR CI contract; harness-specific invocation syntax deliberately remains separate; final CI and review pending |
 | AGENT-07 | OPEN / CONDITIONAL | Optional: add deployment-specific skill only for demonstrated gap |
 | AGENT-08 | OPEN / CONDITIONAL | Optional: reduce skill selection cost when measurable |
 
