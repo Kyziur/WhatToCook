@@ -30,7 +30,7 @@ Default rule: do not spawn subagents unless the task benefits from delegation. M
 - Does not own: independent review of its own work after completion; broad repo/platform maintenance unless the task is specifically infrastructure-oriented.
 - Typical use:
   - API endpoint or Minimal API work,
-  - MAUI feature work,
+  - Blazor Interactive Server feature work,
   - frontend integration,
   - bug fixes,
   - adding or updating tests.
@@ -82,6 +82,12 @@ Default rule: do not spawn subagents unless the task benefits from delegation. M
 3. Use `discovery-spec` before coding only when scope is unclear or OpenSpec work matters.
 4. Use `repo-platform` only for template, tooling, or repository-wide changes.
 5. If more than one OpenSpec change is `in-progress`, explicitly name the active implementation target before editing code.
+
+### Current source versus generated index
+
+- The Repowise section below is generated metadata and may lag behind `main`; do not manually edit it.
+- Before relying on its architecture, symbols, or risk claims, inspect the live tool response's indexed revision and freshness scope. If it is behind the checked-out commit or uncertain, re-read the current source. A generated claim never overrides the repository's current code or specs.
+- The project-local `.mcp.json` starts Repowise without a machine-specific checkout path. This requires the MCP host to launch in the repository directory with an initialized `.repowise` index. For hosts with a different working directory, configure a personal absolute-path override; see [Repowise setup](docs/development/repowise-mcp.md).
 
 ### Active Change Hygiene
 
@@ -192,7 +198,7 @@ When one agent hands work to another, include:
 
 ## Repository Preference
 
-This template is optimized for a low-overhead workflow:
+WhatToCook favors a low-overhead workflow:
 
 - one main implementation worker most of the time,
 - one optional reviewer for independent feedback,
