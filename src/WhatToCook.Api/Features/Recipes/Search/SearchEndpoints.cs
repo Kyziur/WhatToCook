@@ -65,9 +65,27 @@ public static class SearchEndpoints
             );
         }
 
-        var recipes = await query.OrderBy(x => x.Title).ToListAsync(cancellationToken);
+        var page = request.Page ?? 1;
+        var size = request.PageSize ?? RecipePaging.MaxPageSize;
+        if (RecipePaging.IsInvalid(page, size))
+        {
+            return Results.ValidationProblem(
+                new Dictionary<string, string[]>
+                {
+                    [nameof(request.Page)] = ["Page exceeds the supported range."],
+                }
+            );
+        }
 
-        return Results.Ok(recipes.Select(x => x.ToSummaryResponse()));
+        var result = await RecipePaging.FetchAsync(
+            query,
+            page,
+            size,
+            "TitleAscending",
+            cancellationToken
+        );
+        // Preserve the legacy list response; callers can retrieve additional bounded pages.
+        return Results.Ok(result.Items);
     }
 
     private static async Task<IResult> GetIngredientSuggestions(
@@ -132,5 +150,11 @@ public static class SearchEndpoints
 
         [FromQuery(Name = "ingredient")]
         public string[] Ingredient { get; init; } = [];
+
+        [FromQuery(Name = "page")]
+        public int? Page { get; init; }
+
+        [FromQuery(Name = "pageSize")]
+        public int? PageSize { get; init; }
     }
 }
