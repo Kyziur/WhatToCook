@@ -22,10 +22,9 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 
 - **DONE · CI** means source/tests were merged to `main` and relevant GitHub PR CI passed. It does **not** establish production/homelab readiness.
 - **PARTIAL** means only a clearly scoped piece was implemented.
-- **IN REVIEW** means a PR exists but is not counted as completed or merged. CI/PR review and remaining work are explicit.
 - **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
 
-**Current count:** 18 DONE · CI, 4 partial/in review, 47 open/conditional. The original audit's 69 findings remain unchanged.
+**Current count:** 19 DONE · CI, 3 PARTIAL, 47 open/conditional. The original audit's 69 findings remain unchanged.
 
 | Finding | Status | Merged evidence or outstanding work |
 | --- | --- | --- |
@@ -47,7 +46,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | CI-07 | **DONE · CI** | [#14](https://github.com/Kyziur/WhatToCook/pull/14) — Compose contract assertions instead of documentation phrasing |
 | UX-01 | OPEN / CONDITIONAL | Optional: split large UI state only for concrete maintenance cost |
 | UX-02 | **PARTIAL** | [#20](https://github.com/Kyziur/WhatToCook/pull/20) — Keyboard/accessibility smoke delivered; axe-based and broader focus tests outstanding |
-| UX-03 | **IN REVIEW** | [#25](https://github.com/Kyziur/WhatToCook/pull/25) — In review: 10-second SignalR disconnect/reconnect and unsaved-form E2E; not yet CI accepted |
+| UX-03 | **DONE · CI** | [#25](https://github.com/Kyziur/WhatToCook/pull/25) — Desktop/mobile Playwright covers a 10-second SignalR reconnect, unsaved editor/planner drafts and exactly-one save. Long circuit eviction/offline editing remains outside this finding's tested scope |
 | UX-04 | OPEN / CONDITIONAL | Optional: establish mobile performance budget from measurements |
 | UX-05 | OPEN / CONDITIONAL | Conditional: actionable import errors if generic recovery messages prove insufficient |
 | SEC-01 | OPEN / CONDITIONAL | Pre-rollout: real API authorization and access boundary verification |
@@ -70,7 +69,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | OBS-02 | OPEN / CONDITIONAL | Pre-rollout: DB and image storage readiness against deployment |
 | OBS-03 | OPEN / CONDITIONAL | Operational: SLI/SLO and alert ownership if monitored |
 | OBS-04 | **DONE · CI** | [#21](https://github.com/Kyziur/WhatToCook/pull/21) — Bounded import-failure categories without source-content logging |
-| OBS-05 | **IN REVIEW** | [#26](https://github.com/Kyziur/WhatToCook/pull/26) — In review: application log minimization; collector redaction/retention/cardinality still unverified |
+| OBS-05 | **PARTIAL** | [#26](https://github.com/Kyziur/WhatToCook/pull/26) — Recipe write logs no longer include user-controlled titles or internal photo paths; homelab collector redaction, retention and cardinality verification outstanding |
 | OBS-06 | OPEN / CONDITIONAL | Operational: verify OTLP export-to-backend if telemetry enabled |
 | PERF-01 | **DONE · CI** | [#17](https://github.com/Kyziur/WhatToCook/pull/17) — Server-side paging and full-catalog filter semantics |
 | PERF-02 | **DONE · CI** | [#6](https://github.com/Kyziur/WhatToCook/pull/6) — Removed inactive output-cache annotation |
