@@ -22,13 +22,13 @@ The browser test opens **five then twenty tabs** with isolated Blazor circuits a
 
 The opt-in, Development-only `BlazorCircuitProfiler` uses `MeterListener` to sample built-in `aspnetcore.components.circuit.active`, `aspnetcore.components.circuit.connected`, and `aspnetcore.components.render_diff`. It writes one **local JSONL snapshot per second** at `.tmp/playwright-e2e/perf05-metrics.jsonl`, under explicit `PERF05_PROFILE_PATH` and `PERF05_PHASE_PATH`. It never runs in Production and does not expose an unauthenticated diagnostic endpoint.
 
-Each snapshot includes currently connected/active circuits, server process working set, approximate allocated bytes, GC collection increments since that phase began, and median/p95 server render-diff duration. Playwright prints a compact summary per cohort. CI also attaches the raw JSONL file.
+Each snapshot includes currently connected/active circuits, server process working set, approximate allocated bytes, GC collection increments since that phase began, and median/p95 server render-diff duration **when emitted**. The profiler also lists discovered Blazor instruments for version diagnostics. Playwright additionally measures automated search-to-visible-DOM latency p50/p95; these numbers **include Playwright command overhead and network delays**. CI attaches the raw JSONL file.
 
 ## Interpretation
 
 - `RenderP50Ms`/`RenderP95Ms` describe **server render-diff batches** observed by the .NET runtime. They are **not** end-to-end browser paint, network latency, or user-visible interaction p95.
 - Process working set and process-wide allocation counters include API HTTP-client infrastructure, runtime warmup and unrelated work. `WorkingSetBytes` is a process snapshot, not memory per circuit.
-- Snapshots are 1-second samples and the renderer histogram samples are captured with minimal test-only overhead. Measurements are noisy and do not gate CI on arbitrary millisecond/MB limits.
+- Snapshots are 1-second samples. Some .NET/renderer modes may not emit the render-diff histogram even when circuit counts are available; report the render percentile as **unavailable**, not zero, and use the separate browser interaction-to-DOM figure. Measurements are noisy and do not gate CI on arbitrary millisecond/MB limits.
 - No forced GC occurs; disconnected circuits may remain retained by Blazor for reconnection. A larger working set with 20 tabs does not establish a memory leak.
 - Real target hardware, reverse proxy, browser devices, and family usage patterns must be observed before changing component structure or deciding on a circuit budget.
 

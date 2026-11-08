@@ -66,12 +66,6 @@ jobs:
         run: npm ci && npx playwright install --with-deps chromium
         shell: bash
 
-      - name: Playwright smoke suite
-        run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts
-        shell: bash
-        env:
-          PLAYWRIGHT_DOTNET_CONFIGURATION: Release
-
       - name: Profile Blazor circuits under 5/20 tabs (non-gating timings)
         run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts --project=desktop-chromium --grep "@perf05"
         shell: bash
@@ -87,6 +81,12 @@ jobs:
           path: .tmp/playwright-e2e/perf05-metrics.jsonl
           if-no-files-found: warn
           retention-days: 7
+
+      - name: Playwright smoke suite
+        run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts
+        shell: bash
+        env:
+          PLAYWRIGHT_DOTNET_CONFIGURATION: Release
 
       - name: Validate agent MCP configuration
         run: node --test tests/ci/repowise-config.test.mjs

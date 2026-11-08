@@ -16,6 +16,7 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
     private readonly MeterListener listener = new();
     private readonly object sync = new();
     private readonly List<double> renderSamples = [];
+    private readonly HashSet<string> knownInstruments = new(StringComparer.Ordinal);
     private long activeCircuits;
     private long connectedCircuits;
     private string phase = "setup";
@@ -34,6 +35,16 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
 
         listener.InstrumentPublished = (instrument, listener) =>
         {
+            if (instrument.Meter.Name.StartsWith("Microsoft.AspNetCore.Components", StringComparison.Ordinal))
+            {
+                lock (sync)
+                {
+                    knownInstruments.Add(
+                        instrument.Meter.Name + "/" + instrument.Name + "/" + instrument.GetType().Name
+                    );
+                }
+            }
+
             if (ShouldObserve(instrument))
             {
                 listener.EnableMeasurementEvents(instrument);
@@ -50,6 +61,10 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
                 {
                     Interlocked.Add(ref connectedCircuits, value);
                 }
+                else if (instrument.Name == "aspnetcore.components.render_diff")
+                {
+                    RecordRender(value);
+                }
             }
         );
         listener.SetMeasurementEventCallback<double>(
@@ -60,12 +75,15 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
                     return;
                 }
 
-                lock (sync)
+                RecordRender(seconds);
+            }
+        );
+        listener.SetMeasurementEventCallback<int>(
+            (instrument, value, _, _) =>
+            {
+                if (instrument.Name == "aspnetcore.components.render_diff")
                 {
-                    if (renderSamples.Count < MaxRenderSamples)
-                    {
-                        renderSamples.Add(seconds * 1000);
-                    }
+                    RecordRender(value);
                 }
             }
         );
@@ -95,6 +113,12 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
                     values = renderSamples.Order().ToArray();
                 }
 
+                string[] discovered;
+                lock (sync)
+                {
+                    discovered = knownInstruments.Order().ToArray();
+                }
+
                 var snapshot = new
                 {
                     Phase = currentPhase,
@@ -111,6 +135,7 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
                     RenderP50Ms = Percentile(values, 0.50),
                     RenderP95Ms = Percentile(values, 0.95),
                     RenderSamplesCapped = values.Length >= MaxRenderSamples,
+                    PublishedInstruments = discovered,
                 };
                 await File.AppendAllTextAsync(
                     outputPath,
@@ -122,6 +147,17 @@ internal sealed class BlazorCircuitProfiler(string outputPath, string phasePath)
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
             // Normal teardown after the Playwright run.
+        }
+    }
+
+    private void RecordRender(double seconds)
+    {
+        lock (sync)
+        {
+            if (renderSamples.Count < MaxRenderSamples)
+            {
+                renderSamples.Add(seconds * 1000);
+            }
         }
     }
 
