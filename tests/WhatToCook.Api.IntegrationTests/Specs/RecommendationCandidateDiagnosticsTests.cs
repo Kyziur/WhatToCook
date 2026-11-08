@@ -92,7 +92,8 @@ public sealed class RecommendationCandidateDiagnosticsTests(
             var expected = Rank(baseline.Rows, key);
             var selected = Rank(filtered.Rows, key);
             Assert.Equal(expected, selected);
-            Assert.Equal(size, baseline.Rows.Count);
+            // Recipe 40 is intentionally inactive at every measured catalog size.
+            Assert.Equal(size - 1, baseline.Rows.Count);
             Assert.True(filtered.Rows.Count < baseline.Rows.Count);
 
             var sql = eligibleQuery.ToQueryString();
