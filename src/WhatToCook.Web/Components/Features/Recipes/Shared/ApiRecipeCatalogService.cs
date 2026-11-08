@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 
 namespace WhatToCook.Web.Components.Features.Recipes.Shared;
 
@@ -89,6 +90,28 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
                 $"/api/recipes/page?{string.Join("&", fields)}",
                 cancellationToken
             ) ?? throw new HttpRequestException("Catalog page response is missing.");
+        // JsonRequired guards missing properties, not present-but-null values.
+        // Never treat malformed required data as an empty recipe library.
+        if (
+            page.Items is null
+            || page.Tags is null
+            || page.Ingredients is null
+            || page.TagUsage is null
+            || page.Items.Any(item =>
+                item is null || item.Title is null || item.Tags is null || item.Ingredients is null
+            )
+        )
+        {
+            throw new HttpRequestException("Catalog page contains null required fields.");
+        }
+
+        if (page.Page != query.Page || page.PageSize != query.PageSize)
+        {
+            throw new HttpRequestException(
+                "Catalog page metadata does not match the requested page."
+            );
+        }
+
         return new CatalogPage(
             page.Items.Select(MapSummaryToCatalogItem).ToList(),
             page.TotalCount,
@@ -107,7 +130,25 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
             $"/api/recipes/{recipeId}",
             cancellationToken
         );
-        return details is null ? null : MapToCatalogItem(details);
+        if (details is null)
+        {
+            return null;
+        }
+
+        if (
+            details.Title is null
+            || details.Tags is null
+            || details.Ingredients is null
+            || details.Steps is null
+            || details.Ingredients.Any(ingredient =>
+                ingredient is null || ingredient.Ingredient is null
+            )
+        )
+        {
+            throw new HttpRequestException("Recipe details contain null required fields.");
+        }
+
+        return MapToCatalogItem(details);
     }
 
     public async Task<bool> ArchiveAsync(
@@ -162,41 +203,84 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
 
     private sealed class RecipePageDto
     {
+        [JsonRequired]
         public List<RecipeSummaryDto> Items { get; init; } = [];
+
+        [JsonRequired]
         public int TotalCount { get; init; }
+
+        [JsonRequired]
+        public int Page { get; init; }
+
+        [JsonRequired]
+        public int PageSize { get; init; }
+
+        [JsonRequired]
         public List<string> Tags { get; init; } = [];
+
+        [JsonRequired]
         public List<string> Ingredients { get; init; } = [];
+
+        [JsonRequired]
         public Dictionary<string, int> TagUsage { get; init; } = [];
     }
 
     private sealed class RecipeSummaryDto
     {
+        [JsonRequired]
         public Guid Id { get; init; }
+
+        [JsonRequired]
         public string Title { get; init; } = string.Empty;
+
+        [JsonRequired]
         public int Servings { get; init; }
+
         public string? Source { get; init; }
         public string? MainPhotoPath { get; init; }
+
+        [JsonRequired]
         public bool IsActive { get; init; }
+
+        [JsonRequired]
         public List<string> Tags { get; init; } = [];
+
+        [JsonRequired]
         public List<string> Ingredients { get; init; } = [];
     }
 
     private sealed class RecipeDetailsDto
     {
+        [JsonRequired]
         public Guid Id { get; init; }
+
+        [JsonRequired]
         public string Title { get; init; } = string.Empty;
+
+        [JsonRequired]
         public int Servings { get; init; }
+
         public string? Source { get; init; }
         public string? MainPhotoPath { get; init; }
+
+        [JsonRequired]
         public bool IsActive { get; init; }
+
+        [JsonRequired]
         public List<string> Tags { get; init; } = [];
+
+        [JsonRequired]
         public List<RecipeIngredientDto> Ingredients { get; init; } = [];
+
+        [JsonRequired]
         public List<string> Steps { get; init; } = [];
     }
 
     private sealed class RecipeIngredientDto
     {
+        [JsonRequired]
         public string Ingredient { get; init; } = string.Empty;
+
         public string? QuantityText { get; init; }
         public string? Unit { get; init; }
     }

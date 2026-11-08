@@ -118,6 +118,8 @@ public sealed class ApiRecipeCatalogServiceTests
                         {
                             items,
                             totalCount,
+                            page,
+                            pageSize,
                             tags = Array.Empty<string>(),
                             ingredients = Array.Empty<string>(),
                             tagUsage = new Dictionary<string, int>(),
