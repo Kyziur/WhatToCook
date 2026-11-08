@@ -25,7 +25,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 - **IN REVIEW** means an unmerged PR exists; CI or actual host verification remains outstanding.
 - **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
 
-**Current count:** 22 DONE · CI, 6 PARTIAL, 41 open/conditional. The original audit's 69 findings remain unchanged.
+**Current count:** 22 DONE · CI, 6 PARTIAL, 1 IN REVIEW, 40 open/conditional. The original audit's 69 findings remain unchanged.
 
 | Finding | Status | Merged evidence or outstanding work |
 | --- | --- | --- |
@@ -92,7 +92,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | DOC-06 | OPEN / CONDITIONAL | Ongoing practice: docs updated with behavior changes |
 | AGENT-01 | **PARTIAL** | [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Manual instructions now prioritize live source/freshness over older generated Repowise section; each task must still verify its live index status |
 | AGENT-02 | OPEN / CONDITIONAL | Ongoing practice: right-size agent review and evidence |
-| AGENT-03 | OPEN / CONDITIONAL | Optional: consolidate instructions only on observed conflict |
+| AGENT-03 | **IN REVIEW** | Found and repaired dead navigation from `run-tests` to five uninstalled skills; added CI contract check for future named skill references. This is a narrow concrete defect, not evidence for broad instruction consolidation; final-head CI outstanding |
 | AGENT-04 | **PARTIAL** | [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Machine-specific Windows path removed and CI contract test passed; real MCP client smoke from second checkout/WSL still required |
 | AGENT-05 | **DONE · CI** | [#8](https://github.com/Kyziur/WhatToCook/pull/8), [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Aligned agent/OpenSpec product assumptions and corrected stale MAUI implementation example |
 | AGENT-06 | OPEN / CONDITIONAL | Optional: harness commands treated as adapters |
