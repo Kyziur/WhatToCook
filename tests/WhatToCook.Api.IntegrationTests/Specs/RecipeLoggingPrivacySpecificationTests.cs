@@ -22,9 +22,8 @@ public sealed class RecipeLoggingPrivacySpecificationTests(TestWebApplicationFac
         var valid = RecipeApiContracts.CreateRecipePayload(marker);
         using var createdResponse = await client.PostAsJsonAsync("/api/recipes", valid);
         Assert.Equal(HttpStatusCode.Created, createdResponse.StatusCode);
-        var created = await createdResponse.Content.ReadFromJsonAsync<
-            RecipeApiContracts.RecipeDetailsDto
-        >();
+        var created =
+            await createdResponse.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>();
         Assert.NotNull(created);
 
         using var duplicateResponse = await client.PostAsJsonAsync("/api/recipes", valid);
@@ -38,21 +37,28 @@ public sealed class RecipeLoggingPrivacySpecificationTests(TestWebApplicationFac
         Assert.Contains(entries, x => x.Message.Contains($"Created recipe {created.Id}"));
         Assert.Contains(entries, x => x.Message.Contains("title conflicts"));
         Assert.Contains(entries, x => x.Message.Contains("failed validation"));
-        Assert.All(entries, entry =>
-        {
-            Assert.DoesNotContain(marker, entry.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.All(
-                entry.Fields,
-                field =>
-                {
-                    Assert.DoesNotContain(marker, field.Value?.ToString() ?? string.Empty, StringComparison.OrdinalIgnoreCase);
-                    Assert.DoesNotContain(
-                        field.Key,
-                        new[] { "Title", "NormalizedTitle", "PhotoPath", "StoredPath" }
-                    );
-                }
-            );
-        });
+        Assert.All(
+            entries,
+            entry =>
+            {
+                Assert.DoesNotContain(marker, entry.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.All(
+                    entry.Fields,
+                    field =>
+                    {
+                        Assert.DoesNotContain(
+                            marker,
+                            field.Value?.ToString() ?? string.Empty,
+                            StringComparison.OrdinalIgnoreCase
+                        );
+                        Assert.DoesNotContain(
+                            field.Key,
+                            new[] { "Title", "NormalizedTitle", "PhotoPath", "StoredPath" }
+                        );
+                    }
+                );
+            }
+        );
     }
 
     private sealed record LogEntry(
