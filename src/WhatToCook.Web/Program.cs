@@ -1,3 +1,4 @@
+using System.Net;
 using OpenTelemetry.Metrics;
 using WhatToCook.Web;
 using WhatToCook.Web.Components;
@@ -108,14 +109,45 @@ app.MapGet(
             .Select(Uri.EscapeDataString);
         var encodedPath = string.Join('/', encodedSegments);
 
-        using var response = await client.GetAsync(
-            $"/recipe-images/{encodedPath}",
+        using var upstreamRequest = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/recipe-images/{encodedPath}"
+        );
+        // Forward only cache validators, never arbitrary browser headers.
+        foreach (var header in new[] { "If-None-Match", "If-Modified-Since" })
+        {
+            if (httpContext.Request.Headers.TryGetValue(header, out var value))
+            {
+                upstreamRequest.Headers.TryAddWithoutValidation(header, value.ToArray());
+            }
+        }
+
+        using var response = await client.SendAsync(
+            upstreamRequest,
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken
         );
-        if (!response.IsSuccessStatusCode)
+        if (response.StatusCode != HttpStatusCode.NotModified && !response.IsSuccessStatusCode)
         {
             return Results.NotFound();
+        }
+
+        // File names are generated per upload. Revalidate private browser cache
+        // entries against the API's ETag / Last-Modified rather than redownloading.
+        httpContext.Response.Headers["Cache-Control"] = "private, no-cache";
+        if (response.Headers.ETag is { } etag)
+        {
+            httpContext.Response.Headers["ETag"] = etag.ToString();
+        }
+
+        if (response.Content.Headers.LastModified is { } lastModified)
+        {
+            httpContext.Response.Headers["Last-Modified"] = lastModified.ToString("R");
+        }
+
+        if (response.StatusCode == HttpStatusCode.NotModified)
+        {
+            return Results.StatusCode(StatusCodes.Status304NotModified);
         }
 
         httpContext.Response.ContentType =

@@ -113,6 +113,21 @@ test.describe("OpenSpec: recipe-management-core", () => {
     await expect(page).toHaveURL(/\/recipes\/[0-9a-f-]+/);
     await expect(page.getByRole("heading", { name: title })).toBeVisible();
     await expect(page.locator("img.recipe-photo-image")).toBeVisible();
+    const photoUrl = await page.locator("img.recipe-photo-image").getAttribute("src");
+    expect(photoUrl).toMatch(/^\/recipe-images\//);
+    const initialImage = await page.request.get(photoUrl!);
+    expect(initialImage.status()).toBe(200);
+    expect(initialImage.headers()["cache-control"]).toBe("private, no-cache");
+    const etag = initialImage.headers()["etag"];
+    expect(etag).toBeTruthy();
+
+    const revalidated = await page.request.get(photoUrl!, {
+      headers: { "If-None-Match": etag! },
+    });
+    expect(revalidated.status()).toBe(304);
+    expect(revalidated.headers()["etag"]).toBe(etag);
+    expect((await revalidated.body()).length).toBe(0);
+
     await expect(page.locator("ol li")).toHaveCount(2);
 
     await attachPageSnapshot(page, testInfo, "details-after-create-with-photo");
