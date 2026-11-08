@@ -62,8 +62,11 @@ public sealed class ApiRecipeCatalogServiceTests
         Assert.Equal(2, handler.Requests.Count);
     }
 
-    private sealed class PagedCatalogHandler(int totalCount, int? emptyPage = null, int? shortPage = null)
-        : HttpMessageHandler
+    private sealed class PagedCatalogHandler(
+        int totalCount,
+        int? emptyPage = null,
+        int? shortPage = null
+    ) : HttpMessageHandler
     {
         public List<Dictionary<string, string>> Requests { get; } = [];
 
