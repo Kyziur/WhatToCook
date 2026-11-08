@@ -21,6 +21,45 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
             .ToList();
     }
 
+    public async Task<CatalogPage> GetPageAsync(
+        CatalogQuery query,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var fields = new List<string>
+        {
+            $"page={query.Page}",
+            $"pageSize={query.PageSize}",
+            $"sort={Uri.EscapeDataString(query.Sort)}",
+            $"matchAllIngredients={query.MatchAllIngredients.ToString().ToLowerInvariant()}",
+        };
+        if (!string.IsNullOrWhiteSpace(query.Title))
+        {
+            fields.Add($"q={Uri.EscapeDataString(query.Title)}");
+        }
+        if (query.Tags.Count > 0)
+        {
+            fields.Add($"tags={Uri.EscapeDataString(string.Join("|", query.Tags))}");
+        }
+        if (query.Ingredients.Count > 0)
+        {
+            fields.Add($"ingredients={Uri.EscapeDataString(string.Join("|", query.Ingredients))}");
+        }
+
+        var page =
+            await httpClient.GetFromJsonAsync<RecipePageDto>(
+                $"/api/recipes/page?{string.Join("&", fields)}",
+                cancellationToken
+            ) ?? throw new HttpRequestException("Catalog page response is missing.");
+        return new CatalogPage(
+            page.Items.Select(MapSummaryToCatalogItem).ToList(),
+            page.TotalCount,
+            page.Tags,
+            page.Ingredients,
+            page.TagUsage
+        );
+    }
+
     public async Task<RecipeCatalogItem?> GetByIdAsync(
         Guid recipeId,
         CancellationToken cancellationToken = default
@@ -81,6 +120,15 @@ public sealed class ApiRecipeCatalogService(HttpClient httpClient) : IRecipeCata
                 .ToList(),
             details.Steps
         );
+    }
+
+    private sealed class RecipePageDto
+    {
+        public List<RecipeSummaryDto> Items { get; init; } = [];
+        public int TotalCount { get; init; }
+        public List<string> Tags { get; init; } = [];
+        public List<string> Ingredients { get; init; } = [];
+        public Dictionary<string, int> TagUsage { get; init; } = [];
     }
 
     private sealed class RecipeSummaryDto
