@@ -42,7 +42,7 @@ public sealed class RecipeDetailsQueryDiagnosticsTests(
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // These includes mirror the read-only details endpoint; no production query is changed.
+        // Compare the same collection graph as the now-split read-only details endpoint.
         IQueryable<Recipe> query = db
             .Recipes.AsNoTracking()
             .Where(x => x.Id == created.Id)
@@ -95,10 +95,5 @@ public sealed class RecipeDetailsQueryDiagnosticsTests(
         );
     }
 
-    private sealed record QueryObservation(
-        double ElapsedMs,
-        int Ingredients,
-        int Steps,
-        int Tags
-    );
+    private sealed record QueryObservation(double ElapsedMs, int Ingredients, int Steps, int Tags);
 }
