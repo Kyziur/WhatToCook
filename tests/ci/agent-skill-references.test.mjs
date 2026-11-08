@@ -15,3 +15,12 @@ test("run-tests skill points only to installed named skills", () => {
     );
   }
 });
+
+test("dotnet test guidance distinguishes .NET 10 VSTest from native MTP", () => {
+  const source = readFileSync(".agents/skills/run-tests/SKILL.md", "utf8");
+  assert.match(source, /WhatToCook currently runs \*\*\.NET 10 with VSTest command mode\*\*/);
+  assert.match(source, /dotnet test WhatToCook\.slnx/);
+  assert.match(source, /Native MTP command mode/);
+  assert.match(source, /VSTest-to-MTP bridge on SDK 8\/9 or 10\+/);
+  assert.doesNotMatch(source, /Do NOT use bare positional path\*\* on SDK 10\+/);
+});

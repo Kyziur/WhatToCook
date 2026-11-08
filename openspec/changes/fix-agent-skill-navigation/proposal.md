@@ -13,3 +13,7 @@ The tracked `run-tests` skill tells agents to consult `platform-detection`, `fil
 ## Non-goals
 
 No agent hierarchy, new generator, new skill, application code, or deployment change. AGENT-03 remains conditional/partial until broader instruction-drift evidence is found.
+
+## Additional review correction
+
+The original skill also incorrectly equated **SDK 10** with native MTP command mode, contradicting this repository's actual VSTest-mode `dotnet test WhatToCook.slnx`. The correct discriminator is the command runner selection in `global.json`; MTP bridge in VSTest mode still requires `--`, while native MTP may use it optionally. Keep the correction in this existing skill, not a new instruction layer.

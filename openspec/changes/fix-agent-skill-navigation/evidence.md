@@ -11,3 +11,7 @@
 Five previously unresolved named skill links were replaced with existing in-file guidance, actual CI instructions, or installed `systematic-debugging`. The test intentionally validates actionable backtick-quoted references in `run-tests` only; this does **not** assert that every skill in the entire repository is free of indirect references or that AGENT-03 broad deduplication is needed.
 
 Independent review and explicit merge remain open. Final-head documentation-only CI must be observed before merge; updating this file does not replace that check.
+
+## Subsequent command-mode review finding
+
+The review identified a second concrete conflict: the skill prohibited positional paths and `--` for *all* .NET SDK 10 calls, despite WhatToCook using VSTest command mode on SDK 10. Corrected the distinction between VSTest, VSTest-to-MTP bridge, and native MTP (including the optional native `--` separator) against [Microsoft's testing guide](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test). Added a focused source-contract regression check; **final-head CI for this subsequent correction is pending**.

@@ -92,7 +92,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | DOC-06 | OPEN / CONDITIONAL | Ongoing practice: docs updated with behavior changes |
 | AGENT-01 | **PARTIAL** | [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Manual instructions now prioritize live source/freshness over older generated Repowise section; each task must still verify its live index status |
 | AGENT-02 | OPEN / CONDITIONAL | Ongoing practice: right-size agent review and evidence |
-| AGENT-03 | **IN REVIEW** | Found and repaired dead navigation from `run-tests` to five uninstalled skills; added CI contract check for future named skill references. This is a narrow concrete defect, not evidence for broad instruction consolidation; final-head CI outstanding |
+| AGENT-03 | **IN REVIEW** | Found and repaired dead navigation to five uninstalled skills **and** SDK10 VSTest/native-MTP command-mode contradiction; added CI contract checks. This is a narrow concrete defect, not evidence for broad instruction consolidation; final-head CI outstanding |
 | AGENT-04 | **PARTIAL** | [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Machine-specific Windows path removed and CI contract test passed; real MCP client smoke from second checkout/WSL still required |
 | AGENT-05 | **DONE · CI** | [#8](https://github.com/Kyziur/WhatToCook/pull/8), [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Aligned agent/OpenSpec product assumptions and corrected stale MAUI implementation example |
 | AGENT-06 | OPEN / CONDITIONAL | Optional: harness commands treated as adapters |
