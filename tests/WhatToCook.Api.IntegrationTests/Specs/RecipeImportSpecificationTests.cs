@@ -12,6 +12,39 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
         PropertyNameCaseInsensitive = true,
     };
 
+    [Theory]
+    [InlineData("timeout")]
+    [InlineData("http_status")]
+    [InlineData("transport")]
+    [InlineData("unexpected")]
+    public async Task CreateImport_WhenFetchFails_ShouldReturnSafeFailure(string failureKind)
+    {
+        using var client = factory.CreateClient();
+        var secret = Guid.NewGuid().ToString("N");
+        var url = $"https://aniagotuje.pl/przepis/import-failure?token={secret}";
+        factory.ImportFailuresByUrl[url] = failureKind switch
+        {
+            "timeout" => new OperationCanceledException($"Private token: {secret}"),
+            "http_status" => new HttpRequestException(
+                $"Private token: {secret}",
+                null,
+                HttpStatusCode.Forbidden
+            ),
+            "transport" => new HttpRequestException($"Private token: {secret}"),
+            _ => new InvalidOperationException($"Private token: {secret}"),
+        };
+
+        using var response = await client.PostAsJsonAsync(
+            "/api/recipe-imports/url",
+            new RecipeApiContracts.CreateRecipeImportFromUrlPayload { Url = url }
+        );
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain(secret, body, StringComparison.Ordinal);
+        Assert.Contains("could not be fetched or read", body, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public async Task CreateImportDraftFromSupportedRecipePage_ShouldPersistDraft()
     {

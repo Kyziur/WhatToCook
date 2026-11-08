@@ -20,7 +20,7 @@ public sealed class HttpRecipeImportPageFetcher(
     {
         if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
         {
-            throw new InvalidOperationException("Only HTTP(S) imports are supported.");
+            throw new RecipeImportFetchException(RecipeImportFetchFailure.UnsupportedScheme);
         }
 
         if (!IsDevelopmentFixture(uri))
@@ -47,7 +47,7 @@ public sealed class HttpRecipeImportPageFetcher(
             )
         )
         {
-            throw new InvalidOperationException("The imported response is too large or not HTML.");
+            throw new RecipeImportFetchException(RecipeImportFetchFailure.InvalidResponse);
         }
 
         await using var stream = await response.Content.ReadAsStreamAsync(timeout.Token);
@@ -65,7 +65,7 @@ public sealed class HttpRecipeImportPageFetcher(
             bytesRead += Encoding.UTF8.GetByteCount(buffer, 0, read);
             if (bytesRead > MaxResponseBytes)
             {
-                throw new InvalidOperationException("The imported response is too large.");
+                throw new RecipeImportFetchException(RecipeImportFetchFailure.InvalidResponse);
             }
 
             builder.Append(buffer, 0, read);
@@ -93,7 +93,7 @@ public sealed class HttpRecipeImportPageFetcher(
         var addresses = await Dns.GetHostAddressesAsync(host, cancellationToken);
         if (addresses.Length == 0)
         {
-            throw new InvalidOperationException("The import host could not be resolved.");
+            throw new RecipeImportFetchException(RecipeImportFetchFailure.DnsResolution);
         }
 
         foreach (var resolvedAddress in addresses)
@@ -120,7 +120,20 @@ public sealed class HttpRecipeImportPageFetcher(
                 && (address.IsIPv6LinkLocal || address.IsIPv6SiteLocal || address.IsIPv6UniqueLocal)
         )
         {
-            throw new InvalidOperationException("Private and local import hosts are not allowed.");
+            throw new RecipeImportFetchException(RecipeImportFetchFailure.BlockedDestination);
         }
     }
+}
+
+internal enum RecipeImportFetchFailure
+{
+    UnsupportedScheme,
+    BlockedDestination,
+    DnsResolution,
+    InvalidResponse,
+}
+
+internal sealed class RecipeImportFetchException(RecipeImportFetchFailure reason) : Exception
+{
+    public RecipeImportFetchFailure Reason { get; } = reason;
 }

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Net.Sockets;
 using Microsoft.EntityFrameworkCore;
 using WhatToCook.Api.Domain.Recipes;
 using WhatToCook.Api.Features.Recipes.Shared;
@@ -35,7 +37,8 @@ public sealed class RecipeImportService(
     AppDbContext dbContext,
     IRecipeImportPageFetcher pageFetcher,
     IRecipeImportSourceAdapterResolver sourceAdapterResolver,
-    IRecipeWriteService recipeWriteService
+    IRecipeWriteService recipeWriteService,
+    ILogger<RecipeImportService> logger
 ) : IRecipeImportService
 {
     public async Task<RecipeImportCreateResult> CreateFromUrlAsync(
@@ -67,13 +70,20 @@ public sealed class RecipeImportService(
             );
         }
 
+        var startedAt = Stopwatch.GetTimestamp();
         string html;
         try
         {
             html = await pageFetcher.FetchAsync(uri, cancellationToken);
         }
-        catch
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            // A caller-aborted request is not a failed import and must remain cancelable.
+            throw;
+        }
+        catch (Exception exception)
+        {
+            LogImportFailure(ClassifyFetchFailure(exception), adapter.Key, startedAt);
             return RecipeImportCreateResult.UnsupportedSource(
                 "The recipe page could not be fetched or read."
             );
@@ -82,6 +92,7 @@ public sealed class RecipeImportService(
         var extraction = adapter.Extract(uri, html);
         if (!extraction.IsSuccess || extraction.Draft is null)
         {
+            LogImportFailure("extraction_failed", adapter.Key, startedAt);
             return RecipeImportCreateResult.UnsupportedSource(
                 extraction.ErrorMessage ?? "The recipe page could not be extracted into a draft."
             );
@@ -169,6 +180,33 @@ public sealed class RecipeImportService(
 
         return RecipeImportCreateResult.Success(MapDraft(draft));
     }
+
+    private void LogImportFailure(string category, string adapter, long startedAt)
+    {
+        logger.LogWarning(
+            "Recipe import failed. Category={Category} Adapter={Adapter} DurationMs={DurationMs}",
+            category,
+            adapter,
+            Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds
+        );
+    }
+
+    private static string ClassifyFetchFailure(Exception failure) =>
+        failure switch
+        {
+            RecipeImportFetchException { Reason: RecipeImportFetchFailure.BlockedDestination } =>
+                "blocked_destination",
+            RecipeImportFetchException { Reason: RecipeImportFetchFailure.InvalidResponse } =>
+                "invalid_response",
+            RecipeImportFetchException { Reason: RecipeImportFetchFailure.DnsResolution } =>
+                "dns_resolution",
+            RecipeImportFetchException => "request_rejected",
+            OperationCanceledException => "timeout",
+            HttpRequestException { StatusCode: not null } => "http_status",
+            HttpRequestException => "http_transport",
+            SocketException => "dns_resolution",
+            _ => "unexpected",
+        };
 
     public async Task<RecipeImportDraftResponse?> GetDraftAsync(
         Guid draftId,
