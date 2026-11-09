@@ -16,7 +16,7 @@ The audit contains 69 original finding IDs. Their assessments, including optiona
 
 Each chapter identifies a recommended action, evidence or the limit of available evidence, and a verification approach. Optional items include the condition under which the work is worthwhile; an unmeasured cost or an unverified exposure is not recorded as a production incident.
 
-## Implementation tracker (updated 2026-11-08)
+## Implementation tracker (updated 2026-11-09)
 
 This is the **live implementation tracker** for the 69 original findings. It is separate from the historical 2026-11-02 static audit and 2026-11-06 assessment.
 
@@ -25,7 +25,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 - **IN REVIEW** means an unmerged PR exists; CI or actual host verification remains outstanding.
 - **OPEN / CONDITIONAL** means no verified closure; optional work should not be implemented without its stated trigger.
 
-**Current count:** 27 DONE · CI, 8 PARTIAL, 34 open/conditional. The original audit's 69 findings remain unchanged.
+**Current count:** 27 DONE · CI, 8 PARTIAL, 1 IN REVIEW, 33 open/conditional. The original audit's 69 findings remain unchanged.
 
 | Finding | Status | Merged evidence or outstanding work |
 | --- | --- | --- |
@@ -79,7 +79,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | PERF-05 | **DONE · CI** | [#34](https://github.com/Kyziur/WhatToCook/pull/34) — Development-only Blazor circuit/render metrics and 5/20-tab diagnostics merged, final-head [CI 42506756813](https://github.com/Kyziur/WhatToCook/actions/runs/42506756813) green. Single-run server render p95 51.66/77.16 ms on shared runner; no production p95 or demonstrated need for UI refactor. Optional host repeats remain |
 | PERF-06 | **PARTIAL · CI** | [#41](https://github.com/Kyziur/WhatToCook/pull/41) — Web proxy now forwards conditional validators and preserves 304/ETag/Last-Modified with private revalidation; final-head [CI 42527840882](https://github.com/Kyziur/WhatToCook/actions/runs/42527840882) green (122 API, 56 component, 98 browser; ARM64 passed). Image variants remain **conditional on representative photo and network-transfer measurements**, not assumed necessary |
 | PERF-07 | **DONE · CI** | [#30](https://github.com/Kyziur/WhatToCook/pull/30) — Endpoint now uses `AsSplitQuery()` after repeated synthetic PostgreSQL 100×100×2 stress measurements; HTTP completeness and full CI passed ([run](https://github.com/Kyziur/WhatToCook/actions/runs/42481352433)). Production p95 remains unmeasured |
-| ARC-01 | OPEN / CONDITIONAL | Conditional: split complex page only when changing affected flow |
+| ARC-01 | **IN REVIEW** | Narrow editor save-flow correctness fix: preserve the created recipe ID across failed photo upload/retry; no speculative page-wide refactor. CI and review pending |
 | ARC-02 | **DONE · CI** | [#35](https://github.com/Kyziur/WhatToCook/pull/35) — Pure shopping aggregation and shared numeric semantics extracted, DB-free tests added; final-head [CI 42508132586](https://github.com/Kyziur/WhatToCook/actions/runs/42508132586) green (120 API, 53 component, 98 browser). Transactions and checklist reconciliation remain unchanged |
 | ARC-03 | **PARTIAL · CI** | [#42](https://github.com/Kyziur/WhatToCook/pull/42) — Fixed archived-recipe row-ID reuse bug with pure rule (same entry ID, recipe ID and date); DB-free + PostgreSQL HTTP regressions for keep/move/swap. Final-head [CI 42528747845](https://github.com/Kyziur/WhatToCook/actions/runs/42528747845) green (125 API, 56 component, 98 browser; ARM64 passed). Broader use-case extraction remains optional unless a concrete boundary benefit emerges |
 | ARC-04 | **PARTIAL** | [#29](https://github.com/Kyziur/WhatToCook/pull/29) — Current trusted-LAN/Web/API/DB and identity ownership decision documented; actual homelab access matrix and pre-exposure user authorization decision still required |

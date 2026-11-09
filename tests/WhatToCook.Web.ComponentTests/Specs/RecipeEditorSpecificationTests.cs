@@ -1,6 +1,7 @@
 using AngleSharp.Dom;
 using Bunit;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using WhatToCook.Web.Components.Features.Recipes.Editor.Pages;
 using WhatToCook.Web.Components.Features.Recipes.Editor.Services;
@@ -147,10 +148,58 @@ public sealed class RecipeEditorSpecificationTests
         Assert.Equal("alert", cut.Find("[role='alert']").GetAttribute("role"));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CreateRecipe_WhenPhotoUploadFails_ShouldRetryWithoutCreatingDuplicate(bool throwOnUpload)
+    {
+        using var context = new BunitContext();
+        context.JSInterop.Mode = JSRuntimeMode.Loose;
+        var editorService = new FakeRecipeEditorService
+        {
+            UploadResult = RecipePhotoUploadResult.Failure("Nie udało się wysłać zdjęcia."),
+            ThrowOnUpload = throwOnUpload,
+        };
+        context.Services.AddSingleton<IRecipeEditorService>(editorService);
+
+        var cut = context.Render<RecipeEditorPage>();
+        cut.Find("#recipe-title").Change("Pomidorowa ze zdjęciem");
+        cut.Find("input[placeholder='np. pomidor']").Input("Pomidor");
+        cut.Find("textarea").Change("Pokrój pomidor");
+        cut.FindComponent<InputFile>()
+            .UploadFiles(InputFileContent.CreateFromBinary([1, 2, 3], "photo.png", contentType: "image/png"));
+
+        SubmitEditor(cut);
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Single(editorService.SavedRecipeIds);
+            Assert.Null(editorService.SavedRecipeIds[0]);
+            Assert.Contains("Nie udało się", cut.Markup);
+        });
+
+        editorService.UploadResult = RecipePhotoUploadResult.Success("images/fake.jpg");
+        editorService.ThrowOnUpload = false;
+        SubmitEditor(cut);
+
+        cut.WaitForAssertion(() => Assert.Equal(2, editorService.SavedRecipeIds.Count));
+        Assert.Equal(
+            Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            editorService.SavedRecipeIds[1]
+        );
+        Assert.Contains(
+            "/recipes/11111111-1111-1111-1111-111111111111",
+            context.Services.GetRequiredService<NavigationManager>().Uri
+        );
+    }
+
     private sealed class FakeRecipeEditorService : IRecipeEditorService
     {
         public RecipeSaveRequest? LastRequest { get; private set; }
         public RecipeSaveResult? SaveResult { get; set; }
+        public RecipePhotoUploadResult? UploadResult { get; set; }
+        public bool ThrowOnUpload { get; set; }
+        public List<Guid?> SavedRecipeIds { get; } = [];
 
         public Task<RecipeEditorDraft?> GetByIdAsync(
             Guid recipeId,
@@ -167,6 +216,7 @@ public sealed class RecipeEditorSpecificationTests
         )
         {
             LastRequest = request;
+            SavedRecipeIds.Add(recipeId);
             return Task.FromResult(
                 SaveResult
                     ?? RecipeSaveResult.Success(Guid.Parse("11111111-1111-1111-1111-111111111111"))
@@ -181,7 +231,12 @@ public sealed class RecipeEditorSpecificationTests
             CancellationToken cancellationToken = default
         )
         {
-            return Task.FromResult(RecipePhotoUploadResult.Success("images/fake.jpg"));
+            if (ThrowOnUpload)
+            {
+                throw new IOException("Photo stream unavailable");
+            }
+
+            return Task.FromResult(UploadResult ?? RecipePhotoUploadResult.Success("images/fake.jpg"));
         }
 
         public Task<IReadOnlyList<string>> GetIngredientSuggestionsAsync(

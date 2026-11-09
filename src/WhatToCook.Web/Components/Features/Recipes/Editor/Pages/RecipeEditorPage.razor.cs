@@ -51,6 +51,9 @@ public partial class RecipeEditorPage : IAsyncDisposable
     private bool HasAttemptedSubmit { get; set; }
     private bool FocusFeedbackAfterRender { get; set; }
     private Guid? LoadedRecipeId { get; set; }
+    // A new recipe may be persisted even when its subsequent photo upload fails.
+    // Keep its identity so a retry updates that recipe instead of creating a duplicate.
+    private Guid? PersistedNewRecipeId { get; set; }
     private List<string> ServerValidationErrors { get; } = [];
     private IBrowserFile? SelectedPhoto { get; set; }
     private InputFile? PhotoInput { get; set; }
@@ -133,6 +136,7 @@ public partial class RecipeEditorPage : IAsyncDisposable
             return;
         }
 
+        PersistedNewRecipeId = null;
         IsLoading = true;
         FeedbackMessage = string.Empty;
         FeedbackIsError = false;
@@ -254,7 +258,7 @@ public partial class RecipeEditorPage : IAsyncDisposable
             );
 
             var saveResult = await RecipeEditorService.SaveAsync(
-                RecipeId,
+                RecipeId ?? PersistedNewRecipeId,
                 request,
                 lifetimeCts.Token
             );
@@ -274,6 +278,11 @@ public partial class RecipeEditorPage : IAsyncDisposable
                     await ValidationSummaryElement.FocusAsync();
                 }
                 return;
+            }
+
+            if (!RecipeId.HasValue)
+            {
+                PersistedNewRecipeId = saveResult.RecipeId.Value;
             }
 
             if (SelectedPhoto is not null)
@@ -328,7 +337,10 @@ public partial class RecipeEditorPage : IAsyncDisposable
         catch
         {
             IsSaving = false;
-            FeedbackMessage = "Nie udało się zapisać przepisu. Spróbuj ponownie za chwilę.";
+            FeedbackMessage =
+                PersistedNewRecipeId.HasValue && SelectedPhoto is not null
+                    ? "Przepis zapisany. Nie udało się przesłać zdjęcia; ponów zapis, aby spróbować ponownie."
+                    : "Nie udało się zapisać przepisu. Spróbuj ponownie za chwilę.";
             FeedbackIsError = true;
         }
     }
