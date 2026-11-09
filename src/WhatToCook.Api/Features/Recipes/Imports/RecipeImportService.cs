@@ -58,7 +58,8 @@ public sealed class RecipeImportService(
         if (RecipeImportDraftLimits.ExceedsMaxSourceUrlLength(sourceUrl))
         {
             return RecipeImportCreateResult.ValidationFailure(
-                "Recipe URL must be at most 2000 characters."
+                "Recipe URL must be at most 2000 characters.",
+                "invalid_url"
             );
         }
 
@@ -66,7 +67,8 @@ public sealed class RecipeImportService(
         if (adapter is null)
         {
             return RecipeImportCreateResult.UnsupportedSource(
-                "This recipe source is not supported yet."
+                "This recipe source is not supported yet.",
+                "unsupported_source"
             );
         }
 
@@ -83,9 +85,11 @@ public sealed class RecipeImportService(
         }
         catch (Exception exception)
         {
-            LogImportFailure(ClassifyFetchFailure(exception), adapter.Key, startedAt);
+            var failureCategory = ClassifyFetchFailure(exception);
+            LogImportFailure(failureCategory, adapter.Key, startedAt);
             return RecipeImportCreateResult.UnsupportedSource(
-                "The recipe page could not be fetched or read."
+                "The recipe page could not be fetched or read.",
+                failureCategory
             );
         }
 
@@ -94,7 +98,8 @@ public sealed class RecipeImportService(
         {
             LogImportFailure("extraction_failed", adapter.Key, startedAt);
             return RecipeImportCreateResult.UnsupportedSource(
-                extraction.ErrorMessage ?? "The recipe page could not be extracted into a draft."
+                extraction.ErrorMessage ?? "The recipe page could not be extracted into a draft.",
+                "extraction_failed"
             );
         }
 
@@ -109,7 +114,7 @@ public sealed class RecipeImportService(
         );
         if (validation is not null)
         {
-            return RecipeImportCreateResult.ValidationFailure(validation);
+            return RecipeImportCreateResult.ValidationFailure(validation, "invalid_draft");
         }
 
         var draft = new RecipeImportDraft
