@@ -4,6 +4,7 @@
 The editor handles both /recipes/new and /recipes/{id}/edit, but the create route returns without resetting a previously loaded edit. Selected photos may also persist when switching between edited recipes on the same component instance.
 
 ## Changes
+- Account for Blazor preserving an omitted RecipeId by recognizing the new-recipe route URL.
 - On edit -> new navigation, reset the model, EditContext, errors, form status and photo state to a clean new recipe.
 - On successful edit -> edit navigation, discard any pending photo from the previous recipe before applying the next draft.
 - Disable the stale edit form when the requested recipe failed to load, to prevent saving previous content under another ID.

@@ -118,6 +118,13 @@ public partial class RecipeEditorPage : IAsyncDisposable
 
     protected override async Task OnParametersSetAsync()
     {
+        // Blazor can retain a parameter omitted when this page is reused for another route.
+        var routePath = new Uri(NavigationManager.Uri).AbsolutePath.TrimEnd('/');
+        if (routePath.EndsWith("/recipes/new", StringComparison.OrdinalIgnoreCase))
+        {
+            RecipeId = null;
+        }
+
         if (!RecipeId.HasValue)
         {
             if (LoadedRecipeId.HasValue)

@@ -16,3 +16,7 @@ The editor SHALL reset the form to defaults when switching from an existing reci
 #### Scenario: Target recipe cannot be loaded
 - **WHEN** loading a different recipe ID fails or the recipe is missing
 - **THEN** the previous recipe cannot be saved as the requested target recipe
+
+#### Scenario: Router omits the recipe ID on the new route
+- **WHEN** the same editor component navigates from edit to the new-recipe URL without a RecipeId parameter
+- **THEN** the previous ID is discarded and the form starts with defaults

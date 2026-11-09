@@ -305,6 +305,27 @@ public sealed class RecipeEditorSpecificationTests
         Assert.Empty(editorService.SavedRecipeIds);
     }
 
+    [Fact]
+    public void Editor_WhenNewRouteOmitsRecipeId_ShouldClearPreviousEdit()
+    {
+        using var context = new BunitContext();
+        var existingId = Guid.NewGuid();
+        var editorService = new FakeRecipeEditorService();
+        editorService.Drafts[existingId] = CreateDraft(existingId, "Poprzedni przepis");
+        context.Services.AddSingleton<IRecipeEditorService>(editorService);
+
+        var cut = context.Render<RecipeEditorPage>(parameters =>
+            parameters.Add(x => x.RecipeId, existingId)
+        );
+        Assert.Contains("Poprzedni przepis", cut.Markup);
+
+        context.Services.GetRequiredService<NavigationManager>().NavigateTo("/recipes/new");
+        cut.Render(parameters => parameters.Add(x => x.ReturnUrl, "/"));
+
+        Assert.DoesNotContain("Poprzedni przepis", cut.Markup);
+        Assert.Equal(string.Empty, cut.Find("#recipe-title").GetAttribute("value"));
+    }
+
     private static RecipeEditorDraft CreateDraft(Guid id, string title) =>
         new(
             id,
