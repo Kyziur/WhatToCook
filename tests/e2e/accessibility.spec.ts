@@ -33,7 +33,7 @@ test("@a11y library: search is keyboard-reachable and labelled", async ({ page }
   await expect(search).toBeVisible();
   await search.focus();
   await expect(search).toBeFocused();
-  await page.keyboard.type("pomidor");
+  await search.pressSequentially("pomidor", { delay: 120 });
   await expect(search).toHaveValue("pomidor");
 });
 
