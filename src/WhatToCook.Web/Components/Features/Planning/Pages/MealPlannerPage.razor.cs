@@ -131,8 +131,9 @@ public partial class MealPlannerPage : IDisposable
         }
 
         IsSelectingPlan = true;
+        var previousPlanId = SelectedPlanId;
+        var selectionCompleted = false;
         SelectedPlanId = planId;
-        CurrentPlan = null;
         try
         {
             var plan = await MealPlanService.GetPlanAsync(planId, lifetimeCts.Token);
@@ -151,6 +152,7 @@ public partial class MealPlannerPage : IDisposable
             IsDirty = false;
             IsRegenerationConfirmationOpen = false;
             await LoadEmbeddedShoppingListAsync(planId);
+            selectionCompleted = true;
         }
         catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
         catch
@@ -159,6 +161,11 @@ public partial class MealPlannerPage : IDisposable
         }
         finally
         {
+            if (!selectionCompleted)
+            {
+                SelectedPlanId = previousPlanId;
+            }
+
             IsSelectingPlan = false;
         }
     }
@@ -336,21 +343,6 @@ public partial class MealPlannerPage : IDisposable
         }
     }
 
-    private void SelectToday()
-    {
-        if (CurrentPlan is null)
-        {
-            return;
-        }
-
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        SelectedDay =
-            today >= CurrentPlan.DateFrom && today <= CurrentPlan.DateTo
-                ? today
-                : CurrentPlan.DateFrom;
-        ActiveMealActionEntryId = null;
-    }
-
     private string FormatVisibleWeekRange()
     {
         var days = GetVisibleDays();
@@ -434,9 +426,6 @@ public partial class MealPlannerPage : IDisposable
         selectedRecipePerDay[day.ToString("yyyy-MM-dd")] = value ?? string.Empty;
     }
 
-    private bool CanAddSelectedRecipeForDay(DateOnly day) =>
-        Guid.TryParse(GetDaySelection(day), out _);
-
     private string GetDayRecipeSearchTerm(DateOnly day) =>
         dayRecipeSearchTerms.TryGetValue(day.ToString("yyyy-MM-dd"), out var value)
             ? value
@@ -519,66 +508,6 @@ public partial class MealPlannerPage : IDisposable
         ActiveMealActionEntryId = null;
     }
 
-    private void MoveEntryUp(DateOnly day, Guid rowId)
-    {
-        if (CurrentPlan is null)
-        {
-            return;
-        }
-
-        var slot = MealSlotOrdering.GetSlot(
-            CurrentPlan.Entries.Single(x => x.RowId == rowId).SortOrder
-        );
-        var entries = CurrentPlan
-            .Entries.Where(x =>
-                x.PlannedDate == day && MealSlotOrdering.GetSlot(x.SortOrder) == slot
-            )
-            .OrderBy(x => x.SortOrder)
-            .ToList();
-        var index = entries.FindIndex(x => x.RowId == rowId);
-        if (index <= 0)
-        {
-            return;
-        }
-
-        (entries[index - 1].SortOrder, entries[index].SortOrder) = (
-            entries[index].SortOrder,
-            entries[index - 1].SortOrder
-        );
-        NormalizeSortOrderForDay(day);
-        MarkDirty();
-    }
-
-    private void MoveEntryDown(DateOnly day, Guid rowId)
-    {
-        if (CurrentPlan is null)
-        {
-            return;
-        }
-
-        var slot = MealSlotOrdering.GetSlot(
-            CurrentPlan.Entries.Single(x => x.RowId == rowId).SortOrder
-        );
-        var entries = CurrentPlan
-            .Entries.Where(x =>
-                x.PlannedDate == day && MealSlotOrdering.GetSlot(x.SortOrder) == slot
-            )
-            .OrderBy(x => x.SortOrder)
-            .ToList();
-        var index = entries.FindIndex(x => x.RowId == rowId);
-        if (index < 0 || index >= entries.Count - 1)
-        {
-            return;
-        }
-
-        (entries[index + 1].SortOrder, entries[index].SortOrder) = (
-            entries[index].SortOrder,
-            entries[index + 1].SortOrder
-        );
-        NormalizeSortOrderForDay(day);
-        MarkDirty();
-    }
-
     private void NormalizeSortOrderForDay(DateOnly day)
     {
         if (CurrentPlan is null)
@@ -599,35 +528,6 @@ public partial class MealPlannerPage : IDisposable
                 ordered[index].SortOrder = MealSlotOrdering.Encode(slot.Slot, index);
             }
         }
-    }
-
-    private void UpdateMultiplier(Guid rowId, string? rawValue)
-    {
-        if (CurrentPlan is null)
-        {
-            return;
-        }
-
-        var entry = CurrentPlan.Entries.SingleOrDefault(x => x.RowId == rowId);
-        if (entry is null)
-        {
-            return;
-        }
-
-        if (
-            !decimal.TryParse(
-                rawValue,
-                NumberStyles.Number,
-                CultureInfo.InvariantCulture,
-                out var parsed
-            )
-        )
-        {
-            return;
-        }
-
-        entry.Multiplier = parsed;
-        MarkDirty();
     }
 
     private bool IsMealActionMenuOpen(Guid rowId) => ActiveMealActionEntryId == rowId;
@@ -772,45 +672,6 @@ public partial class MealPlannerPage : IDisposable
         }
     }
 
-    private async Task MarkShoppingGeneratedAsync()
-    {
-        if (SelectedPlanId is null || IsBusy)
-        {
-            return;
-        }
-
-        CurrentOperation = PlannerOperation.GeneratingShopping;
-        try
-        {
-            var marked = await MealPlanService.MarkShoppingGeneratedAsync(
-                SelectedPlanId.Value,
-                lifetimeCts.Token
-            );
-            if (!marked)
-            {
-                ShowToast("Nie udało się wygenerować listy zakupów dla tego planu.", isError: true);
-                return;
-            }
-
-            if (CurrentPlan is not null)
-            {
-                CurrentPlan.HasGeneratedShoppingList = true;
-            }
-
-            ShowToast("Lista zakupów została wygenerowana.", isError: false);
-            await LoadEmbeddedShoppingListAsync(SelectedPlanId.Value);
-        }
-        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
-        catch
-        {
-            ShowToast("Nie udało się wygenerować listy zakupów dla tego planu.", isError: true);
-        }
-        finally
-        {
-            CurrentOperation = PlannerOperation.None;
-        }
-    }
-
     private void MarkDirty()
     {
         IsDirty = true;
@@ -834,7 +695,7 @@ public partial class MealPlannerPage : IDisposable
 
     private async Task ToggleEmbeddedShoppingItemAsync(ShoppingListItem item)
     {
-        if (SelectedPlanId is null || IsBusy || ShoppingListService is null)
+        if (SelectedPlanId is null || IsBusy)
         {
             return;
         }
@@ -906,34 +767,16 @@ public partial class MealPlannerPage : IDisposable
             _ => day.DayOfWeek.ToString(),
         };
 
-    private string GetDayEntryCountLabel(DateOnly day)
-    {
-        var count = CurrentPlan?.Entries.Count(x => x.PlannedDate == day) ?? 0;
-        return count switch
-        {
-            0 => "bez przepisów",
-            1 => "1 przepis",
-            _ => $"{count} przepisy",
-        };
-    }
-
     private static DateOnly ParseDate(string? value, DateOnly fallback) =>
         DateOnly.TryParse(value, out var parsed) ? parsed : fallback;
 
     private static string ToDateInput(DateOnly value) => value.ToString("yyyy-MM-dd");
 
-    private static string GetDayRecipeSelectId(DateOnly day) => $"day-recipe-{day:yyyyMMdd}";
-
     private static string GetDayRecipeSearchInputId(DateOnly day) =>
         $"day-recipe-search-{day:yyyyMMdd}";
 
-    private static string GetDayAddRecipeButtonId(DateOnly day) => $"day-add-recipe-{day:yyyyMMdd}";
-
     private string GetShoppingLinkForCurrentPlan() =>
         SelectedPlanId.HasValue ? $"/shopping?planId={SelectedPlanId.Value}" : "/shopping";
-
-    private static string GetPlanChipLabel(MealPlanSummary plan) =>
-        $"{plan.Name} ({FormatPlanDateRange(plan.DateFrom, plan.DateTo)})";
 
     private static string FormatPlanDateRange(DateOnly from, DateOnly to)
     {
@@ -989,7 +832,6 @@ public partial class MealPlannerPage : IDisposable
         None,
         Creating,
         Saving,
-        GeneratingShopping,
     }
 
     private sealed class EditablePlan
