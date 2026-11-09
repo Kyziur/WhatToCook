@@ -922,17 +922,12 @@ public partial class MealPlannerPage : IDisposable
 
     private static string ToDateInput(DateOnly value) => value.ToString("yyyy-MM-dd");
 
-    private static string FormatMultiplier(decimal value) =>
-        value.ToString("0.###", CultureInfo.InvariantCulture);
-
     private static string GetDayRecipeSelectId(DateOnly day) => $"day-recipe-{day:yyyyMMdd}";
 
     private static string GetDayRecipeSearchInputId(DateOnly day) =>
         $"day-recipe-search-{day:yyyyMMdd}";
 
     private static string GetDayAddRecipeButtonId(DateOnly day) => $"day-add-recipe-{day:yyyyMMdd}";
-
-    private static string GetEntryMultiplierInputId(Guid rowId) => $"entry-multiplier-{rowId:N}";
 
     private string GetShoppingLinkForCurrentPlan() =>
         SelectedPlanId.HasValue ? $"/shopping?planId={SelectedPlanId.Value}" : "/shopping";
