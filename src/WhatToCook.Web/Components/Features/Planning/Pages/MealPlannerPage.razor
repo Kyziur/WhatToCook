@@ -185,7 +185,6 @@
                                     <PlannerMealCard @key="entry.RowId"
                                                          Title="@entry.RecipeTitle"
                                                          Multiplier="@entry.Multiplier"
-                                                         PhotoPath="@(GetRecipeForEntry(entry)?.MainPhotoPath)"
                                                          Compact="true"
                                                          ActionsOpen="@IsMealActionMenuOpen(entry.RowId)"
                                                          Disabled="@(IsBusy || !IsInteractive)"
