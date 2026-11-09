@@ -3,7 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { parseProbeArgs, summarizeImageCapture } from "./image-transfer-metrics.mjs";
 
-async function capture(page, url, settleMs, reload) {
+async function capture(page, url, settleMs, loadTimeoutMs, reload) {
   if (reload) {
     await page.reload({ waitUntil: "domcontentloaded", timeout: 30000 });
   } else {
@@ -13,7 +13,7 @@ async function capture(page, url, settleMs, reload) {
   // The report requires real photos in the loaded library, not a seeded placeholder.
   await page.locator(".recipe-card img[src*='/recipe-images/']").first().waitFor({
     state: "attached",
-    timeout: 15000,
+    timeout: loadTimeoutMs,
   });
   await page.waitForFunction(
     () =>
@@ -21,7 +21,7 @@ async function capture(page, url, settleMs, reload) {
         (image) => image.complete && image.naturalWidth > 0
       ),
     null,
-    { timeout: 15000 }
+    { timeout: loadTimeoutMs }
   );
   await page.waitForTimeout(settleMs);
 
@@ -82,8 +82,8 @@ async function main() {
     });
 
     // A new, isolated browser context starts with an empty cache.
-    const firstVisit = await capture(page, options.url, options.settleMs, false);
-    const repeatVisit = await capture(page, options.url, options.settleMs, true);
+    const firstVisit = await capture(page, options.url, options.settleMs, options.loadTimeoutMs, false);
+    const repeatVisit = await capture(page, options.url, options.settleMs, options.loadTimeoutMs, true);
     const report = {
       probe: "PERF-06",
       mode: options.mobile ? "mobile-viewport" : "desktop-viewport",

@@ -71,6 +71,9 @@ jobs:
         run: npm ci && npx playwright install --with-deps chromium
         shell: bash
 
+      - name: Verify PERF-06 probe against an isolated browser image fixture
+        run: node --test tests/ci/image-transfer-browser.test.mjs
+
       - name: Profile Blazor circuits under 5/20 tabs (non-gating timings)
         run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts --project=desktop-chromium --grep "@perf05"
         shell: bash
