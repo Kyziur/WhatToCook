@@ -10,12 +10,14 @@ public sealed class PlannerMealCardSpecificationTests
     public void CompactCard_ShouldKeepTitleAndMultiplierWithoutPhoto()
     {
         using var context = new BunitContext();
-        var cut = context.Render<PlannerMealCard>(parameters => parameters
-            .Add(x => x.Title, "Zupa pomidorowa")
-            .Add(x => x.Multiplier, 1.5m)
-            .Add(x => x.PhotoPath, "test.jpg")
-            .Add(x => x.Compact, true)
-            .Add(x => x.Disabled, true));
+        var cut = context.Render<PlannerMealCard>(parameters =>
+            parameters
+                .Add(x => x.Title, "Zupa pomidorowa")
+                .Add(x => x.Multiplier, 1.5m)
+                .Add(x => x.PhotoPath, "test.jpg")
+                .Add(x => x.Compact, true)
+                .Add(x => x.Disabled, true)
+        );
 
         Assert.Contains("Zupa pomidorowa", cut.Markup);
         Assert.Contains("1.5 × porcja", cut.Markup);
@@ -32,14 +34,16 @@ public sealed class PlannerMealCardSpecificationTests
         var increased = 0;
         var removed = 0;
 
-        var cut = context.Render<PlannerMealCard>(parameters => parameters
-            .Add(x => x.Title, "Makaron")
-            .Add(x => x.Multiplier, 2m)
-            .Add(x => x.ActionsOpen, true)
-            .Add(x => x.OnToggleActions, EventCallback.Factory.Create(this, () => toggled++))
-            .Add(x => x.OnDecrease, EventCallback.Factory.Create(this, () => decreased++))
-            .Add(x => x.OnIncrease, EventCallback.Factory.Create(this, () => increased++))
-            .Add(x => x.OnRemove, EventCallback.Factory.Create(this, () => removed++)));
+        var cut = context.Render<PlannerMealCard>(parameters =>
+            parameters
+                .Add(x => x.Title, "Makaron")
+                .Add(x => x.Multiplier, 2m)
+                .Add(x => x.ActionsOpen, true)
+                .Add(x => x.OnToggleActions, EventCallback.Factory.Create(this, () => toggled++))
+                .Add(x => x.OnDecrease, EventCallback.Factory.Create(this, () => decreased++))
+                .Add(x => x.OnIncrease, EventCallback.Factory.Create(this, () => increased++))
+                .Add(x => x.OnRemove, EventCallback.Factory.Create(this, () => removed++))
+        );
 
         Assert.Contains("planner-meal-card-expanded", cut.Markup);
         Assert.Equal("true", cut.Find(".planner-meal-menu-toggle").GetAttribute("aria-expanded"));
