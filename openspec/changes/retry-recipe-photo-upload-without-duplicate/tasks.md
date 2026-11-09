@@ -5,5 +5,5 @@
 - [x] Preserve pending photo and provide actionable feedback on upload exception.
 - [x] Add component regression scenarios for returned upload failure and thrown exception, plus existing no-photo success.
 - [x] Record scope in OpenSpec and mark ARC-01 as in review in the audit.
-- [ ] Run component and full CI checks; review and correct any failures.
-- [ ] Merge only after green checks, then update the tracker and evidence with final CI links.
+- [x] Run component and full CI checks; correct CSharpier failures and verify final [CI 42599607557](https://github.com/Kyziur/WhatToCook/actions/runs/42599607557).
+- [x] Merge [#44](https://github.com/Kyziur/WhatToCook/pull/44) after green CI; synchronize tracker and evidence in the follow-up documentation PR.
