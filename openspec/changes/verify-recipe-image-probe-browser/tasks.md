@@ -6,5 +6,6 @@
 - [x] Expose a bounded image-load timeout and cover parser validation.
 - [x] Run targeted browser probe in CI after Chromium is installed.
 - [x] Update performance usage documentation and OpenSpec traceability.
-- [ ] Review CI failures and adjust until the final PR head is green.
-- [ ] Merge only after successful CI; synchronize audit row with actual evidence.
+- [x] Review focused browser-test and full CI results; [final-head CI 42616962766](https://github.com/Kyziur/WhatToCook/actions/runs/42616962766) green.
+- [x] Merge [#48](https://github.com/Kyziur/WhatToCook/pull/48) after green CI and synchronize audit/evidence in this documentation follow-up.
+- [ ] Run real-photo baseline on the homelab before deciding whether to generate thumbnails (tracked under `measure-recipe-image-transfer`).
