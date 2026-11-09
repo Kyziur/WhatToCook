@@ -197,6 +197,37 @@ public sealed class RecipeEditorSpecificationTests
         );
     }
 
+    [Fact]
+    public void SaveRecipe_AfterApiFailure_ShouldAllowRetry()
+    {
+        using var context = new BunitContext();
+        var editorService = new FakeRecipeEditorService
+        {
+            SaveResult = RecipeSaveResult.Failure("Chwilowy błąd zapisu."),
+        };
+        context.Services.AddSingleton<IRecipeEditorService>(editorService);
+
+        var cut = context.Render<RecipeEditorPage>();
+        cut.Find("#recipe-title").Change("Krem z dyni");
+        cut.Find("input[placeholder='np. pomidor']").Input("Dynia");
+        cut.Find("textarea").Change("Ugotuj dynię");
+
+        SubmitEditor(cut);
+        Assert.Single(editorService.SavedRecipeIds);
+        Assert.Contains("Chwilowy błąd zapisu.", cut.Markup);
+        Assert.False(FindSaveButton(cut).HasAttribute("disabled"));
+
+        editorService.SaveResult = null;
+        SubmitEditor(cut);
+
+        Assert.Equal(2, editorService.SavedRecipeIds.Count);
+        Assert.All(editorService.SavedRecipeIds, recipeId => Assert.Null(recipeId));
+        Assert.Contains(
+            "/recipes/11111111-1111-1111-1111-111111111111",
+            context.Services.GetRequiredService<NavigationManager>().Uri
+        );
+    }
+
     private sealed class FakeRecipeEditorService : IRecipeEditorService
     {
         public RecipeSaveRequest? LastRequest { get; private set; }

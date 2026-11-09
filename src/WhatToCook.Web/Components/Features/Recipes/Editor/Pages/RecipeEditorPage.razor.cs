@@ -198,7 +198,6 @@ public partial class RecipeEditorPage : IAsyncDisposable
         {
             if (!EditContext.Validate())
             {
-                IsSaving = false;
                 await FocusFirstDataAnnotationErrorAsync();
                 return;
             }
@@ -217,7 +216,6 @@ public partial class RecipeEditorPage : IAsyncDisposable
                     ServerValidationErrors.Add("Dodaj co najmniej jeden krok.");
                 }
 
-                IsSaving = false;
                 await InvokeAsync(StateHasChanged);
                 await FocusFirstBusinessErrorAsync(hasIngredient, hasStep);
                 return;
@@ -252,7 +250,6 @@ public partial class RecipeEditorPage : IAsyncDisposable
 
             if (!saveResult.IsSuccess || saveResult.RecipeId is null)
             {
-                IsSaving = false;
                 FeedbackMessage = saveResult.ErrorMessage ?? "Nie udało się zapisać przepisu.";
                 FeedbackIsError = true;
                 ServerValidationErrors.AddRange(
@@ -287,7 +284,6 @@ public partial class RecipeEditorPage : IAsyncDisposable
 
                 if (!uploadResult.IsSuccess)
                 {
-                    IsSaving = false;
                     FeedbackMessage =
                         uploadResult.ErrorMessage
                         ?? "Przepis zapisany, ale zdjęcie nie zostało przesłane.";
@@ -301,7 +297,6 @@ public partial class RecipeEditorPage : IAsyncDisposable
                 CurrentPhotoPath = uploadResult.MainPhotoPath;
             }
 
-            IsSaving = false;
             IsDirty = false;
             HasAttemptedSubmit = false;
             FeedbackMessage = RecipeId.HasValue
@@ -319,19 +314,20 @@ public partial class RecipeEditorPage : IAsyncDisposable
         }
         catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested)
         {
-            IsSaving = false;
         }
         catch
         {
-            IsSaving = false;
             FeedbackMessage =
                 PersistedNewRecipeId.HasValue && SelectedPhoto is not null
                     ? "Przepis zapisany. Nie udało się przesłać zdjęcia; ponów zapis, aby spróbować ponownie."
                     : "Nie udało się zapisać przepisu. Spróbuj ponownie za chwilę.";
             FeedbackIsError = true;
         }
+        finally
+        {
+            IsSaving = false;
+        }
     }
-
     private void AddIngredient()
     {
         Model.Ingredients.Add(
