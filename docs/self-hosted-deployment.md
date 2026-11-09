@@ -2,9 +2,19 @@
 
 WhatToCook is an application service for the household local network. The homelab repository owns Bitwarden Secrets Manager (BWS), Komodo, Periphery, host-path preparation, shared Docker networks, routing, and backups. This repository owns the application images and the passive Compose contract in `deploy/docker-compose.yml`.
 
+## Future independent Komodo Resource Sync owner (M1.5)
+
+The **candidate** [`deploy/komodo.toml`](../deploy/komodo.toml) lets `Kyziur/WhatToCook` own exactly one Komodo Stack, `what-to-cook`. The homelab repository still owns Core/Periphery installation, BWS runtime, host paths, networks, backup inventory and manual deployment policy. The manifest is **not activated** by committing it or merging its PR.
+
+**Preserved identities:** Komodo Stack `what-to-cook`, Compose project `whattocook`, Docker volume expected to be `whattocook_postgres-data` (verify actual live name first), host data root `/srv/whattocook`, and Git run directory `deploy`. The draft references existing homelab-installed BWS and predeploy utilities; it does not contain their source or tokens.
+
+**Safe handoff:** Follow the [homelab ownership runbook](https://github.com/Kyziur/homelab/blob/gitops/platform-only-komodo-resource-sync/docs/runbooks/komodo-ownership-handoff.md). In an operator-approved backup/restore window, preview **both** legacy and candidate Sync diffs. Stop on any unexpected delete, project name change, new PostgreSQL volume or duplicate owner. Apply one owner at a time, with manual Stack deployment only after verifying live volume, backup and source revision. Never activate the new Sync while the old Sync manages the resource.
+
+Source-only CI checks identity, manual-only deployment and absence of secret values. It does not prove live Sync match_tags behavior, database restore, native Periphery secret interpolation or Pi readiness. M3 will replace the temporary wrapper only after independent runtime/security approval.
+
 ## Deployment variable contract
 
-The canonical production deployment is a homelab-managed Komodo Resource Sync Stack consuming this repository's `deploy/docker-compose.yml`. This repository MUST NOT contain BWS tokens or project IDs, a `bws run` invocation, a Komodo hook, a host-preparation script, or a production `deploy/.env` file.
+The canonical production deployment is a homelab-managed Komodo Resource Sync Stack consuming this repository's `deploy/docker-compose.yml`. This repository MUST NOT contain BWS tokens or project IDs, an executable `bws run` script, a host-preparation script, or a production `deploy/.env` file. The staged declarative Sync may reference existing homelab-owned host hooks and the installed BWS wrapper until the approved M3 transition.
 
 | Owner | Variables | Contract |
 | --- | --- | --- |
