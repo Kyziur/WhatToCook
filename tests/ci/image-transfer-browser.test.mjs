@@ -73,7 +73,8 @@ test("PERF-06 probe captures first and conditional repeat visits in real Chromiu
     assert.equal(report.repeatVisit.visibleLoadedImageCount, 1);
     assert.ok(hits.first >= 1, "first request must download the fixture");
     assert.ok(hits.conditional >= 1, "repeat request must send a cache validator");
-    assert.doesNotMatch(stdout, /fixture\\.svg|127\\.0\\.0\\.1/);
+    assert.ok(!stdout.includes("fixture.svg"), "report must not leak image file paths");
+    assert.ok(!stdout.includes("127.0.0.1"), "report must not leak the probed host");
   });
 });
 
