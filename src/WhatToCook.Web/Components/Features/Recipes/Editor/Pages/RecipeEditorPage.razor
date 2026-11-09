@@ -203,17 +203,7 @@
                         }
                     </div>
                 }
-                @if (Model.Tags.Count > 0)
-                {
-                    <div class="chip-row">
-                        @foreach (var tag in Model.Tags)
-                        {
-                            <button type="button" class="chip selected-chip" @onclick="() => RemoveTag(tag)">
-                                @tag ×
-                            </button>
-                        }
-                    </div>
-                }
+                <RecipeTagChips Tags="@Model.Tags" OnRemove="RemoveTag" />
                 </div>
                 <div class="editor-subsection">
                 <h4>Zdjęcie</h4>

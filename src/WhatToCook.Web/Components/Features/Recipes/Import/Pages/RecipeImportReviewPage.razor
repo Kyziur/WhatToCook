@@ -169,17 +169,7 @@
                     placeholder="np. obiad" />
                 <button type="button" class="chip" @onclick="AddTag">Dodaj tag</button>
             </div>
-            @if (Tags.Count > 0)
-            {
-                <div class="chip-row">
-                    @foreach (var tag in Tags)
-                    {
-                        <button type="button" class="chip selected-chip" @onclick="() => RemoveTag(tag)">
-                            @tag x
-                        </button>
-                    }
-                </div>
-            }
+            <RecipeTagChips Tags="@Tags" OnRemove="RemoveTag" />
         </section>
 
         <div class="actions-row">
