@@ -182,7 +182,17 @@
                             <section class="planner-slot-cell @(entries.Count == 0 ? "planner-slot-empty" : string.Empty)" data-day="@day.ToString("yyyy-MM-dd")" data-slot="@slot.Slot">
                                 @foreach (var entry in entries)
                                 {
-                                    @EntryCard(entry, compact: true)
+                                    <PlannerMealCard @key="entry.RowId"
+                                                         Title="@entry.RecipeTitle"
+                                                         Multiplier="@entry.Multiplier"
+                                                         PhotoPath="@(GetRecipeForEntry(entry)?.MainPhotoPath)"
+                                                         Compact="true"
+                                                         ActionsOpen="@IsMealActionMenuOpen(entry.RowId)"
+                                                         Disabled="@(IsBusy || !IsInteractive)"
+                                                         OnToggleActions="@(() => ToggleMealActionMenu(entry.RowId))"
+                                                         OnDecrease="@(() => AdjustMultiplier(entry.RowId, -1m))"
+                                                         OnIncrease="@(() => AdjustMultiplier(entry.RowId, 1m))"
+                                                         OnRemove="@(() => RemoveEntry(entry.RowId))" />
                                 }
                                 <button type="button" class="planner-add-slot" disabled="@(IsBusy || !IsInteractive)" @onclick="() => OpenRecipePicker(day, slot.Slot)">+ Dodaj<br />posiłek</button>
                             </section>
@@ -217,7 +227,17 @@
                                 <div class="planner-mobile-slot-content">
                                     @foreach (var entry in entries)
                                     {
-                                        @EntryCard(entry, compact: false)
+                                        <PlannerMealCard @key="entry.RowId"
+                                                         Title="@entry.RecipeTitle"
+                                                         Multiplier="@entry.Multiplier"
+                                                         PhotoPath="@(GetRecipeForEntry(entry)?.MainPhotoPath)"
+                                                         Compact="false"
+                                                         ActionsOpen="@IsMealActionMenuOpen(entry.RowId)"
+                                                         Disabled="@(IsBusy || !IsInteractive)"
+                                                         OnToggleActions="@(() => ToggleMealActionMenu(entry.RowId))"
+                                                         OnDecrease="@(() => AdjustMultiplier(entry.RowId, -1m))"
+                                                         OnIncrease="@(() => AdjustMultiplier(entry.RowId, 1m))"
+                                                         OnRemove="@(() => RemoveEntry(entry.RowId))" />
                                     }
                                     <button type="button" class="planner-add-slot" disabled="@(IsBusy || !IsInteractive)" @onclick="() => OpenRecipePicker(SelectedDay, slot.Slot)">+ Dodaj posiłek</button>
                                 </div>
@@ -297,39 +317,4 @@
         </button>
     </form>;
 
-    private RenderFragment EntryCard(EditableEntry entry, bool compact) => @<article class="planner-meal-card @(compact ? "planner-meal-card-compact" : "planner-meal-card-expanded")" @key="entry.RowId">
-        @if (!compact)
-        {
-            @if (GetRecipeForEntry(entry)?.MainPhotoPath is { Length: > 0 } photoPath)
-            {
-                <img src="@RecipeImageUrlBuilder.Build(photoPath)" alt="" />
-            }
-            else
-            {
-                <span class="planner-recipe-placeholder" aria-hidden="true">♨</span>
-            }
-        }
-        <div class="planner-meal-copy">
-            <strong title="@entry.RecipeTitle">@entry.RecipeTitle</strong>
-            <span>@FormatMultiplier(entry.Multiplier) × porcja</span>
-        </div>
-        <div class="planner-meal-actions @(IsMealActionMenuOpen(entry.RowId) ? "planner-meal-actions-active" : string.Empty)">
-            <button type="button"
-                    class="planner-meal-menu-toggle"
-                    aria-label="Opcje posiłku @entry.RecipeTitle"
-                    aria-expanded="@IsMealActionMenuOpen(entry.RowId).ToString().ToLowerInvariant()"
-                    disabled="@(IsBusy || !IsInteractive)"
-                    @onclick="() => ToggleMealActionMenu(entry.RowId)">
-                •••
-            </button>
-            @if (IsMealActionMenuOpen(entry.RowId))
-            {
-                <div class="planner-meal-actions-panel">
-                    <button type="button" aria-label="Zmniejsz mnożnik @entry.RecipeTitle" disabled="@(IsBusy || !IsInteractive)" @onclick="() => AdjustMultiplier(entry.RowId, -1m)">−</button>
-                    <button type="button" aria-label="Zwiększ mnożnik @entry.RecipeTitle" disabled="@(IsBusy || !IsInteractive)" @onclick="() => AdjustMultiplier(entry.RowId, 1m)">+</button>
-                    <button type="button" aria-label="Usuń @entry.RecipeTitle" disabled="@(IsBusy || !IsInteractive)" @onclick="() => RemoveEntry(entry.RowId)">×</button>
-                </div>
-            }
-        </div>
-    </article>;
 }
