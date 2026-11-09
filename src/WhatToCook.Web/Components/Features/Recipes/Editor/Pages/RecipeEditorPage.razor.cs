@@ -312,9 +312,7 @@ public partial class RecipeEditorPage : IAsyncDisposable
                 );
             }
         }
-        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested)
-        {
-        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
         catch
         {
             FeedbackMessage =
@@ -328,6 +326,7 @@ public partial class RecipeEditorPage : IAsyncDisposable
             IsSaving = false;
         }
     }
+
     private void AddIngredient()
     {
         Model.Ingredients.Add(
