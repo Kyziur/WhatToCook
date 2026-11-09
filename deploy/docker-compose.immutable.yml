@@ -1,0 +1,14 @@
+# Opt-in immutable deployment overlay. Never include this file in the existing
+# Komodo Stack until BOTH digest-pinned multi-architecture images are published
+# and the homelab operator explicitly approves the deployment-contract switch.
+# Must follow docker-compose.yml: docker compose -f docker-compose.yml
+#   -f docker-compose.immutable.yml config
+services:
+  api:
+    build: !reset null
+    image: ${WHATTOCOOK_API_IMAGE:?Set an immutable ghcr.io/kyziur/whattocook-api@sha256:<digest> reference}
+    pull_policy: always
+  web:
+    build: !reset null
+    image: ${WHATTOCOOK_WEB_IMAGE:?Set an immutable ghcr.io/kyziur/whattocook-web@sha256:<digest> reference}
+    pull_policy: always
