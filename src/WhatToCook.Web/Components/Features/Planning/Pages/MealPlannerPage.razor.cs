@@ -26,10 +26,7 @@ public partial class MealPlannerPage : IDisposable
     private IRecipeCatalogService RecipeCatalogService { get; set; } = null!;
 
     [Inject]
-    private IServiceProvider ServiceProvider { get; set; } = null!;
-
-    private IShoppingListService? ShoppingListService =>
-        ServiceProvider.GetService(typeof(IShoppingListService)) as IShoppingListService;
+    private IShoppingListService ShoppingListService { get; set; } = null!;
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
@@ -751,7 +748,7 @@ public partial class MealPlannerPage : IDisposable
                     CurrentPlan.HasGeneratedShoppingList = true;
                 }
             }
-            if (regenerateShoppingList && ShoppingListService is not null)
+            if (regenerateShoppingList)
             {
                 EmbeddedShoppingList = await ShoppingListService.GetForPlanAsync(
                     SelectedPlanId.Value,
@@ -821,12 +818,6 @@ public partial class MealPlannerPage : IDisposable
 
     private async Task LoadEmbeddedShoppingListAsync(Guid planId)
     {
-        if (ShoppingListService is null)
-        {
-            EmbeddedShoppingList = null;
-            return;
-        }
-
         try
         {
             EmbeddedShoppingList = await ShoppingListService.GetForPlanAsync(

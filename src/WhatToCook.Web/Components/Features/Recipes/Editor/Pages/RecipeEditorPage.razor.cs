@@ -11,20 +11,6 @@ namespace WhatToCook.Web.Components.Features.Recipes.Editor.Pages;
 
 public partial class RecipeEditorPage : IAsyncDisposable
 {
-    private static readonly IReadOnlyList<UnitOption> AllowedUnits =
-    [
-        new("", "brak jednostki"),
-        new("szt", "szt."),
-        new("g", "g"),
-        new("kg", "kg"),
-        new("ml", "ml"),
-        new("l", "l"),
-        new("lyzeczka", "łyżeczka"),
-        new("lyzka", "łyżka"),
-        new("szklanka", "szklanka"),
-        new("opakowanie", "opakowanie"),
-    ];
-
     [Inject]
     private IJSRuntime JsRuntime { get; set; } = null!;
 
@@ -624,8 +610,6 @@ public partial class RecipeEditorPage : IAsyncDisposable
         $"ingredient-{ingredient.Id:N}-unit";
 
     private static string GetStepInputId(StepRow step) => $"step-{step.Id:N}-text";
-
-    private sealed record UnitOption(string Value, string Label);
 
     private sealed class RecipeEditorModel
     {

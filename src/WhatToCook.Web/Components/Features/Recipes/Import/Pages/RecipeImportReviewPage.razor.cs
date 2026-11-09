@@ -5,20 +5,6 @@ namespace WhatToCook.Web.Components.Features.Recipes.Import.Pages;
 
 public partial class RecipeImportReviewPage : IDisposable
 {
-    private static readonly IReadOnlyList<UnitOption> AllowedUnits =
-    [
-        new("", "brak jednostki"),
-        new("szt", "szt."),
-        new("g", "g"),
-        new("kg", "kg"),
-        new("ml", "ml"),
-        new("l", "l"),
-        new("lyzeczka", "łyżeczka"),
-        new("lyzka", "łyżka"),
-        new("szklanka", "szklanka"),
-        new("opakowanie", "opakowanie"),
-    ];
-
     [Inject]
     private IRecipeImportService RecipeImportService { get; set; } = null!;
 
@@ -293,8 +279,6 @@ public partial class RecipeImportReviewPage : IDisposable
         public Guid Id { get; set; } = Guid.NewGuid();
         public string Text { get; set; } = string.Empty;
     }
-
-    private sealed record UnitOption(string Value, string Label);
 
     private static string JoinStepTexts(string first, string second)
     {

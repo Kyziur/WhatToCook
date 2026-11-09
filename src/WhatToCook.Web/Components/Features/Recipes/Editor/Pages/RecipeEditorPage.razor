@@ -1,3 +1,4 @@
+@using WhatToCook.Web.Components.Features.Recipes.Shared
 @page "/recipes/new"
 @page "/recipes/{RecipeId:guid}/edit"
 @using Microsoft.AspNetCore.Components.Web
@@ -118,7 +119,7 @@
                                 Składnik @(ingredient.SortOrder + 1), jednostka
                             </label>
                             <select id="@GetIngredientUnitInputId(ingredient)" class="input ingredient-unit" @bind="ingredient.Unit">
-                                @foreach (var unit in AllowedUnits)
+                                @foreach (var unit in RecipeUnitOptions.All)
                                 {
                                     <option value="@unit.Value">@unit.Label</option>
                                 }
