@@ -80,6 +80,9 @@ async function shutdown(exitCode) {
   }
 
   await stopDockerContainer();
+  // Each Playwright run owns a unique storage path; remove generated uploads
+  // after terminating the API, not just the isolated PostgreSQL container.
+  fs.rmSync(recipeImagesPath, { recursive: true, force: true });
   process.exit(exitCode);
 }
 
@@ -184,5 +187,6 @@ process.on("SIGTERM", () => {
 void main().catch(async (error) => {
   console.error(error);
   await stopDockerContainer();
+  fs.rmSync(recipeImagesPath, { recursive: true, force: true });
   process.exit(1);
 });
