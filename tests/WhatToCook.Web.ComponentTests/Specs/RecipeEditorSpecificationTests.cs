@@ -240,7 +240,9 @@ public sealed class RecipeEditorSpecificationTests
                 throw new IOException("Photo stream unavailable");
             }
 
-            return Task.FromResult(UploadResult ?? RecipePhotoUploadResult.Success("images/fake.jpg"));
+            return Task.FromResult(
+                UploadResult ?? RecipePhotoUploadResult.Success("images/fake.jpg")
+            );
         }
 
         public Task<IReadOnlyList<string>> GetIngredientSuggestionsAsync(
