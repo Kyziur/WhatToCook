@@ -31,7 +31,8 @@ public sealed class BrowserMutationGuardSpecificationTests(TestWebApplicationFac
             RecipeApiContracts.CreateRecipePayload($"CSRF upload {Guid.NewGuid():N}")
         );
         created.EnsureSuccessStatusCode();
-        var recipe = await created.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>();
+        var recipe =
+            await created.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>();
         Assert.NotNull(recipe);
 
         using var request = new HttpRequestMessage(
@@ -41,7 +42,9 @@ public sealed class BrowserMutationGuardSpecificationTests(TestWebApplicationFac
         request.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "cross-site");
         var form = new MultipartFormDataContent();
         form.Add(
-            new ByteArrayContent(Convert.FromBase64String("R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==")),
+            new ByteArrayContent(
+                Convert.FromBase64String("R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==")
+            ),
             "file",
             "photo.gif"
         );
