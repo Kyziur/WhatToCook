@@ -22,4 +22,4 @@ jobs:
         with:
           persist-credentials: false
       - name: Validate isolated GitOps ownership and persistence contract
-        run: python3 -m unittest discover -s scripts -p test-komodo-owner.py -v
+        run: python3 scripts/test-komodo-owner.py -v
