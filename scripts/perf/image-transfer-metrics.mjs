@@ -1,21 +1,21 @@
 const imagePathPrefix = "/recipe-images/";
 
 export function parseProbeArgs(args) {
-  const options = { url: null, mobile: false, settleMs: 2000, output: null };
+  const options = { url: null, mobile: false, settleMs: 2000, loadTimeoutMs: 15000, output: null };
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
     if (arg === "--mobile") {
       options.mobile = true;
-    } else if (["--url", "--settle-ms", "--output"].includes(arg)) {
+    } else if (["--url", "--settle-ms", "--load-timeout-ms", "--output"].includes(arg)) {
       const value = args[++index];
       if (!value || value.startsWith("--")) {
         throw new Error(`Missing value for ${arg}`);
       }
       if (arg === "--url") options.url = value;
       if (arg === "--output") options.output = value;
-      if (arg === "--settle-ms") {
-        if (!/^\d+$/.test(value)) throw new Error("--settle-ms must be an integer");
-        options.settleMs = Number(value);
+      if (arg === "--settle-ms" || arg === "--load-timeout-ms") {
+        if (!/^\d+$/.test(value)) throw new Error(`${arg} must be an integer`);
+        options[arg === "--settle-ms" ? "settleMs" : "loadTimeoutMs"] = Number(value);
       }
     } else {
       throw new Error(`Unknown argument: ${arg}`);
@@ -29,6 +29,9 @@ export function parseProbeArgs(args) {
   }
   if (!Number.isSafeInteger(options.settleMs) || options.settleMs > 30000) {
     throw new Error("--settle-ms must be between 0 and 30000");
+  }
+  if (!Number.isSafeInteger(options.loadTimeoutMs) || options.loadTimeoutMs < 100 || options.loadTimeoutMs > 60000) {
+    throw new Error("--load-timeout-ms must be between 100 and 60000");
   }
   options.url = url.href;
   return options;

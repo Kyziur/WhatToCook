@@ -8,12 +8,17 @@ import {
 test("probe arguments require a valid HTTP(S) library URL and bound the settle delay", () => {
   assert.equal(parseProbeArgs(["--url", "http://localhost:5180/", "--mobile"]).mobile, true);
   assert.equal(parseProbeArgs(["--url", "https://example.test/", "--settle-ms", "0"]).settleMs, 0);
+  assert.equal(parseProbeArgs(["--url", "https://example.test/"]).loadTimeoutMs, 15000);
+  assert.equal(parseProbeArgs(["--url", "https://example.test/", "--load-timeout-ms", "100"]).loadTimeoutMs, 100);
   for (const args of [
     [],
     ["--url", "file:///etc/passwd"],
     ["--url", "https://name:secret@example.test/"],
     ["--url", "http://localhost/", "--settle-ms", "-1"],
     ["--url", "http://localhost/", "--settle-ms", "30001"],
+    ["--url", "http://localhost/", "--load-timeout-ms", "99"],
+    ["--url", "http://localhost/", "--load-timeout-ms", "60001"],
+    ["--url", "http://localhost/", "--load-timeout-ms", "1.5"],
     ["--url", "http://localhost/", "--output"],
     ["--url", "http://localhost/", "--unknown"],
   ]) {
