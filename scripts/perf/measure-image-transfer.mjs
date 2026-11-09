@@ -15,6 +15,13 @@ async function capture(page, url, settleMs, reload) {
     state: "attached",
     timeout: 15000,
   });
+  await page.waitForFunction(
+    () =>
+      [...document.querySelectorAll(".recipe-card img[src*='/recipe-images/']")].some(
+        (image) => image.complete && image.naturalWidth > 0
+      ),
+    { timeout: 15000 }
+  );
   await page.waitForTimeout(settleMs);
 
   const raw = await page.evaluate(() => {
