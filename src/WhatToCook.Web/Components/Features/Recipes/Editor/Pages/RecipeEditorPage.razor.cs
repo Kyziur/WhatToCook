@@ -188,39 +188,40 @@ public partial class RecipeEditorPage : IAsyncDisposable
             return;
         }
 
-        IsSaving = true;
         HasAttemptedSubmit = true;
         FeedbackMessage = string.Empty;
         FeedbackIsError = false;
         ServerValidationErrors.Clear();
 
+        // Validate before disabling the form so invalid fields remain focusable.
+        if (!EditContext.Validate())
+        {
+            await FocusFirstDataAnnotationErrorAsync();
+            return;
+        }
+
+        var hasIngredient = Model.Ingredients.Any(x => !string.IsNullOrWhiteSpace(x.Name));
+        var hasStep = Model.Steps.Any(x => !string.IsNullOrWhiteSpace(x.Text));
+        if (!hasIngredient || !hasStep)
+        {
+            if (!hasIngredient)
+            {
+                ServerValidationErrors.Add("Dodaj co najmniej jeden składnik.");
+            }
+
+            if (!hasStep)
+            {
+                ServerValidationErrors.Add("Dodaj co najmniej jeden krok.");
+            }
+
+            await InvokeAsync(StateHasChanged);
+            await FocusFirstBusinessErrorAsync(hasIngredient, hasStep);
+            return;
+        }
+
+        IsSaving = true;
         try
         {
-            if (!EditContext.Validate())
-            {
-                await FocusFirstDataAnnotationErrorAsync();
-                return;
-            }
-
-            var hasIngredient = Model.Ingredients.Any(x => !string.IsNullOrWhiteSpace(x.Name));
-            var hasStep = Model.Steps.Any(x => !string.IsNullOrWhiteSpace(x.Text));
-            if (!hasIngredient || !hasStep)
-            {
-                if (!hasIngredient)
-                {
-                    ServerValidationErrors.Add("Dodaj co najmniej jeden składnik.");
-                }
-
-                if (!hasStep)
-                {
-                    ServerValidationErrors.Add("Dodaj co najmniej jeden krok.");
-                }
-
-                await InvokeAsync(StateHasChanged);
-                await FocusFirstBusinessErrorAsync(hasIngredient, hasStep);
-                return;
-            }
-
             var request = new RecipeSaveRequest(
                 Model.Title.Trim(),
                 Model.Servings,
