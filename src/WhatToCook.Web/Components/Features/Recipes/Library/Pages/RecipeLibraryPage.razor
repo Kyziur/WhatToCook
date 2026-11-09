@@ -432,12 +432,6 @@
         await LoadAsync();
     }
 
-    private static bool MatchesTitle(string title, string query) =>
-        SearchTextNormalizer.Normalize(title).Contains(
-            SearchTextNormalizer.Normalize(query),
-            StringComparison.Ordinal
-        );
-
     private string GetDetailsLink(Guid recipeId)
     {
         var returnUrl = Uri.EscapeDataString(GetReturnUrl());
@@ -650,27 +644,6 @@
             && FilteredIngredients.Count > CollapsedIngredientCount;
 
         FilteredRecipes = AllRecipes.ToList();
-    }
-
-    private bool MatchesSelectedIngredients(RecipeCatalogItem recipe)
-    {
-        if (SelectedIngredients.Count == 0)
-        {
-            return true;
-        }
-
-        bool HasIngredient(string selected) =>
-            recipe.Ingredients.Any(ingredient =>
-                string.Equals(
-                    IngredientFilterNameNormalizer.Normalize(ingredient.Name),
-                    selected,
-                    StringComparison.OrdinalIgnoreCase
-                )
-            );
-
-        return MatchAllIngredients
-            ? SelectedIngredients.All(HasIngredient)
-            : SelectedIngredients.Any(HasIngredient);
     }
 
     private static List<string> FilterByTerm(IEnumerable<string> source, string term)
