@@ -5,6 +5,6 @@
 - [x] Add deterministic Node tests for parsing, image resource filtering and zero-observation handling.
 - [x] Document local reproduction, privacy scope, and measurement limitations.
 - [x] Mark the PERF-06 audit row PARTIAL · IN REVIEW, without claiming a host measurement.
-- [ ] Run Node tests and CI; review/fix observed failures.
-- [ ] Merge after green checks and update audit/evidence.
+- [x] Run Node tests and full final-head [CI 42599858495](https://github.com/Kyziur/WhatToCook/actions/runs/42599858495); review and add a loaded-photo guard before green CI.
+- [x] Merge [#45](https://github.com/Kyziur/WhatToCook/pull/45) after green CI; synchronize tracker and evidence in follow-up documentation PR.
 - [ ] Run against representative real photos and Wi-Fi/mobile networks before any thumbnail change.
