@@ -31,8 +31,7 @@ public sealed class BrowserMutationGuardSpecificationTests(TestWebApplicationFac
             RecipeApiContracts.CreateRecipePayload($"CSRF upload {Guid.NewGuid():N}")
         );
         created.EnsureSuccessStatusCode();
-        var recipe =
-            await created.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>();
+        var recipe = await created.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>();
         Assert.NotNull(recipe);
 
         using var request = new HttpRequestMessage(
