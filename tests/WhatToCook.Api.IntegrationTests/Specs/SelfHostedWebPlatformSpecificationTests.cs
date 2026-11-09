@@ -212,9 +212,10 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
                 RecipeApiContracts.CreateRecipePayload($"Deployment smoke {Guid.NewGuid():N}")
             );
             Assert.Equal(HttpStatusCode.Created, createdResponse.StatusCode);
-            var created = await createdResponse.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>(
-                JsonOptions
-            );
+            var created =
+                await createdResponse.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>(
+                    JsonOptions
+                );
             Assert.NotNull(created);
 
             using var detailsResponse = await apiClient.GetAsync($"api/recipes/{created!.Id}");
@@ -226,10 +227,13 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
             using var uploadContent = new MultipartFormDataContent();
             uploadContent.Add(new ByteArrayContent(imageBytes), "file", "smoke.gif");
             using var uploadResponse = await apiClient.PostAsync(
-                $"api/recipes/{created.Id}/photo", uploadContent
+                $"api/recipes/{created.Id}/photo",
+                uploadContent
             );
             uploadResponse.EnsureSuccessStatusCode();
-            var photoResult = await uploadResponse.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+            var photoResult = await uploadResponse.Content.ReadFromJsonAsync<JsonElement>(
+                JsonOptions
+            );
             var photoName = photoResult.GetProperty("mainPhotoPath").GetString();
             Assert.False(string.IsNullOrWhiteSpace(photoName));
             Assert.Equal(Path.GetFileName(photoName), photoName);
