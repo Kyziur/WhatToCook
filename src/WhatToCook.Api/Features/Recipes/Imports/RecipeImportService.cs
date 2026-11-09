@@ -51,7 +51,10 @@ public sealed class RecipeImportService(
             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
         )
         {
-            return RecipeImportCreateResult.ValidationFailure("A valid recipe URL is required.", "invalid_url");
+            return RecipeImportCreateResult.ValidationFailure(
+                "A valid recipe URL is required.",
+                "invalid_url"
+            );
         }
 
         var sourceUrl = uri.ToString();
@@ -662,10 +665,16 @@ public sealed record RecipeImportCreateResult(
     public static RecipeImportCreateResult Success(RecipeImportDraftResponse draft) =>
         new(RecipeImportCreateStatus.Success, draft, null);
 
-    public static RecipeImportCreateResult ValidationFailure(string message, string? errorCode = null) =>
+    public static RecipeImportCreateResult ValidationFailure(
+        string message,
+        string? errorCode = null
+    ) =>
         new(RecipeImportCreateStatus.ValidationFailure, null, message, errorCode);
 
-    public static RecipeImportCreateResult UnsupportedSource(string message, string? errorCode = null) =>
+    public static RecipeImportCreateResult UnsupportedSource(
+        string message,
+        string? errorCode = null
+    ) =>
         new(RecipeImportCreateStatus.UnsupportedSource, null, message, errorCode);
 }
 
