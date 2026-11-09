@@ -20,6 +20,7 @@ async function capture(page, url, settleMs, reload) {
       [...document.querySelectorAll(".recipe-card img[src*='/recipe-images/']")].some(
         (image) => image.complete && image.naturalWidth > 0
       ),
+    null,
     { timeout: 15000 }
   );
   await page.waitForTimeout(settleMs);
