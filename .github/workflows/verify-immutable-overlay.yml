@@ -1,0 +1,54 @@
+name: Verify immutable image deployment overlay
+on:
+  pull_request:
+    paths:
+      - deploy/docker-compose.yml
+      - deploy/docker-compose.immutable.yml
+      - .github/workflows/verify-immutable-overlay.yml
+  push:
+    branches: [main]
+    paths:
+      - deploy/docker-compose.yml
+      - deploy/docker-compose.immutable.yml
+      - .github/workflows/verify-immutable-overlay.yml
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert immutable overlay preserves existing network, data and exposure contract
+        env:
+          DATA_ROOT: /srv/whattocook
+          POSTGRES_PASSWORD: ci-only-not-a-secret
+          WHATTOCOOK_API_IMAGE: ghcr.io/kyziur/whattocook-api@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          WHATTOCOOK_WEB_IMAGE: ghcr.io/kyziur/whattocook-web@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+        run: |
+          docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.immutable.yml --project-name whattocook config --format json > "$RUNNER_TEMP/immutable.json"
+          python3 - "$RUNNER_TEMP/immutable.json" <<'PY'
+          import json,sys
+          services=json.load(open(sys.argv[1],encoding="utf-8"))["services"]
+          for name in ("api","web"):
+              assert "build" not in services[name], f"{name} must not build from checkout"
+              assert services[name]["image"].startswith("ghcr.io/kyziur/whattocook-"+name+"@sha256:")
+              assert not services[name].get("ports"), f"{name} must not publish ports"
+          assert not services["postgres"].get("ports")
+          assert "edge" not in services["api"]["networks"]
+          assert services["web"]["networks"]["edge"]["aliases"] == ["what-to-cook-web"]
+          assert services["postgres"]["volumes"][0]["target"] == "/var/lib/postgresql/data"
+          assert services["api"]["volumes"][0]["source"] == "/srv/whattocook/recipe-images"
+          PY
+      - name: Refuse missing image pin
+        env:
+          DATA_ROOT: /srv/whattocook
+          POSTGRES_PASSWORD: ci-only-not-a-secret
+          WHATTOCOOK_API_IMAGE: ""
+          WHATTOCOOK_WEB_IMAGE: ""
+        run: |
+          if docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.immutable.yml config -q; then
+            echo "immutable image pins must be required" >&2
+            exit 1
+          fi
