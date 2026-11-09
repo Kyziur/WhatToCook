@@ -51,6 +51,7 @@ public partial class RecipeEditorPage : IAsyncDisposable
     private bool HasAttemptedSubmit { get; set; }
     private bool FocusFeedbackAfterRender { get; set; }
     private Guid? LoadedRecipeId { get; set; }
+
     // A new recipe may be persisted even when its subsequent photo upload fails.
     // Keep its identity so a retry updates that recipe instead of creating a duplicate.
     private Guid? PersistedNewRecipeId { get; set; }
