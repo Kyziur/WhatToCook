@@ -1,0 +1,23 @@
+@if (Tags.Count > 0)
+{
+    <div class="chip-row">
+        @foreach (var tag in Tags)
+        {
+            <button type="button"
+                    @key="tag"
+                    class="chip selected-chip"
+                    aria-label="Usuń tag @tag"
+                    @onclick="() => OnRemove.InvokeAsync(tag)">
+                @tag ×
+            </button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<string> Tags { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<string> OnRemove { get; set; }
+}
