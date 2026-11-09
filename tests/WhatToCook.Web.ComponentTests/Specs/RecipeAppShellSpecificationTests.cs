@@ -1,9 +1,11 @@
 using Bunit;
+using WhatToCook.Web.ComponentTests.Fakes;
 using Microsoft.Extensions.DependencyInjection;
 using WhatToCook.Web.Components.Features.Planning.Pages;
 using WhatToCook.Web.Components.Features.Planning.Services;
 using WhatToCook.Web.Components.Features.Recipes.Library.Pages;
 using WhatToCook.Web.Components.Features.Recipes.Shared;
+using WhatToCook.Web.Components.Features.Shopping.Services;
 using WhatToCook.Web.Components.Layout;
 
 namespace WhatToCook.Web.ComponentTests.Specs;
@@ -61,6 +63,7 @@ public sealed class RecipeAppShellSpecificationTests
         using var context = new BunitContext();
         context.Services.AddSingleton<IMealPlanService>(new EmptyMealPlanService());
         context.Services.AddSingleton<IRecipeCatalogService>(new FakeRecipeCatalogService([]));
+        context.Services.AddSingleton<IShoppingListService>(new EmptyShoppingListService());
 
         var cut = context.Render<MealPlannerPage>();
         Assert.Contains("Zaplanuj pierwszy tydzień", cut.Markup);

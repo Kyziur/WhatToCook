@@ -1,4 +1,5 @@
 using Bunit;
+using WhatToCook.Web.ComponentTests.Fakes;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using WhatToCook.Web.Components.Features.Planning.Components;
@@ -383,37 +384,6 @@ public sealed class MealPlanningSpecificationTests
         var context = new BunitContext();
         context.Services.AddSingleton<IShoppingListService>(new EmptyShoppingListService());
         return context;
-    }
-
-    private sealed class EmptyShoppingListService : IShoppingListService
-    {
-        public Task<ShoppingListDetails?> GetForPlanAsync(
-            Guid planId,
-            CancellationToken cancellationToken = default
-        ) => Task.FromResult<ShoppingListDetails?>(null);
-
-        public Task<IReadOnlyList<RecipeRecommendation>?> GetRecipeRecommendationsAsync(
-            Guid planId,
-            CancellationToken cancellationToken = default
-        ) => Task.FromResult<IReadOnlyList<RecipeRecommendation>?>([]);
-
-        public Task<ShoppingListDetails?> SetItemStateAsync(
-            Guid planId,
-            Guid itemId,
-            ShoppingChecklistState state,
-            CancellationToken cancellationToken = default
-        ) => Task.FromResult<ShoppingListDetails?>(null);
-
-        public Task<ShoppingListDetails?> AddManualItemAsync(
-            Guid planId,
-            string text,
-            CancellationToken cancellationToken = default
-        ) => Task.FromResult<ShoppingListDetails?>(null);
-
-        public Task<string?> GetCopyTextAsync(
-            Guid planId,
-            CancellationToken cancellationToken = default
-        ) => Task.FromResult<string?>(null);
     }
 
     private sealed class FakeRecipeCatalogService(IReadOnlyList<RecipeCatalogItem> items)
