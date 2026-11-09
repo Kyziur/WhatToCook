@@ -32,8 +32,10 @@ jobs:
       - name: Check formatting
         run: dotnet csharpier check .
 
-      - name: Validate audit tracker counts
-        run: node --test tests/ci/audit-tracker.test.mjs
+      - name: Validate audit tracker and image probe helpers
+        run: |
+          node --check scripts/perf/measure-image-transfer.mjs
+          node --test tests/ci/audit-tracker.test.mjs tests/ci/image-transfer-metrics.test.mjs
 
       - name: Restore .NET packages
         run: dotnet restore WhatToCook.slnx
