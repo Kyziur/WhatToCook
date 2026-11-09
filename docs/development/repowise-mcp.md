@@ -19,3 +19,16 @@ If your MCP client does **not** use the project root as process cwd, use a **per
 `node --test tests/ci/repowise-config.test.mjs` verifies the committed JSON remains path-free, uses stdio, and points agents at the current Blazor stack. It does **not** launch Repowise or certify MCP-client cwd behavior. A real host smoke test remains necessary before treating AGENT-04 as complete across environments.
 
 References: [Repowise MCP server documentation](https://github.com/repowise-dev/repowise/blob/main/website/mcp-server.md), [CLI reference](https://github.com/repowise-dev/repowise/blob/main/docs/reference/CLI_REFERENCE.md).
+
+## Index freshness preflight (AGENT-01)
+
+Run these commands **in the checkout that the MCP host is using**, not a different copy:
+
+```sh
+git rev-parse HEAD
+repowise status --format json
+```
+
+`git rev-parse HEAD` prints the working checkout's committed revision. `repowise status --format json` shows the CLI's index/wiki sync state for that checkout. Before relying on a Repowise MCP response, also inspect its **live** freshness/approximation metadata and indexed revision/scope; do not infer live freshness from the checked-in generated `AGENTS.md` footer or its old `confidence` number. If an exact revision is unavailable, behind HEAD, or the response is marked approximate/stale, inspect the **current source and specs directly** before applying changes.
+
+The human-maintained instructions above the generated region in `AGENTS.md` take precedence if that region says to trust its index without rereading. Do not manually patch the generated section; refresh Repowise using its supported workflow when appropriate. This is a **per-task preflight**, not a recurring manual CI check and not proof of AGENT-04's second-checkout MCP-client behavior.

@@ -16,7 +16,7 @@ The audit contains 69 original finding IDs. Their assessments, including optiona
 
 Each chapter identifies a recommended action, evidence or the limit of available evidence, and a verification approach. Optional items include the condition under which the work is worthwhile; an unmeasured cost or an unverified exposure is not recorded as a production incident.
 
-## Implementation tracker (updated 2026-11-08)
+## Implementation tracker (updated 2026-11-09)
 
 This is the **live implementation tracker** for the 69 original findings. It is separate from the historical 2026-11-02 static audit and 2026-11-06 assessment.
 
@@ -90,7 +90,7 @@ This is the **live implementation tracker** for the 69 original findings. It is 
 | DOC-04 | **DONE · CI** | [#8](https://github.com/Kyziur/WhatToCook/pull/8) — Corrected product-specific documentation context |
 | DOC-05 | OPEN / CONDITIONAL | Optional: preserve deployment note, dedupe only if necessary |
 | DOC-06 | OPEN / CONDITIONAL | Ongoing practice: docs updated with behavior changes |
-| AGENT-01 | **PARTIAL** | [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Manual instructions now prioritize live source/freshness over older generated Repowise section; each task must still verify its live index status |
+| AGENT-01 | **PARTIAL · IN REVIEW** | [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Manual instructions now prioritize live source/freshness over older generated Repowise section; explicit manual-instruction precedence and focused CI regression are under review; each task must still verify its live index status |
 | AGENT-02 | OPEN / CONDITIONAL | Ongoing practice: right-size agent review and evidence |
 | AGENT-03 | **DONE · CI** | [#36](https://github.com/Kyziur/WhatToCook/pull/36) — Five dead skill references and incorrect SDK10 VSTest/MTP guidance fixed with Node contract checks; final-head [CI 42508393599](https://github.com/Kyziur/WhatToCook/actions/runs/42508393599) green. No blanket deduplication of otherwise consistent harness instructions |
 | AGENT-04 | **PARTIAL** | [#28](https://github.com/Kyziur/WhatToCook/pull/28) — Machine-specific Windows path removed and CI contract test passed; real MCP client smoke from second checkout/WSL still required |
