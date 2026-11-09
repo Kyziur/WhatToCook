@@ -650,17 +650,18 @@ public sealed class RecipeImportService(
 public sealed record RecipeImportCreateResult(
     RecipeImportCreateStatus Status,
     RecipeImportDraftResponse? Draft,
-    string? ErrorMessage
+    string? ErrorMessage,
+    string? ErrorCode = null
 )
 {
     public static RecipeImportCreateResult Success(RecipeImportDraftResponse draft) =>
         new(RecipeImportCreateStatus.Success, draft, null);
 
-    public static RecipeImportCreateResult ValidationFailure(string message) =>
-        new(RecipeImportCreateStatus.ValidationFailure, null, message);
+    public static RecipeImportCreateResult ValidationFailure(string message, string? errorCode = null) =>
+        new(RecipeImportCreateStatus.ValidationFailure, null, message, errorCode);
 
-    public static RecipeImportCreateResult UnsupportedSource(string message) =>
-        new(RecipeImportCreateStatus.UnsupportedSource, null, message);
+    public static RecipeImportCreateResult UnsupportedSource(string message, string? errorCode = null) =>
+        new(RecipeImportCreateStatus.UnsupportedSource, null, message, errorCode);
 }
 
 public enum RecipeImportCreateStatus
