@@ -320,7 +320,7 @@ public sealed class RecipeEditorSpecificationTests
         Assert.Contains("Poprzedni przepis", cut.Markup);
 
         context.Services.GetRequiredService<NavigationManager>().NavigateTo("/recipes/new");
-        cut.Render(parameters => parameters.Add(x => x.ReturnUrl, "/"));
+        cut.Render(_ => { });
 
         Assert.DoesNotContain("Poprzedni przepis", cut.Markup);
         Assert.Equal(string.Empty, cut.Find("#recipe-title").GetAttribute("value"));
