@@ -12,16 +12,21 @@ public static class RecipeImportFailureGuidance
         code switch
         {
             "invalid_url" => "Sprawdź adres URL przepisu i spróbuj ponownie.",
-            "unsupported_source" => "Ta witryna nie jest obsługiwana. Wybierz przepis z obsługiwanego źródła.",
+            "unsupported_source" =>
+                "Ta witryna nie jest obsługiwana. Wybierz przepis z obsługiwanego źródła.",
             "timeout" => "Strona przepisu nie odpowiedziała na czas. Spróbuj ponownie za chwilę.",
             "dns_resolution" or "http_transport" =>
                 "Nie udało się połączyć ze stroną przepisu. Sprawdź połączenie i spróbuj ponownie.",
-            "http_status" => "Witryna odrzuciła pobranie przepisu. Otwórz stronę w przeglądarce lub użyj innego źródła.",
+            "http_status" =>
+                "Witryna odrzuciła pobranie przepisu. Otwórz stronę w przeglądarce lub użyj innego źródła.",
             "blocked_destination" or "request_rejected" =>
                 "Nie można bezpiecznie pobrać tego adresu. Użyj publicznego adresu obsługiwanej strony.",
-            "invalid_response" => "Strona zwróciła nieobsługiwaną odpowiedź. Wybierz inną stronę z przepisem.",
-            "extraction_failed" => "Nie udało się odczytać przepisu z tej strony. Sprawdź, czy zawiera pełną recepturę.",
-            "invalid_draft" => "Pobrany przepis wymaga poprawek. Spróbuj innej strony z pełnym opisem przepisu.",
+            "invalid_response" =>
+                "Strona zwróciła nieobsługiwaną odpowiedź. Wybierz inną stronę z przepisem.",
+            "extraction_failed" =>
+                "Nie udało się odczytać przepisu z tej strony. Sprawdź, czy zawiera pełną recepturę.",
+            "invalid_draft" =>
+                "Pobrany przepis wymaga poprawek. Spróbuj innej strony z pełnym opisem przepisu.",
             "unexpected" => "Import chwilowo nie działa. Spróbuj ponownie później.",
             _ when status == HttpStatusCode.BadRequest =>
                 "Sprawdź adres i dane przepisu, a następnie spróbuj ponownie.",
