@@ -832,7 +832,6 @@ public partial class MealPlannerPage : IDisposable
         None,
         Creating,
         Saving,
-        GeneratingShopping,
     }
 
     private sealed class EditablePlan
