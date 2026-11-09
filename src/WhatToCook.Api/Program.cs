@@ -10,6 +10,7 @@ using WhatToCook.Api.Features.Recipes.Shared;
 using WhatToCook.Api.Features.Shopping.Lists;
 using WhatToCook.Api.Infrastructure.Data;
 using WhatToCook.Api.Infrastructure.Storage;
+using WhatToCook.Api.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -46,6 +47,7 @@ app.UseStaticFiles(
     }
 );
 app.UseResponseCompression();
+app.UseMiddleware<BrowserMutationGuardMiddleware>();
 app.MapDefaultEndpoints();
 app.MapOpenApi();
 
