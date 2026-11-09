@@ -219,6 +219,45 @@ public sealed class MealPlanningSpecificationTests
     }
 
     [Fact]
+    public void FailedPlanSwitch_ShouldPreserveCurrentDraftAndSelection()
+    {
+        using var context = CreateContext();
+        var current = new MealPlanDetails(
+            Guid.NewGuid(),
+            "Plan bieżący",
+            new DateOnly(2026, 6, 1),
+            new DateOnly(2026, 6, 7),
+            false,
+            []
+        );
+        var other = new MealPlanDetails(
+            Guid.NewGuid(),
+            "Plan poprzedni",
+            new DateOnly(2026, 5, 1),
+            new DateOnly(2026, 5, 7),
+            false,
+            []
+        );
+        var plans = new FakeMealPlanService([current, other]) { FailingPlanId = other.Id };
+        context.Services.AddSingleton<IMealPlanService>(plans);
+        context.Services.AddSingleton<IRecipeCatalogService>(new FakeRecipeCatalogService([]));
+
+        var cut = context.Render<MealPlannerPage>();
+        cut.FindAll("button").Single(x => x.TextContent.Trim() == "Edytuj plan").Click();
+        cut.Find("#plan-name").Input("Niezapisany plan rodzinny");
+
+        cut.Find("#plan-selector").Change(other.Id.ToString());
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Contains("Nie udało się załadować wybranego planu.", cut.Markup);
+            Assert.Contains("Niezapisany plan rodzinny", cut.Markup);
+            Assert.Contains("Masz niezapisane zmiany", cut.Markup);
+            Assert.Equal(current.Id.ToString(), cut.Find("#plan-selector").GetAttribute("value"));
+        });
+    }
+
+    [Fact]
     public async Task PlannerSaveWhileRunning_ShouldDisableActionsAndExecuteOnce()
     {
         using var context = CreateContext();
@@ -276,6 +315,7 @@ public sealed class MealPlanningSpecificationTests
         public int SaveCalls { get; private set; }
         public TaskCompletionSource<IReadOnlyList<MealPlanSummary>>? PlansCompletion { get; set; }
         public int PlanLoadFailuresRemaining { get; set; }
+        public Guid? FailingPlanId { get; set; }
         public TaskCompletionSource<MealPlanSaveResult>? SaveCompletion { get; set; }
 
         public async Task<IReadOnlyList<MealPlanSummary>> GetPlansAsync(
@@ -309,6 +349,11 @@ public sealed class MealPlanningSpecificationTests
             CancellationToken cancellationToken = default
         )
         {
+            if (FailingPlanId == planId)
+            {
+                throw new HttpRequestException("Test plan switch failure.");
+            }
+
             plansById.TryGetValue(planId, out var value);
             return Task.FromResult(value);
         }
