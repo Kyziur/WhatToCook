@@ -40,3 +40,19 @@ The report lists image-resource count, `PerformanceResourceTiming.transferSize` 
 The PR CI suite also runs `node --test tests/ci/image-transfer-browser.test.mjs` after installing Playwright Chromium. This launches the **actual measurement CLI** against an isolated, local HTTP fixture with a 200 image response, ETag and conditional 304 revalidation, and verifies the generated report excludes image paths and host URLs. A negative fixture without photos must fail rather than produce an invalid zero-transfer report.
 
 The fixture browser path is verified by [PR #48 CI 42616962766](https://github.com/Kyziur/WhatToCook/actions/runs/42616962766) (2/2 probe tests passed). This verifies the browser-and-script path, **not real-photo performance**. The manual CLI accepts optional `--load-timeout-ms 30000` for a slower host (default 15000, range 100–60000); this only changes how long the probe waits for a loaded photo. Actual household measurements still require a host-reachable Web URL and representative device/network conditions.
+
+## Deterministic generated-image comparison (isolated CI)
+
+To compare a controlled baseline without uploading private images, PR CI executes the opt-in `@perf06-generated` Playwright scenario **against the actual WhatToCook API, Blazor Web app, isolated PostgreSQL database and dedicated image directory**. It creates 36 temporary recipes with procedurally drawn, food-like scenes at 1600–3000 px widths (some portrait), including JPEG, WebP and PNG. It uploads each original through `POST /api/recipes/{id}/photo`, then replaces each photo with a 640 px and finally a 320 px copy encoded in the same format. The application itself serves every variant over `/recipe-images/`; there are no Playwright route mocks.
+
+For each variant, fresh Chromium desktop and mobile **emulated viewports** visit both pages of the filtered 36-recipe library, scroll to load all lazy images and revisit both pages with browser caching enabled. A JSON artifact records total ResourceTiming transferred bytes, reported encoded body sizes, image counts, visible over-resolution and initial page LCP. CI asserts successful upload, decoding, resource coverage, valid profiles, smaller generated-file totals and cleanup; it **does not gate on noisy timing thresholds**.
+
+Locally, after `dotnet build WhatToCook.slnx --configuration Release`, `npm ci` and `npx playwright install chromium`, run:
+
+```sh
+PERF06_PROFILE=1 PERF06_SAMPLE_COUNT=36 PLAYWRIGHT_DOTNET_CONFIGURATION=Release npx playwright test --config=playwright.config.ts --project=desktop-chromium --grep "@perf06-generated"
+```
+
+This launches the existing Playwright-owned API/database/Web environment, writes `.tmp/playwright-e2e/perf06-generated-metrics.json`, archives temporary recipes and removes the dedicated image directory when the E2E harness stops. `PERF06_SAMPLE_COUNT` must be an integer between 30 and 50. **Do not run the benchmark against a production database**; it is intentionally coupled to the isolated E2E runner.
+
+**Interpretation boundary:** generated raster scenes are not representative photographs and may compress differently. The results provide concrete original-vs-320/640 HTTP transfer comparisons under controlled Chromium, **not** an end-user device/network benchmark or production image-quality guarantee. The application is unchanged; shipping thumbnails still requires a quality, fallback, lifecycle and representative real-photo decision.

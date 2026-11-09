@@ -90,6 +90,23 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Profile generated photo transfers and 320/640 px variants (diagnostic)
+        run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts --project=desktop-chromium --grep "@perf06-generated"
+        shell: bash
+        env:
+          PLAYWRIGHT_DOTNET_CONFIGURATION: Release
+          PERF06_PROFILE: "1"
+          PERF06_SAMPLE_COUNT: "36"
+
+      - name: Preserve generated photo transfer measurements
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf06-generated-image-metrics
+          path: .tmp/playwright-e2e/perf06-generated-metrics.json
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Playwright smoke suite
         run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts
         shell: bash
