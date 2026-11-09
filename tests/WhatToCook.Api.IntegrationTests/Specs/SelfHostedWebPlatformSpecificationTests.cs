@@ -102,6 +102,26 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         var projectName = $"wtc{Guid.NewGuid():N}"[..15];
         var dataRoot = Path.Combine(Path.GetTempPath(), $"wtc-selfhost-{Guid.NewGuid():N}");
         Directory.CreateDirectory(dataRoot);
+        var imageRoot = Path.Combine(dataRoot, "recipe-images");
+        Directory.CreateDirectory(imageRoot);
+        // CI's temporary bind mount is owned by the test runner, not the container's
+        // non-root UID 1654. Allow that UID to exercise readiness in this disposable
+        // directory only. Production setup MUST remain 1654:1654 with mode 0750.
+        if (OperatingSystem.IsLinux())
+        {
+            File.SetUnixFileMode(
+                imageRoot,
+                UnixFileMode.UserRead
+                    | UnixFileMode.UserWrite
+                    | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupRead
+                    | UnixFileMode.GroupWrite
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherRead
+                    | UnixFileMode.OtherWrite
+                    | UnixFileMode.OtherExecute
+            );
+        }
 
         var publicHttpPort = GetFreeTcpPort();
         var composeOverrideFile = Path.Combine(
