@@ -56,3 +56,21 @@ PERF06_PROFILE=1 PERF06_SAMPLE_COUNT=36 PLAYWRIGHT_DOTNET_CONFIGURATION=Release 
 This launches the existing Playwright-owned API/database/Web environment, writes `.tmp/playwright-e2e/perf06-generated-metrics.json`, archives temporary recipes and removes the dedicated image directory when the E2E harness stops. `PERF06_SAMPLE_COUNT` must be an integer between 30 and 50. **Do not run the benchmark against a production database**; it is intentionally coupled to the isolated E2E runner.
 
 **Interpretation boundary:** generated raster scenes are not representative photographs and may compress differently. The results provide concrete original-vs-320/640 HTTP transfer comparisons under controlled Chromium, **not** an end-user device/network benchmark or production image-quality guarantee. The application is unchanged; shipping thumbnails still requires a quality, fallback, lifecycle and representative real-photo decision.
+
+## Measured generated-fixture baseline — 9 November 2026
+
+Merged [PR #55](https://github.com/Kyziur/WhatToCook/pull/55), final-head [CI 42641175623](https://github.com/Kyziur/WhatToCook/actions/runs/42641175623) (both verify and ARM64 green). **36 synthetic food-like images** were uploaded using real API + isolated PostgreSQL/image storage. Each cohort used the same 36 recipes, full lazy-load scrolling of library pages **24 + 12**, fresh Chromium cache per original/640/320 cohort, same viewport/device pixel ratio within first and repeat observations. No production images were accessed.
+
+| Uploaded image cohort | Total first-visit browser transfer (36 images) | Relative to original | Repeat visit transfer (36 image resources) |
+| --- | ---: | ---: | ---: |
+| Original source dimensions (1600–3000 px wide, mixed portrait) | **33.27 MiB** | baseline | **10.55 KiB** |
+| 640 px wide | **3.81 MiB** | **88.54% less** | **10.55 KiB** |
+| 320 px wide | **1.44 MiB** | **95.67% less** | **10.55 KiB** |
+
+These browser `transferSize` totals include response headers, not only the image bodies. Body totals recorded independently: original **34,872,139 B**, 640 **3,987,974 B**, 320 **1,498,969 B**. In Chromium the repeat requests revalidated (small header transfers rather than full image bodies); do not treat `encodedBodySize` of a cached or 304 entry as re-downloaded payload.
+
+The six reported LCP values are **single browser observations**, not p95 or comparable mobile hardware latency: in final-head CI, initial page desktop LCP was 668 ms (original), 320 ms (640 px) and 212 ms (320 px); emulated mobile was 200/188/148 ms respectively. They vary substantially across runs and must not be treated as stable performance guarantees. Only the byte counts are strongly controlled by the generated fixture.
+
+**Quality constraint:** for a mobile viewport at device pixel ratio 3, even 640 px can undersample a nearly full-width card. Do not apply a global 320 px or 640 px rewrite. Next evaluate image quality and responsive `srcset`/`sizes` (potentially a higher-DPR option), storage and deletion semantics, and one actual-device/representative-photo check before implementing thumbnails in production.
+
+The per-viewport results and calculated percentage comparisons are stored in the CI artifact `perf06-generated-image-metrics`. The artifact intentionally contains only aggregate counts; no recipe titles, image paths, URLs or private photo bytes. The optional `PERF06_SAMPLE_COUNT` accepts 30–50; page partitioning for 30, 36, 48 and 50 is covered by a separate Playwright test. The CI benchmark itself ran the default **36** fixtures, not 50.
