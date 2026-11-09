@@ -228,6 +228,95 @@ public sealed class RecipeEditorSpecificationTests
         );
     }
 
+    [Fact]
+    public void Editor_WhenReusedForNewRoute_ShouldDiscardPreviousRecipeState()
+    {
+        using var context = new BunitContext();
+        context.JSInterop.Mode = JSRuntimeMode.Loose;
+        var recipeId = Guid.NewGuid();
+        var editorService = new FakeRecipeEditorService();
+        editorService.Drafts[recipeId] = CreateDraft(recipeId, "Wczytany przepis");
+        context.Services.AddSingleton<IRecipeEditorService>(editorService);
+
+        var cut = context.Render<RecipeEditorPage>(parameters =>
+            parameters.Add(x => x.RecipeId, recipeId)
+        );
+        Assert.Contains("Wczytany przepis", cut.Markup);
+
+        cut.Render(parameters => parameters.Add(x => x.RecipeId, (Guid?)null));
+
+        Assert.DoesNotContain("Wczytany przepis", cut.Markup);
+        Assert.Empty(cut.FindAll(".recipe-photo-image"));
+        Assert.Equal(string.Empty, cut.Find("#recipe-title").GetAttribute("value"));
+
+        cut.Find("#recipe-title").Change("Nowy przepis");
+        cut.Find("input[placeholder='np. pomidor']").Input("Cebula");
+        cut.Find("textarea").Change("Pokrój cebulę");
+        SubmitEditor(cut);
+
+        Assert.Null(Assert.Single(editorService.SavedRecipeIds));
+    }
+
+    [Fact]
+    public void Editor_WhenSwitchingEditedRecipes_ShouldNotUploadOldSelectedPhoto()
+    {
+        using var context = new BunitContext();
+        context.JSInterop.Mode = JSRuntimeMode.Loose;
+        var firstId = Guid.NewGuid();
+        var secondId = Guid.NewGuid();
+        var editorService = new FakeRecipeEditorService();
+        editorService.Drafts[firstId] = CreateDraft(firstId, "Przepis pierwszy");
+        editorService.Drafts[secondId] = CreateDraft(secondId, "Przepis drugi");
+        context.Services.AddSingleton<IRecipeEditorService>(editorService);
+
+        var cut = context.Render<RecipeEditorPage>(parameters =>
+            parameters.Add(x => x.RecipeId, firstId)
+        );
+        cut.FindComponent<InputFile>()
+            .UploadFiles(
+                InputFileContent.CreateFromBinary([1, 2, 3], "photo.png", contentType: "image/png")
+            );
+
+        cut.Render(parameters => parameters.Add(x => x.RecipeId, secondId));
+        Assert.Contains("Przepis drugi", cut.Markup);
+        SubmitEditor(cut);
+
+        Assert.Equal(secondId, Assert.Single(editorService.SavedRecipeIds));
+        Assert.Equal(0, editorService.UploadCalls);
+    }
+
+    [Fact]
+    public void Editor_WhenTargetRecipeIsMissing_ShouldDisableStaleDraft()
+    {
+        using var context = new BunitContext();
+        var firstId = Guid.NewGuid();
+        var missingId = Guid.NewGuid();
+        var editorService = new FakeRecipeEditorService();
+        editorService.Drafts[firstId] = CreateDraft(firstId, "Poprzedni przepis");
+        context.Services.AddSingleton<IRecipeEditorService>(editorService);
+
+        var cut = context.Render<RecipeEditorPage>(parameters =>
+            parameters.Add(x => x.RecipeId, firstId)
+        );
+        cut.Render(parameters => parameters.Add(x => x.RecipeId, missingId));
+
+        Assert.Contains("Nie znaleziono przepisu do edycji.", cut.Markup);
+        Assert.True(cut.Find(".editor-form-fields").HasAttribute("disabled"));
+        Assert.Empty(editorService.SavedRecipeIds);
+    }
+
+    private static RecipeEditorDraft CreateDraft(Guid id, string title) =>
+        new(
+            id,
+            title,
+            4,
+            "Notatka",
+            "images/test.jpg",
+            ["obiad"],
+            [new RecipeSaveIngredient("Pomidor", "1", "szt")],
+            ["Ugotuj pomidor"]
+        );
+
     private sealed class FakeRecipeEditorService : IRecipeEditorService
     {
         public RecipeSaveRequest? LastRequest { get; private set; }
@@ -236,12 +325,15 @@ public sealed class RecipeEditorSpecificationTests
         public bool ThrowOnUpload { get; set; }
         public List<Guid?> SavedRecipeIds { get; } = [];
 
+        public Dictionary<Guid, RecipeEditorDraft> Drafts { get; } = new();
+        public int UploadCalls { get; private set; }
+
         public Task<RecipeEditorDraft?> GetByIdAsync(
             Guid recipeId,
             CancellationToken cancellationToken = default
         )
         {
-            return Task.FromResult<RecipeEditorDraft?>(null);
+            return Task.FromResult(Drafts.GetValueOrDefault(recipeId));
         }
 
         public Task<RecipeSaveResult> SaveAsync(
@@ -266,6 +358,7 @@ public sealed class RecipeEditorSpecificationTests
             CancellationToken cancellationToken = default
         )
         {
+            UploadCalls++;
             if (ThrowOnUpload)
             {
                 throw new IOException("Photo stream unavailable");
