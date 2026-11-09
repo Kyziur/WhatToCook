@@ -151,7 +151,9 @@ public sealed class RecipeEditorSpecificationTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void CreateRecipe_WhenPhotoUploadFails_ShouldRetryWithoutCreatingDuplicate(bool throwOnUpload)
+    public void CreateRecipe_WhenPhotoUploadFails_ShouldRetryWithoutCreatingDuplicate(
+        bool throwOnUpload
+    )
     {
         using var context = new BunitContext();
         context.JSInterop.Mode = JSRuntimeMode.Loose;
@@ -167,7 +169,9 @@ public sealed class RecipeEditorSpecificationTests
         cut.Find("input[placeholder='np. pomidor']").Input("Pomidor");
         cut.Find("textarea").Change("Pokrój pomidor");
         cut.FindComponent<InputFile>()
-            .UploadFiles(InputFileContent.CreateFromBinary([1, 2, 3], "photo.png", contentType: "image/png"));
+            .UploadFiles(
+                InputFileContent.CreateFromBinary([1, 2, 3], "photo.png", contentType: "image/png")
+            );
 
         SubmitEditor(cut);
 
