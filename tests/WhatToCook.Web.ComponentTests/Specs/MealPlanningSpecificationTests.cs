@@ -1,12 +1,12 @@
 using Bunit;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
-using WhatToCook.Web.ComponentTests.Fakes;
 using WhatToCook.Web.Components.Features.Planning.Components;
 using WhatToCook.Web.Components.Features.Planning.Pages;
 using WhatToCook.Web.Components.Features.Planning.Services;
 using WhatToCook.Web.Components.Features.Recipes.Shared;
 using WhatToCook.Web.Components.Features.Shopping.Services;
+using WhatToCook.Web.ComponentTests.Fakes;
 
 namespace WhatToCook.Web.ComponentTests.Specs;
 
