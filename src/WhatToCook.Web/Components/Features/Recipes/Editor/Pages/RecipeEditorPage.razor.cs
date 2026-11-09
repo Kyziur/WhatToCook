@@ -188,41 +188,40 @@ public partial class RecipeEditorPage : IAsyncDisposable
             return;
         }
 
-        IsSaving = true;
         HasAttemptedSubmit = true;
         FeedbackMessage = string.Empty;
         FeedbackIsError = false;
         ServerValidationErrors.Clear();
 
+        // Validate before disabling the form so invalid fields remain focusable.
+        if (!EditContext.Validate())
+        {
+            await FocusFirstDataAnnotationErrorAsync();
+            return;
+        }
+
+        var hasIngredient = Model.Ingredients.Any(x => !string.IsNullOrWhiteSpace(x.Name));
+        var hasStep = Model.Steps.Any(x => !string.IsNullOrWhiteSpace(x.Text));
+        if (!hasIngredient || !hasStep)
+        {
+            if (!hasIngredient)
+            {
+                ServerValidationErrors.Add("Dodaj co najmniej jeden składnik.");
+            }
+
+            if (!hasStep)
+            {
+                ServerValidationErrors.Add("Dodaj co najmniej jeden krok.");
+            }
+
+            await InvokeAsync(StateHasChanged);
+            await FocusFirstBusinessErrorAsync(hasIngredient, hasStep);
+            return;
+        }
+
+        IsSaving = true;
         try
         {
-            if (!EditContext.Validate())
-            {
-                IsSaving = false;
-                await FocusFirstDataAnnotationErrorAsync();
-                return;
-            }
-
-            var hasIngredient = Model.Ingredients.Any(x => !string.IsNullOrWhiteSpace(x.Name));
-            var hasStep = Model.Steps.Any(x => !string.IsNullOrWhiteSpace(x.Text));
-            if (!hasIngredient || !hasStep)
-            {
-                if (!hasIngredient)
-                {
-                    ServerValidationErrors.Add("Dodaj co najmniej jeden składnik.");
-                }
-
-                if (!hasStep)
-                {
-                    ServerValidationErrors.Add("Dodaj co najmniej jeden krok.");
-                }
-
-                IsSaving = false;
-                await InvokeAsync(StateHasChanged);
-                await FocusFirstBusinessErrorAsync(hasIngredient, hasStep);
-                return;
-            }
-
             var request = new RecipeSaveRequest(
                 Model.Title.Trim(),
                 Model.Servings,
@@ -252,7 +251,6 @@ public partial class RecipeEditorPage : IAsyncDisposable
 
             if (!saveResult.IsSuccess || saveResult.RecipeId is null)
             {
-                IsSaving = false;
                 FeedbackMessage = saveResult.ErrorMessage ?? "Nie udało się zapisać przepisu.";
                 FeedbackIsError = true;
                 ServerValidationErrors.AddRange(
@@ -287,7 +285,6 @@ public partial class RecipeEditorPage : IAsyncDisposable
 
                 if (!uploadResult.IsSuccess)
                 {
-                    IsSaving = false;
                     FeedbackMessage =
                         uploadResult.ErrorMessage
                         ?? "Przepis zapisany, ale zdjęcie nie zostało przesłane.";
@@ -301,7 +298,6 @@ public partial class RecipeEditorPage : IAsyncDisposable
                 CurrentPhotoPath = uploadResult.MainPhotoPath;
             }
 
-            IsSaving = false;
             IsDirty = false;
             HasAttemptedSubmit = false;
             FeedbackMessage = RecipeId.HasValue
@@ -317,18 +313,18 @@ public partial class RecipeEditorPage : IAsyncDisposable
                 );
             }
         }
-        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested)
-        {
-            IsSaving = false;
-        }
+        catch (OperationCanceledException) when (lifetimeCts.IsCancellationRequested) { }
         catch
         {
-            IsSaving = false;
             FeedbackMessage =
                 PersistedNewRecipeId.HasValue && SelectedPhoto is not null
                     ? "Przepis zapisany. Nie udało się przesłać zdjęcia; ponów zapis, aby spróbować ponownie."
                     : "Nie udało się zapisać przepisu. Spróbuj ponownie za chwilę.";
             FeedbackIsError = true;
+        }
+        finally
+        {
+            IsSaving = false;
         }
     }
 
