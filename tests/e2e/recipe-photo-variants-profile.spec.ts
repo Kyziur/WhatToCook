@@ -231,23 +231,32 @@ async function captureLibraryPage(page: Page, expected: number, firstPage: boole
   return { ...summary, lcpMs: firstPage ? summary.lcpMs : null };
 }
 
+function photoCountsByPage(count: number): number[] {
+  const pages: number[] = [];
+  for (let offset = 0; offset < count; offset += pageSize) {
+    pages.push(Math.min(pageSize, count - offset));
+  }
+  return pages;
+}
+
 async function runVisit(page: Page, prefix: string, count: number): Promise<Visit> {
   await gotoAndWaitForApp(page, "/?q=" + encodeURIComponent(prefix));
-  const firstPage = await captureLibraryPage(page, Math.min(pageSize, count), true);
-
-  let secondPage = null;
-  if (count > pageSize) {
-    // Blazor changes the catalog without a document navigation; separate the
-    // second page's browser resource timing from the first page's images.
-    await page.evaluate(() => performance.clearResourceTimings());
-    await page.locator("#library-next-page").click();
-    secondPage = await captureLibraryPage(page, count - pageSize, false);
+  const pages = photoCountsByPage(count);
+  const summaries = [];
+  for (const [index, expected] of pages.entries()) {
+    if (index > 0) {
+      // Blazor changes the catalog without document navigation. Reset resource
+      // entries so each page contributes exactly its own image transfers.
+      await page.evaluate(() => performance.clearResourceTimings());
+      await page.locator("#library-next-page").click();
+    }
+    summaries.push(await captureLibraryPage(page, expected, index === 0));
   }
-
+  const firstPage = summaries[0];
   return {
-    transferredBytes: firstPage.transferBytesIncludingHeaders + (secondPage?.transferBytesIncludingHeaders ?? 0),
-    encodedBodyBytesReported: firstPage.encodedBodyBytesReported + (secondPage?.encodedBodyBytesReported ?? 0),
-    resourceCount: firstPage.resourceCount + (secondPage?.resourceCount ?? 0),
+    transferredBytes: summaries.reduce((sum, item) => sum + item.transferBytesIncludingHeaders, 0),
+    encodedBodyBytesReported: summaries.reduce((sum, item) => sum + item.encodedBodyBytesReported, 0),
+    resourceCount: summaries.reduce((sum, item) => sum + item.resourceCount, 0),
     visibleLoadedImageCount: firstPage.visibleLoadedImageCount,
     overResolutionCount: firstPage.overResolutionCount,
     largestDimensionRatio: firstPage.largestDimensionRatio,
@@ -290,6 +299,13 @@ async function profileVariant(browser: Browser, prefix: string, count: number, v
   return profiles;
 }
 
+test("PERF-06 generated fixture paging handles the full 30-50 range", () => {
+  expect(photoCountsByPage(30)).toEqual([24, 6]);
+  expect(photoCountsByPage(36)).toEqual([24, 12]);
+  expect(photoCountsByPage(48)).toEqual([24, 24]);
+  expect(photoCountsByPage(50)).toEqual([24, 24, 2]);
+});
+
 test("@perf06-generated compare real Web transfers of procedural original/640/320 photo uploads", async ({ browser, request }) => {
   test.skip(process.env.PERF06_PROFILE !== "1", "Run through the isolated PERF06_PROFILE=1 workflow");
   test.setTimeout(720_000);
@@ -318,6 +334,19 @@ test("@perf06-generated compare real Web transfers of procedural original/640/32
       profiles.push(...await profileVariant(browser, prefix, count, variant, fixtureBodyBytes));
     }
 
+    // Compare like-for-like profile runs, not unrelated devices or photo sets.
+    const comparisons = profiles
+      .filter((item) => item.variant !== "original")
+      .map((item) => {
+        const baseline = profiles.find((candidate) => candidate.variant === "original" && candidate.viewport === item.viewport)!;
+        return {
+          variant: item.variant,
+          viewport: item.viewport,
+          fixtureBodyReductionPct: Math.round((1 - item.fixtureBodyBytes / baseline.fixtureBodyBytes) * 10000) / 100,
+          firstVisitTransferReductionPct: Math.round((1 - item.firstVisit.transferredBytes / baseline.firstVisit.transferredBytes) * 10000) / 100,
+        };
+      });
+
     // Report only aggregates; never include recipe titles, file names, image paths or host URLs.
     const report = {
       scenario: "PERF-06-generated-variants",
@@ -325,6 +354,7 @@ test("@perf06-generated compare real Web transfers of procedural original/640/32
       formats: ["JPEG", "WebP", "PNG"],
       variants: ["original", "640", "320"],
       profiles,
+      comparisons,
       limitations:
         "Procedural food-like raster images, not photographs. Browser-based JPEG/WebP/PNG encoding, isolated PostgreSQL/storage, " +
         "single-host Chromium, device emulation and single LCP observation. Page 2 is a Blazor navigation; LCP applies only to page 1. " +
@@ -335,6 +365,7 @@ test("@perf06-generated compare real Web transfers of procedural original/640/32
     fs.writeFileSync(outputPath, JSON.stringify(report, null, 2) + "\n", { flag: "w" });
     console.log("PERF-06 generated profile: " + JSON.stringify({
       photos: count,
+      comparisons,
       profiles: profiles.map((item) => ({
         variant: item.variant,
         viewport: item.viewport,
