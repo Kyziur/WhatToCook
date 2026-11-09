@@ -64,7 +64,8 @@ public partial class RecipeImportPage : IDisposable
         catch (HttpRequestException)
         {
             IsSubmitting = false;
-            FeedbackMessage = "Nie można połączyć się z usługą importu. Sprawdź połączenie i spróbuj ponownie.";
+            FeedbackMessage =
+                "Nie można połączyć się z usługą importu. Sprawdź połączenie i spróbuj ponownie.";
             IsError = true;
             return;
         }
