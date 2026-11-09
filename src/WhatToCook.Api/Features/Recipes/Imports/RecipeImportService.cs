@@ -668,14 +668,12 @@ public sealed record RecipeImportCreateResult(
     public static RecipeImportCreateResult ValidationFailure(
         string message,
         string? errorCode = null
-    ) =>
-        new(RecipeImportCreateStatus.ValidationFailure, null, message, errorCode);
+    ) => new(RecipeImportCreateStatus.ValidationFailure, null, message, errorCode);
 
     public static RecipeImportCreateResult UnsupportedSource(
         string message,
         string? errorCode = null
-    ) =>
-        new(RecipeImportCreateStatus.UnsupportedSource, null, message, errorCode);
+    ) => new(RecipeImportCreateStatus.UnsupportedSource, null, message, errorCode);
 }
 
 public enum RecipeImportCreateStatus
