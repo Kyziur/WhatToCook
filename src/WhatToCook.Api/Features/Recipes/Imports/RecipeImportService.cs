@@ -51,7 +51,7 @@ public sealed class RecipeImportService(
             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
         )
         {
-            return RecipeImportCreateResult.ValidationFailure("A valid recipe URL is required.");
+            return RecipeImportCreateResult.ValidationFailure("A valid recipe URL is required.", "invalid_url");
         }
 
         var sourceUrl = uri.ToString();
