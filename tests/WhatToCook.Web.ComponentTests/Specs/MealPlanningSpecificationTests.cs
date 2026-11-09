@@ -1,7 +1,7 @@
 using Bunit;
-using WhatToCook.Web.ComponentTests.Fakes;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
+using WhatToCook.Web.ComponentTests.Fakes;
 using WhatToCook.Web.Components.Features.Planning.Components;
 using WhatToCook.Web.Components.Features.Planning.Pages;
 using WhatToCook.Web.Components.Features.Planning.Services;

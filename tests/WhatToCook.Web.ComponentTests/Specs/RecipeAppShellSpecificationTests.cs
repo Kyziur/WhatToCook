@@ -1,6 +1,6 @@
 using Bunit;
-using WhatToCook.Web.ComponentTests.Fakes;
 using Microsoft.Extensions.DependencyInjection;
+using WhatToCook.Web.ComponentTests.Fakes;
 using WhatToCook.Web.Components.Features.Planning.Pages;
 using WhatToCook.Web.Components.Features.Planning.Services;
 using WhatToCook.Web.Components.Features.Recipes.Library.Pages;
