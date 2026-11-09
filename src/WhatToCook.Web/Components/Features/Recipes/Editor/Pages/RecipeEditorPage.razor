@@ -51,7 +51,7 @@
         <EditForm EditContext="EditContext" FormName="recipe-editor" OnSubmit="@(_ => SaveRecipeAsync())">
             <DataAnnotationsValidator />
             <ValidationSummary />
-            <fieldset class="editor-form-fields" disabled="@(!IsInteractive || IsSaving)">
+            <fieldset class="editor-form-fields" disabled="@(!IsInteractive || IsSaving || (RecipeId.HasValue && LoadedRecipeId != RecipeId))">
 
             <details id="editor-basics" class="surface-card section-card editor-anchor-section" open>
                 <summary class="section-title"><span class="section-badge">1</span>Podstawy</summary>
@@ -217,7 +217,7 @@
                     <img class="recipe-photo-image" src="@RecipeImageUrlBuilder.Build(CurrentPhotoPath)" alt="Aktualne zdjęcie przepisu" />
                 }
                 <label class="visually-hidden" for="recipe-photo">Zdjęcie główne przepisu</label>
-                <InputFile @ref="PhotoInput" id="recipe-photo" OnChange="HandlePhotoSelected" />
+                <InputFile @key="RecipeId" @ref="PhotoInput" id="recipe-photo" OnChange="HandlePhotoSelected" />
                 @if (!string.IsNullOrWhiteSpace(SelectedPhotoName))
                 {
                     <p class="muted">Wybrano: @SelectedPhotoName</p>

@@ -118,16 +118,31 @@ public partial class RecipeEditorPage : IAsyncDisposable
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!RecipeId.HasValue || LoadedRecipeId == RecipeId)
+        // Blazor can retain a parameter omitted when this page is reused for another route.
+        var routePath = new Uri(NavigationManager.Uri).AbsolutePath.TrimEnd('/');
+        if (routePath.EndsWith("/recipes/new", StringComparison.OrdinalIgnoreCase))
+        {
+            RecipeId = null;
+        }
+
+        if (!RecipeId.HasValue)
+        {
+            if (LoadedRecipeId.HasValue)
+            {
+                await ResetForNewRecipeAsync();
+            }
+
+            return;
+        }
+
+        if (LoadedRecipeId == RecipeId)
         {
             return;
         }
 
         PersistedNewRecipeId = null;
         IsLoading = true;
-        FeedbackMessage = string.Empty;
-        FeedbackIsError = false;
-        ServerValidationErrors.Clear();
+        ResetFeedback();
 
         RecipeEditorDraft? recipe;
         try
@@ -154,7 +169,11 @@ public partial class RecipeEditorPage : IAsyncDisposable
             return;
         }
 
+        await ClearSelectedPhotoAsync();
         LoadedRecipeId = recipe.Id;
+        HasAttemptedSubmit = false;
+        FocusFeedbackAfterRender = false;
+        NewTag = string.Empty;
         Model.Title = recipe.Title;
         Model.Servings = recipe.Servings;
         Model.Source = recipe.Source;
@@ -172,6 +191,36 @@ public partial class RecipeEditorPage : IAsyncDisposable
         EditContext = CreateEditContext();
         await RefreshIngredientSuggestionsAsync(string.Empty);
         await RefreshTagSuggestionsAsync();
+    }
+
+    private async Task ResetForNewRecipeAsync()
+    {
+        await ClearSelectedPhotoAsync();
+        LoadedRecipeId = null;
+        PersistedNewRecipeId = null;
+        CurrentPhotoPath = null;
+        Model.Title = string.Empty;
+        Model.Servings = 1;
+        Model.Source = null;
+        Model.Ingredients = [IngredientRow.From(0, string.Empty, string.Empty, string.Empty)];
+        Model.Steps = [StepRow.From(0, string.Empty)];
+        Model.Tags = [];
+        NewTag = string.Empty;
+        IsDirty = false;
+        IsLoading = false;
+        HasAttemptedSubmit = false;
+        FocusFeedbackAfterRender = false;
+        ResetFeedback();
+        EditContext = CreateEditContext();
+        await RefreshIngredientSuggestionsAsync(string.Empty);
+        await RefreshTagSuggestionsAsync();
+    }
+
+    private void ResetFeedback()
+    {
+        FeedbackMessage = string.Empty;
+        FeedbackIsError = false;
+        ServerValidationErrors.Clear();
     }
 
     private EditContext CreateEditContext()
@@ -497,6 +546,13 @@ public partial class RecipeEditorPage : IAsyncDisposable
             PhotoInput!.Element
         );
         IsDirty = true;
+    }
+
+    private async Task ClearSelectedPhotoAsync()
+    {
+        await ReleaseSelectedPhotoPreviewAsync();
+        SelectedPhoto = null;
+        SelectedPhotoName = null;
     }
 
     private async Task ReleaseSelectedPhotoPreviewAsync()
