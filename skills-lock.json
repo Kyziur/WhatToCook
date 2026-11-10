@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "skills": {
+    "documentation-quality": {
+      "source": "Kyziur/agent-skills",
+      "sourceUrl": "https://github.com/Kyziur/agent-skills",
+      "ref": "a796b982041d4c70e585256cc4cf218f5c6dd430",
+      "sourceType": "github",
+      "skillPath": "skills/documentation-quality/SKILL.md",
+      "computedHash": "d3f651061e6b3deffcb1985e7dd341af62cf8c32cac0e7cc1e53a701cdd4cbd6"
+    }
+  }
+}
