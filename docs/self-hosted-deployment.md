@@ -76,3 +76,19 @@ Local direct API execution requires a connection string through Aspire, environm
 ## Verification checklist
 
 After the first homelab deployment, verify that the wrapped `config`, `pull`, and `up` lifecycle succeeds; all three services pass healthchecks; only non-secret values appear in the generated Stack `.env`; the Web route keeps a SignalR connection; and API/PostgreSQL are not proxy-addressable. Run the existing backup actions, validate the gzip dump and captured recipe-image data, and complete a restore drill before production readiness.
+
+### Host preparation and maintenance serialization
+
+The independent owner now wraps the **mutating** pre-deploy
+`prepare-what-to-cook .env` host-directory preparation with the same
+`/etc/komodo/.homelab-maintenance.lock` used by platform backups and Compose.
+The supported Compose commands `config`, `build`, `pull`, `up`, `run`
+are also wrapped. Do not assume Komodo wraps `down`: any manual stop/down
+must take the same host maintenance lock and coordinate with backup/recovery.
+
+**Host-side security gate remains open:** the legacy platform-installed
+`prepare-what-to-cook` executes Docker with a host-root bind and derives
+`recipe-images` from `DATA_ROOT`. Before activating this new owner, review
+and harden that platform utility against symlinks and unintended root-owned
+paths; a lock alone does not make arbitrary host-path preparation safe. This
+PR does not install, replace or invoke the utility on the Pi.
