@@ -25,7 +25,7 @@ extra_args = ["--remove-orphans"]
 # Transitional compatibility contract. Do not remove wrapper until M3 is
 # runtime-verified on disposable credentials and the Pi recovery path.
 compose_cmd_wrapper = "/usr/local/bin/bws-with-token run --no-inherit-env -- flock -x -w 900 /etc/komodo/.homelab-maintenance.lock [[COMPOSE_COMMAND]]"
-compose_cmd_wrapper_include = ["config", "pull", "up"]
+compose_cmd_wrapper_include = ["config", "build", "pull", "up", "run"]
 environment = """
 DATA_ROOT = /srv/whattocook
 POSTGRES_DB = whattocook
@@ -35,6 +35,7 @@ SEED_DATA_ENABLED = false
 DOCKER_PLATFORM = linux/arm64/v8
 """
 # Host-side Bitwarden workload secret: POSTGRES_PASSWORD. Never include here.
+# Serialize the mutating pre-deploy directory preparation with backups too.
 [stack.config.pre_deploy]
 path = "."
-command = "/usr/local/bin/prepare-what-to-cook .env"
+command = "flock -x -w 900 /etc/komodo/.homelab-maintenance.lock /usr/local/bin/prepare-what-to-cook .env"
