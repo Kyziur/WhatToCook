@@ -83,6 +83,10 @@ Default rule: do not spawn subagents unless the task benefits from delegation. M
 4. Use `repo-platform` only for template, tooling, or repository-wide changes.
 5. If more than one OpenSpec change is `in-progress`, explicitly name the active implementation target before editing code.
 
+### Documentation
+
+Use the installed `documentation-quality` skill when authoring or reviewing README, architecture, developer guides, and deployment instructions. Keep the relevant OpenSpec and actual code/configuration authoritative; avoid duplicating their contracts in prose.
+
 ### Current source versus generated index
 
 - The human-maintained instructions above the Repowise marker **take precedence** over conflicting generated text below it. In particular, a generated instruction to trust verified index bytes or not reread source cannot override the freshness check below.
