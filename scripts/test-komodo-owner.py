@@ -31,7 +31,8 @@ class WhatToCookOwnership(unittest.TestCase):
         self.assertNotIn("--force-recreate", cfg.get("extra_args", []))
         self.assertIn("flock -x", cfg["compose_cmd_wrapper"])
         self.assertIn("[[COMPOSE_COMMAND]]", cfg["compose_cmd_wrapper"])
-        self.assertEqual(cfg["pre_deploy"]["command"], "/usr/local/bin/prepare-what-to-cook .env")
+        self.assertEqual(cfg["compose_cmd_wrapper_include"], ["config", "build", "pull", "up", "run"])
+        self.assertEqual(cfg["pre_deploy"]["command"], "flock -x -w 900 /etc/komodo/.homelab-maintenance.lock /usr/local/bin/prepare-what-to-cook .env")
 
     def test_no_secret_value_or_token_in_stack_environment(self):
         doc = tomllib.loads((ROOT / "deploy/komodo.toml").read_text())
