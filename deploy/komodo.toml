@@ -1,0 +1,41 @@
+# Candidate only: unique Resource Sync owner of WhatToCook; not deployed.
+# Keep the existing homelab-owned Stack authoritative until an operator has
+# reviewed a two-Sync no-delete diff and verified backups + project identity.
+# The host, Komodo, BWS token and wrapper remain homelab-owned.
+[[stack]]
+name = "what-to-cook"
+tags = ["wtc"]
+description = "WhatToCook app (independent Sync, existing Compose project identity)"
+after = []
+
+[stack.config]
+server = "Local"
+git_provider = "github.com"
+repo = "Kyziur/WhatToCook"
+branch = "main"
+git_account = "kyziur"
+run_directory = "deploy"
+project_name = "whattocook"
+file_paths = ["docker-compose.yml"]
+auto_update = false
+poll_for_updates = true
+webhook_enabled = false
+send_alerts = true
+extra_args = ["--remove-orphans"]
+# Transitional compatibility contract. Do not remove wrapper until M3 is
+# runtime-verified on disposable credentials and the Pi recovery path.
+compose_cmd_wrapper = "/usr/local/bin/bws-with-token run --no-inherit-env -- flock -x -w 900 /etc/komodo/.homelab-maintenance.lock [[COMPOSE_COMMAND]]"
+compose_cmd_wrapper_include = ["config", "build", "pull", "up", "run"]
+environment = """
+DATA_ROOT = /srv/whattocook
+POSTGRES_DB = whattocook
+POSTGRES_USER = whattocook
+ASPNETCORE_ENVIRONMENT = Production
+SEED_DATA_ENABLED = false
+DOCKER_PLATFORM = linux/arm64/v8
+"""
+# Host-side Bitwarden workload secret: POSTGRES_PASSWORD. Never include here.
+# Serialize the mutating pre-deploy directory preparation with backups too.
+[stack.config.pre_deploy]
+path = "."
+command = "flock -x -w 900 /etc/komodo/.homelab-maintenance.lock /usr/local/bin/prepare-what-to-cook .env"
