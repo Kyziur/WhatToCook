@@ -1,11 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
-import { gotoAndWaitForApp, uniqueSuffix } from "./helpers";
+import { createPlan, uniqueSuffix } from "./helpers";
 
 test.describe("OpenSpec: planning-workspace-ui", () => {
   test("Create and edit a plan", async ({ page }) => {
     const name = `Plan ${uniqueSuffix()}`;
-    await gotoAndWaitForApp(page, "/planning");
-    await createPlan(page, "2026-05-01", "2026-05-07", name);
+    await createPlan(page, name, "2026-05-01", "2026-05-07");
 
     await page.getByRole("button", { name: /Edytuj/ }).first().click();
     await expect(page.locator("#plan-name")).toHaveValue(name);
@@ -15,8 +14,7 @@ test.describe("OpenSpec: planning-workspace-ui", () => {
   });
 
   test("Search drawer and assign a recipe to dinner slot", async ({ page }) => {
-    await gotoAndWaitForApp(page, "/planning");
-    await createPlan(page, "2026-05-01", "2026-05-07", `Slot ${uniqueSuffix()}`);
+    await createPlan(page, `Slot ${uniqueSuffix()}`, "2026-05-01", "2026-05-07");
 
     await openSlotPicker(page, "2026-05-01", "Dinner");
     const drawer = page.locator(".planner-recipe-drawer");
@@ -28,8 +26,7 @@ test.describe("OpenSpec: planning-workspace-ui", () => {
   });
 
   test("Prevent duplicate recipe in one day and allow it on another", async ({ page }) => {
-    await gotoAndWaitForApp(page, "/planning");
-    await createPlan(page, "2026-05-01", "2026-05-07", `Duplikat ${uniqueSuffix()}`);
+    await createPlan(page, `Duplikat ${uniqueSuffix()}`, "2026-05-01", "2026-05-07");
 
     await addRecipeToSlot(page, "2026-05-01", "Grecka sałatka");
     await openSlotPicker(page, "2026-05-01", "Dinner");
@@ -41,8 +38,7 @@ test.describe("OpenSpec: planning-workspace-ui", () => {
   });
 
   test("Initial plan save generates shopping list without a replacement dialog", async ({ page }) => {
-    await gotoAndWaitForApp(page, "/planning");
-    await createPlan(page, "2026-05-08", "2026-05-14", `Zakupy ${uniqueSuffix()}`);
+    await createPlan(page, `Zakupy ${uniqueSuffix()}`, "2026-05-08", "2026-05-14");
     await addRecipeToSlot(page, "2026-05-08", "Grecka sałatka");
 
     await page.getByRole("button", { name: "Zapisz plan" }).click();
@@ -52,8 +48,7 @@ test.describe("OpenSpec: planning-workspace-ui", () => {
 
   test("Show one selected day and usable slots on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await gotoAndWaitForApp(page, "/planning");
-    await createPlan(page, "2026-11-01", "2026-11-07", `Mobile ${uniqueSuffix()}`);
+    await createPlan(page, `Mobile ${uniqueSuffix()}`, "2026-11-01", "2026-11-07");
 
     await expect(page.locator(".planner-mobile-day-picker button")).toHaveCount(7);
     await expect(page.locator(".planner-mobile-slot")).toHaveCount(4);
@@ -63,32 +58,6 @@ test.describe("OpenSpec: planning-workspace-ui", () => {
   });
 });
 
-async function createPlan(page: Page, from: string, to: string, name: string): Promise<void> {
-  await expect(page.getByText("Ładowanie planu posiłków")).toHaveCount(0);
-  await expect(page.locator(".planner-workspace button:not(:disabled):visible").first()).toBeVisible();
-  const emptyState = page.locator(".planner-empty-layout");
-  const existingPlanState = page.locator(".planner-period-toolbar");
-  const stablePlannerState = page.locator(".planner-empty-layout, .planner-period-toolbar");
-  const form = page.locator("#new-date-from");
-  const newPlanButton = page.locator("button:visible").filter({ hasText: /^Nowy plan$/ });
-
-  await expect(stablePlannerState).toHaveCount(1);
-  await expect(stablePlannerState).toBeVisible();
-  if ((await emptyState.count()) === 1) {
-    await expect(form).toBeVisible();
-  } else {
-    await expect(existingPlanState).toBeVisible();
-    await expect(newPlanButton).toBeVisible();
-    await newPlanButton.click();
-  }
-  await expect(form).toBeVisible();
-  await expect(page.getByRole("button", { name: "Utwórz plan" })).toHaveAttribute("data-interactive", "true");
-  await page.locator("#new-date-from").fill(from);
-  await page.locator("#new-date-to").fill(to);
-  await page.locator("#new-plan-name").fill(name);
-  await page.getByRole("button", { name: "Utwórz plan" }).click();
-  await expect(page.getByText("Plan utworzony.")).toBeVisible();
-}
 
 async function openSlotPicker(page: Page, date: string, slot: "Breakfast" | "SecondBreakfast" | "Dinner" | "Supper"): Promise<void> {
   const cell = page.locator(`.planner-slot-cell[data-day='${date}'][data-slot='${slot}']`).first();

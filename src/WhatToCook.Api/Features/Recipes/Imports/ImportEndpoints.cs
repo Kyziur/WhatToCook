@@ -32,10 +32,10 @@ public static class ImportEndpoints
                 result.Draft
             ),
             RecipeImportCreateStatus.ValidationFailure => Results.BadRequest(
-                new { message = result.ErrorMessage }
+                new { message = result.ErrorMessage, code = result.ErrorCode }
             ),
             RecipeImportCreateStatus.UnsupportedSource => Results.UnprocessableEntity(
-                new { message = result.ErrorMessage }
+                new { message = result.ErrorMessage, code = result.ErrorCode }
             ),
             _ => Results.StatusCode(StatusCodes.Status500InternalServerError),
         };

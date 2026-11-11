@@ -51,14 +51,18 @@ public sealed class RecipeImportService(
             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
         )
         {
-            return RecipeImportCreateResult.ValidationFailure("A valid recipe URL is required.");
+            return RecipeImportCreateResult.ValidationFailure(
+                "A valid recipe URL is required.",
+                "invalid_url"
+            );
         }
 
         var sourceUrl = uri.ToString();
         if (RecipeImportDraftLimits.ExceedsMaxSourceUrlLength(sourceUrl))
         {
             return RecipeImportCreateResult.ValidationFailure(
-                "Recipe URL must be at most 2000 characters."
+                "Recipe URL must be at most 2000 characters.",
+                "invalid_url"
             );
         }
 
@@ -66,7 +70,8 @@ public sealed class RecipeImportService(
         if (adapter is null)
         {
             return RecipeImportCreateResult.UnsupportedSource(
-                "This recipe source is not supported yet."
+                "This recipe source is not supported yet.",
+                "unsupported_source"
             );
         }
 
@@ -83,9 +88,11 @@ public sealed class RecipeImportService(
         }
         catch (Exception exception)
         {
-            LogImportFailure(ClassifyFetchFailure(exception), adapter.Key, startedAt);
+            var failureCategory = ClassifyFetchFailure(exception);
+            LogImportFailure(failureCategory, adapter.Key, startedAt);
             return RecipeImportCreateResult.UnsupportedSource(
-                "The recipe page could not be fetched or read."
+                "The recipe page could not be fetched or read.",
+                failureCategory
             );
         }
 
@@ -94,7 +101,8 @@ public sealed class RecipeImportService(
         {
             LogImportFailure("extraction_failed", adapter.Key, startedAt);
             return RecipeImportCreateResult.UnsupportedSource(
-                extraction.ErrorMessage ?? "The recipe page could not be extracted into a draft."
+                extraction.ErrorMessage ?? "The recipe page could not be extracted into a draft.",
+                "extraction_failed"
             );
         }
 
@@ -109,7 +117,7 @@ public sealed class RecipeImportService(
         );
         if (validation is not null)
         {
-            return RecipeImportCreateResult.ValidationFailure(validation);
+            return RecipeImportCreateResult.ValidationFailure(validation, "invalid_draft");
         }
 
         var draft = new RecipeImportDraft
@@ -650,17 +658,22 @@ public sealed class RecipeImportService(
 public sealed record RecipeImportCreateResult(
     RecipeImportCreateStatus Status,
     RecipeImportDraftResponse? Draft,
-    string? ErrorMessage
+    string? ErrorMessage,
+    string? ErrorCode = null
 )
 {
     public static RecipeImportCreateResult Success(RecipeImportDraftResponse draft) =>
         new(RecipeImportCreateStatus.Success, draft, null);
 
-    public static RecipeImportCreateResult ValidationFailure(string message) =>
-        new(RecipeImportCreateStatus.ValidationFailure, null, message);
+    public static RecipeImportCreateResult ValidationFailure(
+        string message,
+        string? errorCode = null
+    ) => new(RecipeImportCreateStatus.ValidationFailure, null, message, errorCode);
 
-    public static RecipeImportCreateResult UnsupportedSource(string message) =>
-        new(RecipeImportCreateStatus.UnsupportedSource, null, message);
+    public static RecipeImportCreateResult UnsupportedSource(
+        string message,
+        string? errorCode = null
+    ) => new(RecipeImportCreateStatus.UnsupportedSource, null, message, errorCode);
 }
 
 public enum RecipeImportCreateStatus
