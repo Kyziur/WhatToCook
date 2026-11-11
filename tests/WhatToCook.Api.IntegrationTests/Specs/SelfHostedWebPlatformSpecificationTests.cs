@@ -124,6 +124,7 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         }
 
         var publicHttpPort = GetFreeTcpPort();
+        var apiHttpPort = GetFreeTcpPort();
         var composeOverrideFile = Path.Combine(
             Path.GetTempPath(),
             $"wtc-selfhost-override-{Guid.NewGuid():N}.yml"
@@ -137,6 +138,7 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         var env = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
             ["PUBLIC_HTTP_PORT"] = publicHttpPort.ToString(),
+            ["API_HTTP_PORT"] = apiHttpPort.ToString(),
             ["DATA_ROOT"] = dataRoot,
             ["POSTGRES_PASSWORD"] = "wtc-self-host",
             ["SEED_DATA_ENABLED"] = "false",
@@ -152,7 +154,10 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
                 services:
                   web:
                     ports:
-                      - "${PUBLIC_HTTP_PORT}:8080"
+                      - "127.0.0.1:${PUBLIC_HTTP_PORT}:8080"
+                  api:
+                    ports:
+                      - "127.0.0.1:${API_HTTP_PORT}:8080"
                 """
             );
 
@@ -194,6 +199,48 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Contains("WhatToCook", html);
+
+            // Temporary Compose stack only: verify PostgreSQL-backed recipe creation and
+            // write/read through the API container image bind mount as non-root UID.
+            using var apiClient = new HttpClient
+            {
+                BaseAddress = new Uri($"http://127.0.0.1:{apiHttpPort}/"),
+                Timeout = TimeSpan.FromSeconds(20),
+            };
+            using var createdResponse = await apiClient.PostAsJsonAsync(
+                "api/recipes",
+                RecipeApiContracts.CreateRecipePayload($"Deployment smoke {Guid.NewGuid():N}")
+            );
+            Assert.Equal(HttpStatusCode.Created, createdResponse.StatusCode);
+            var created =
+                await createdResponse.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>(
+                    JsonOptions
+                );
+            Assert.NotNull(created);
+
+            using var detailsResponse = await apiClient.GetAsync($"api/recipes/{created!.Id}");
+            detailsResponse.EnsureSuccessStatusCode();
+
+            var imageBytes = Convert.FromBase64String(
+                "R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+            );
+            using var uploadContent = new MultipartFormDataContent();
+            uploadContent.Add(new ByteArrayContent(imageBytes), "file", "smoke.gif");
+            using var uploadResponse = await apiClient.PostAsync(
+                $"api/recipes/{created.Id}/photo",
+                uploadContent
+            );
+            uploadResponse.EnsureSuccessStatusCode();
+            var photoResult = await uploadResponse.Content.ReadFromJsonAsync<JsonElement>(
+                JsonOptions
+            );
+            var photoName = photoResult.GetProperty("mainPhotoPath").GetString();
+            Assert.False(string.IsNullOrWhiteSpace(photoName));
+            Assert.Equal(Path.GetFileName(photoName), photoName);
+            Assert.True(File.Exists(Path.Combine(imageRoot, photoName!)));
+            using var photoResponse = await apiClient.GetAsync($"recipe-images/{photoName}");
+            photoResponse.EnsureSuccessStatusCode();
+            Assert.Equal(imageBytes, await photoResponse.Content.ReadAsByteArrayAsync());
         }
         finally
         {

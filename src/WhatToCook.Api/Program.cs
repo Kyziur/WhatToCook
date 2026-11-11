@@ -9,6 +9,7 @@ using WhatToCook.Api.Features.Recipes.Search;
 using WhatToCook.Api.Features.Recipes.Shared;
 using WhatToCook.Api.Features.Shopping.Lists;
 using WhatToCook.Api.Infrastructure.Data;
+using WhatToCook.Api.Infrastructure.Security;
 using WhatToCook.Api.Infrastructure.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,7 +21,10 @@ builder.Services.Configure<FormOptions>(options =>
 builder.Services.AddOpenApi();
 builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
 builder.Services.AddAppDbContext();
-builder.Services.AddHealthChecks().AddCheck<AppDbHealthCheck>("database", tags: ["ready"]);
+builder
+    .Services.AddHealthChecks()
+    .AddCheck<AppDbHealthCheck>("database", tags: ["ready"])
+    .AddCheck<RecipeImageStorageHealthCheck>("recipe-images", tags: ["ready"]);
 builder
     .Services.AddHttpClient("recipe-import", client => client.Timeout = TimeSpan.FromSeconds(10))
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
@@ -46,6 +50,7 @@ app.UseStaticFiles(
     }
 );
 app.UseResponseCompression();
+app.UseMiddleware<BrowserMutationGuardMiddleware>();
 app.MapDefaultEndpoints();
 app.MapOpenApi();
 
