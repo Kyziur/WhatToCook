@@ -43,6 +43,15 @@ public sealed class RecipeImportSpecificationTests(TestWebApplicationFactory fac
         var body = await response.Content.ReadAsStringAsync();
         Assert.DoesNotContain(secret, body, StringComparison.Ordinal);
         Assert.Contains("could not be fetched or read", body, StringComparison.OrdinalIgnoreCase);
+        using var document = JsonDocument.Parse(body);
+        var expectedCode = failureKind switch
+        {
+            "timeout" => "timeout",
+            "http_status" => "http_status",
+            "transport" => "http_transport",
+            _ => "unexpected",
+        };
+        Assert.Equal(expectedCode, document.RootElement.GetProperty("code").GetString());
     }
 
     [Fact]

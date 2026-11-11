@@ -36,9 +36,12 @@ public sealed class ApiRecipeImportService(HttpClient httpClient) : IRecipeImpor
                 : RecipeImportCreateResult.Success(MapDraft(draft));
         }
 
-        var message = await ReadMessageAsync(response, cancellationToken);
+        var failure = await response.Content.ReadFromJsonAsync<MessageDto>(
+            JsonOptions,
+            cancellationToken
+        );
         return RecipeImportCreateResult.Failure(
-            message ?? "Nie udało się utworzyć szkicu importu."
+            RecipeImportFailureGuidance.ForCode(failure?.Code, response.StatusCode)
         );
     }
 
@@ -289,5 +292,6 @@ public sealed class ApiRecipeImportService(HttpClient httpClient) : IRecipeImpor
     private sealed class MessageDto
     {
         public string? Message { get; init; }
+        public string? Code { get; init; }
     }
 }

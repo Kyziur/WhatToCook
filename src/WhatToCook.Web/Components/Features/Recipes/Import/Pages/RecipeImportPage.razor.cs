@@ -54,6 +54,21 @@ public partial class RecipeImportPage : IDisposable
             IsSubmitting = false;
             return;
         }
+        catch (OperationCanceledException)
+        {
+            IsSubmitting = false;
+            FeedbackMessage = "Przekroczono czas oczekiwania na import. Spróbuj ponownie.";
+            IsError = true;
+            return;
+        }
+        catch (HttpRequestException)
+        {
+            IsSubmitting = false;
+            FeedbackMessage =
+                "Nie można połączyć się z usługą importu. Sprawdź połączenie i spróbuj ponownie.";
+            IsError = true;
+            return;
+        }
         catch
         {
             IsSubmitting = false;
