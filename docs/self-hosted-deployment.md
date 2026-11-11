@@ -1,98 +1,34 @@
-# Self-hosted deployment (Komodo / Bitwarden Secrets Manager)
+# Self-hosted deployment — operator handoff
 
-WhatToCook is an application service for the household local network. The homelab repository owns Bitwarden Secrets Manager (BWS), Komodo, Periphery, host-path preparation, shared Docker networks, routing, and backups. This repository owns the application images and the passive Compose contract in `deploy/docker-compose.yml`.
+**Status:** `deploy/komodo.toml` is a **candidate** independent Resource Sync owner. Committing it does **not** activate the Sync or prove a successful Pi migration. Follow the operator-approved procedure in [Kyziur/homelab](https://github.com/Kyziur/homelab); this repository contains the [application Compose contract](../deploy/docker-compose.yml), not the live deployment controller.
 
-## Future independent Komodo Resource Sync owner (M1.5)
+## Who owns what
 
-The **candidate** [`deploy/komodo.toml`](../deploy/komodo.toml) lets `Kyziur/WhatToCook` own exactly one Komodo Stack, `what-to-cook`. The homelab repository still owns Core/Periphery installation, BWS runtime, host paths, networks, backup inventory and manual deployment policy. The manifest is **not activated** by committing it or merging its PR.
+- **WhatToCook:** API/Web images, `deploy/docker-compose.yml`, `deploy/komodo.toml`, schema migrations and application health behavior.
+- **Homelab:** Komodo/Periphery, Bitwarden Secrets Manager (BWS), host preparation, shared networks, ingress, locks, backups, restore and runtime verification.
 
-**Preserved identities:** Komodo Stack `what-to-cook`, Compose project `whattocook`, Docker volume expected to be `whattocook_postgres-data` (verify actual live name first), host data root `/srv/whattocook`, and Git run directory `deploy`. The draft references existing homelab-installed BWS and predeploy utilities; it does not contain their source or tokens.
+The Compose project is configured as `whattocook` in the candidate manifest. The logical database volume is `postgres-data` (expected Docker name `whattocook_postgres-data`); **verify the actual existing live identity** before applying anything. The default host `DATA_ROOT` candidate is `/srv/whattocook`, not evidence of the current host state.
 
-**Safe handoff:** Follow the [homelab ownership runbook](https://github.com/Kyziur/homelab/blob/gitops/platform-only-komodo-resource-sync/docs/runbooks/komodo-ownership-handoff.md). In an operator-approved backup/restore window, preview **both** legacy and candidate Sync diffs. Stop on any unexpected delete, project name change, new PostgreSQL volume or duplicate owner. Apply one owner at a time, with manual Stack deployment only after verifying live volume, backup and source revision. Never activate the new Sync while the old Sync manages the resource.
+## Preflight — stop on any mismatch
 
-Source-only CI checks identity, manual-only deployment and absence of secret values. It does not prove live Sync match_tags behavior, database restore, native Periphery secret interpolation or Pi readiness. M3 will replace the temporary wrapper only after independent runtime/security approval.
+Before transferring ownership or deploying, the authorized homelab operator must:
 
-## Deployment variable contract
+1. Compare **legacy and new Resource Sync previews**; confirm one owner of the `what-to-cook` Stack and no unexpected deletes or duplicate Compose projects.
+2. Record the existing project name, PostgreSQL volume and data root. Confirm a **tested, isolated restore** of the database **and** recipe images. A backup file alone is not enough.
+3. Check actual shared networks (`edge`, `observability`, `egress`), Web-only edge reachability and proxy WebSocket/forwarded-header support. API and PostgreSQL must not be externally exposed.
+4. Verify `${DATA_ROOT}/recipe-images` is a real, expected directory, writable by API UID/GID **1654:1654** with mode **0750**. Check the homelab-owned `prepare-what-to-cook` hook for unsafe symlink/path traversal: it has host-root capabilities.
+5. Confirm maintenance locking and a documented, verified recovery path. The candidate wraps pre-deploy and `config/build/pull/up/run` with the homelab lock; **manual `down` is not covered**.
 
-The canonical production deployment is a homelab-managed Komodo Resource Sync Stack consuming this repository's `deploy/docker-compose.yml`. This repository MUST NOT contain BWS tokens or project IDs, an executable `bws run` script, a host-preparation script, or a production `deploy/.env` file. The staged declarative Sync may reference existing homelab-owned host hooks and the installed BWS wrapper until the approved M3 transition.
+**STOP:** missing restore evidence, unexpected volume/project changes, an unsafe host-preparation hook, duplicate Sync ownership, missing networks or surprise exposure. Do not use a fresh empty volume as a fallback.
 
-| Owner | Variables | Contract |
-| --- | --- | --- |
-| BWS workload secret | `POSTGRES_PASSWORD` | The existing `homelab-workloads` BWS scope supplies it only to the Periphery-wrapped Compose process. It is never committed and never declared in a Stack `environment` block. |
-| Required non-secret Stack variables | `DATA_ROOT`, `POSTGRES_DB=whattocook`, `POSTGRES_USER=whattocook`, `ASPNETCORE_ENVIRONMENT=Production`, `SEED_DATA_ENABLED=false`, `DOCKER_PLATFORM` | Resource Sync generates the Stack `.env` from these values. |
-| Optional homelab overrides | `OTEL_EXPORTER_OTLP_ENDPOINT`, `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY` | Omit an override where the Compose default already matches homelab infrastructure. |
-| Compose-owned internals | `ConnectionStrings__whattocook-db`, `Storage__RecipeImagesPath`, `Api__BaseUrl` | Compose derives these values; they are not Stack or BWS inputs. |
+## Configuration and application constraints
 
-The application contract does not require `BWS_ACCESS_TOKEN`. The Periphery host owns that token and the approved wrapper; the generated Stack `.env` contains non-secret values only.
+[The example](../deploy/.env.example) lists non-secret Stack variables; [Compose](../deploy/docker-compose.yml) is authoritative for required/optional values. `DATA_ROOT` is mandatory. `POSTGRES_PASSWORD` must come only from the existing homelab BWS workload wrapper, **not** Git, a committed `.env` or a Komodo Stack environment field. `BWS_ACCESS_TOKEN` belongs to the host, never the application Stack.
 
-`POSTGRES_PASSWORD` and `DATA_ROOT` are fail-closed Compose inputs. The API has no production fallback password.
+Compose builds Web/API from the checkout; it does **not** pin immutable published images. The API applies EF Core migrations at startup: deploy **one controlled API replica**, with a reviewed schema-recovery plan. Rotating a BWS secret alone does not update the existing PostgreSQL role password.
 
-## Komodo and network boundary
+## After an approved deployment
 
-The homelab Stack configuration selects the canonical Git repository and branch, an existing Periphery target, the `deploy` run directory, and the existing Compose project name. Before the first Stack is created, inspect the live host and reuse its Compose project name, PostgreSQL volume, and `DATA_ROOT`; never accept an inferred new empty PostgreSQL volume.
+Verify real healthchecks, a **database-backed** recipe read/write, recipe-photo upload/read, Web SignalR connection, network isolation, expected existing database contents and a fresh backup/restore check. Record the actual outcome in the homelab rollout evidence.
 
-Keep API and PostgreSQL on internal Docker networks. Expose only the Web service through the shared homelab edge at `what-to-cook-web:8080`. The reverse proxy must preserve forwarded headers and WebSocket upgrades for Blazor SignalR. Do not publish host ports or proxy API or PostgreSQL directly.
-
-Web carries no Docker ingress labels; routing to `what-to-cook-web:8080` is defined only by the homelab Traefik file provider (`infra/infra-edge/traefik/dynamic` and Caddyfile in the homelab repository). Docker-label routing is not used because labels on containers can be created or altered by anyone with Docker access. Caddy remains authoritative until an operator-approved cutover; no service in this repository exposes API or PostgreSQL.
-
-## Compose and persistence
-
-`deploy/docker-compose.yml` is the application deployment contract. It requires `DATA_ROOT` and `POSTGRES_PASSWORD`; it does not define production secret values.
-
-The PostgreSQL volume is logically named `postgres-data`, but its Docker name depends on the Compose project name. Configure Komodo with the verified existing project name or perform an explicit volume migration. Never create a parallel empty database by inference.
-
-The API image runs as `1654:1654`. Before deploying or starting the Stack, homelab MUST create `${DATA_ROOT}/recipe-images`, set its owner to `1654:1654`, and set mode `0750`. This makes the host bind mount writable by the container without granting root access.
-
-`bind.create_host_path: false` prevents automatic creation on the target Linux Docker Engine. In the tested Docker Desktop configuration, however, a missing shared `C:` path was created even by `docker run --mount`; always explicitly prepare and verify the host directory before deployment.
-
-PostgreSQL is not published on a host port. Its healthcheck must pass before the API starts; the API healthcheck must pass before the Web service starts. The deployment smoke check must include a database-backed API request, not only Web liveness.
-
-## Images and migrations
-
-The current Compose file builds API and Web images from the Git checkout. A future immutable-image publication workflow is separate work.
-
-The API applies EF Core migrations at startup. Deploy exactly one controlled API replica. Multi-replica migration orchestration is separate work.
-
-Changing `POSTGRES_PASSWORD` in BWS does not change the password of an existing PostgreSQL role. Rotate the database role first, deploy the replacement secret, verify a database-backed request, then remove the old credential.
-
-## Backup, restore, and rollback
-
-Backup and restore are homelab-owned and remain outside the application release path. The homelab backup action selects PostgreSQL by Compose labels and invokes `docker exec pg_dump`; it does not run Compose or require BWS. Backup coverage includes the verified Stack root and `${DATA_ROOT}/recipe-images`.
-
-Before the first Komodo deployment:
-
-1. Create a database-and-images backup with the homelab procedure.
-2. Record the verified Compose project name and PostgreSQL volume name.
-3. Validate the backup manifest and perform a restore drill.
-4. Deploy without deleting the existing volume.
-5. Verify recipes, images, `/health`, and a database-backed request after API and Web restart.
-
-## Local development
-
-Aspire remains the local development workflow. The Web application uses Blazor Interactive Server rendering in both local and hosted deployments:
-
-```bash
-dotnet run --project src/WhatToCook.AppHost
-```
-
-Local direct API execution requires a connection string through Aspire, environment variables, or user secrets. Missing credentials fail rather than selecting a default password.
-
-## Verification checklist
-
-After the first homelab deployment, verify that the wrapped `config`, `pull`, and `up` lifecycle succeeds; all three services pass healthchecks; only non-secret values appear in the generated Stack `.env`; the Web route keeps a SignalR connection; and API/PostgreSQL are not proxy-addressable. Run the existing backup actions, validate the gzip dump and captured recipe-image data, and complete a restore drill before production readiness.
-
-### Host preparation and maintenance serialization
-
-The independent owner now wraps the **mutating** pre-deploy
-`prepare-what-to-cook .env` host-directory preparation with the same
-`/etc/komodo/.homelab-maintenance.lock` used by platform backups and Compose.
-The supported Compose commands `config`, `build`, `pull`, `up`, `run`
-are also wrapped. Do not assume Komodo wraps `down`: any manual stop/down
-must take the same host maintenance lock and coordinate with backup/recovery.
-
-**Host-side security gate remains open:** the legacy platform-installed
-`prepare-what-to-cook` executes Docker with a host-root bind and derives
-`recipe-images` from `DATA_ROOT`. Before activating this new owner, review
-and harden that platform utility against symlinks and unintended root-owned
-paths; a lock alone does not make arbitrary host-path preparation safe. This
-PR does not install, replace or invoke the utility on the Pi.
+If verification fails, stop further changes and follow the **previously rehearsed homelab recovery procedure**. This page does not claim that reverting a Git commit automatically reverses migrations or restores data. Local development uses [Aspire](../README.md#run-locally), not this production procedure.
