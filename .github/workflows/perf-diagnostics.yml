@@ -1,0 +1,92 @@
+name: perf-diagnostics
+
+# Manual, non-gating timing diagnostics (query shape, PostgreSQL plans, Blazor circuits,
+# generated photo transfers). Moved out of PR CI so every PR push does not pay for them.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Restore .NET packages
+        run: dotnet restore WhatToCook.slnx
+
+      - name: Build
+        run: dotnet build WhatToCook.slnx --no-restore --configuration Release
+
+      - name: Install Playwright dependencies
+        run: npm ci && npx playwright install --with-deps chromium
+        shell: bash
+
+      - name: Profile recipe details query shape (non-gating timings)
+        run: |
+          dotnet test tests/WhatToCook.Api.IntegrationTests/WhatToCook.Api.IntegrationTests.csproj \
+            --no-build --configuration Release \
+            --filter "FullyQualifiedName~RecipeDetailsQueryDiagnosticsTests" \
+            --logger "console;verbosity=detailed"
+
+      - name: Inspect title substring PostgreSQL plans (non-gating timings)
+        run: |
+          dotnet test tests/WhatToCook.Api.IntegrationTests/WhatToCook.Api.IntegrationTests.csproj \
+            --no-build --configuration Release \
+            --filter "FullyQualifiedName~RecipeSubstringSearchDiagnosticsTests" \
+            --logger "console;verbosity=detailed"
+
+      - name: Inspect shopping recommendation candidate materialization (non-gating timings)
+        run: |
+          dotnet test tests/WhatToCook.Api.IntegrationTests/WhatToCook.Api.IntegrationTests.csproj \
+            --no-build --configuration Release \
+            --filter "FullyQualifiedName~RecommendationCandidateDiagnosticsTests" \
+            --logger "console;verbosity=detailed"
+
+      - name: Profile Blazor circuits under 5/20 tabs (non-gating timings)
+        run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts --project=desktop-chromium --grep "@perf05"
+        shell: bash
+        env:
+          PLAYWRIGHT_DOTNET_CONFIGURATION: Release
+          PERF05_PROFILE: "1"
+
+      - name: Preserve circuit profiling snapshots
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf05-circuit-metrics
+          path: .tmp/playwright-e2e/perf05-metrics.jsonl
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Profile generated photo transfers and 320/640 px variants (diagnostic)
+        run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts --project=desktop-chromium --grep "@perf06-generated"
+        shell: bash
+        env:
+          PLAYWRIGHT_DOTNET_CONFIGURATION: Release
+          PERF06_PROFILE: "1"
+          PERF06_SAMPLE_COUNT: "36"
+
+      - name: Preserve generated photo transfer measurements
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf06-generated-image-metrics
+          path: .tmp/playwright-e2e/perf06-generated-metrics.json
+          if-no-files-found: warn
+          retention-days: 14
