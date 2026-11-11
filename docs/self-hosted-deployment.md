@@ -33,6 +33,11 @@ The homelab Stack configuration selects the canonical Git repository and branch,
 
 Keep API and PostgreSQL on internal Docker networks. Expose only the Web service through the shared homelab edge at `what-to-cook-web:8080`. The reverse proxy must preserve forwarded headers and WebSocket upgrades for Blazor SignalR. Do not publish host ports or proxy API or PostgreSQL directly.
 
+Traefik labels on Web are opt-in through `WTC_TRAEFIK_ENABLED` (default
+`false`). They require the homelab's reviewed `tailnet-https@file`
+middleware. Caddy remains authoritative until an operator-approved cutover;
+these labels do not expose API or PostgreSQL.
+
 ## Compose and persistence
 
 `deploy/docker-compose.yml` is the application deployment contract. It requires `DATA_ROOT` and `POSTGRES_PASSWORD`; it does not define production secret values.
