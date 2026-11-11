@@ -116,15 +116,6 @@ services:
       ASPNETCORE_URLS: http://0.0.0.0:8080
       Api__BaseUrl: http://api:8080
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
-    labels:
-      traefik.enable: "${WTC_TRAEFIK_ENABLED:-false}"
-      traefik.docker.network: edge
-      traefik.http.routers.what-to-cook-lan.rule: "Host(`what-to-cook.home.arpa`)"
-      traefik.http.routers.what-to-cook-lan.entrypoints: web
-      traefik.http.routers.what-to-cook-ts.rule: "Host(`what-to-cook.wyvern-allosaurus.ts.net`)"
-      traefik.http.routers.what-to-cook-ts.entrypoints: web
-      traefik.http.routers.what-to-cook-ts.middlewares: tailnet-https@file
-      traefik.http.services.what-to-cook.loadbalancer.server.port: "8080"
     expose:
       - "8080"
     healthcheck:
