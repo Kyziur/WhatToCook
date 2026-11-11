@@ -555,17 +555,18 @@
         return remainingCount > 0 ? $"{names} (+{remainingCount})" : names;
     }
 
-    private static string GetToggleLabel(ShoppingListItem item) =>
-        item.State == ShoppingChecklistState.Mam
-            ? $"Oznacz {item.DisplayText} jako Nie mam"
-            : $"Oznacz {item.DisplayText} jako Mam";
-
     private RenderFragment ShoppingItemList() => @<div class="list shopping-items">
         @foreach (var item in CurrentList!.Items
             .OrderBy(x => x.State == ShoppingChecklistState.NieMam ? 0 : 1)
             .ThenBy(x => x.SortOrder))
         {
-            <button @key="item.Id" type="button" class="shopping-item @(item.State == ShoppingChecklistState.Mam ? "shopping-item-mam" : "shopping-item-niemam")" aria-pressed="@(item.State == ShoppingChecklistState.Mam ? "true" : "false")" aria-label="@GetToggleLabel(item)" aria-disabled="@IsBusy.ToString().ToLowerInvariant()" @onclick="() => ToggleStateAsync(item)">
+            <button
+                @key="item.Id"
+                type="button"
+                class="shopping-item @(item.State == ShoppingChecklistState.Mam ? "shopping-item-mam" : "shopping-item-niemam")"
+                aria-pressed="@(item.State == ShoppingChecklistState.Mam ? "true" : "false")"
+                aria-disabled="@IsBusy.ToString().ToLowerInvariant()"
+                @onclick="() => ToggleStateAsync(item)">
                 <span class="planner-state-indicator @(item.State == ShoppingChecklistState.NieMam ? "niemam" : "mam")">@(item.State == ShoppingChecklistState.NieMam ? "❌ Nie mam" : "✅ Mam w domu")</span>
                 <span class="shopping-item-copy"><strong>@item.Name</strong>@if (item.IsManual) { <small>pozycja ręczna</small> }</span>
                 <span class="shopping-item-quantity">@FormatItemQuantity(item)@if (item.RegenerationNote is not null) { <small>@item.RegenerationNote</small> }</span>

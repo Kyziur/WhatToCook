@@ -147,7 +147,11 @@ public sealed class ShoppingListManagementSpecificationTests
         ]);
         var shopping = new FakeShoppingListService();
         mealPlans.OnShoppingGenerated = () =>
-            shopping.Seed(planId, "Pierwsza lista", [CreateItem("Pomidor", "2 szt Pomidor")]);
+            shopping.Seed(
+                planId,
+                "Pierwsza lista",
+                [CreateItem("Pomidor", "2 szt Pomidor", quantityText: "2", unit: "szt")]
+            );
         context.Services.AddSingleton<IMealPlanService>(mealPlans);
         context.Services.AddSingleton<IShoppingListService>(shopping);
         context
@@ -161,7 +165,9 @@ public sealed class ShoppingListManagementSpecificationTests
 
         Assert.Equal(1, mealPlans.ShoppingGenerationCalls);
         Assert.DoesNotContain("Regeneracja usunie", cut.Markup);
-        Assert.Contains("2 szt Pomidor", cut.Markup);
+        var generatedItem = cut.Find(".shopping-item");
+        Assert.Equal("Pomidor", generatedItem.QuerySelector(".shopping-item-copy strong")?.TextContent);
+        Assert.Equal("2 szt", generatedItem.QuerySelector(".shopping-item-quantity")?.TextContent.Trim());
     }
 
     [Fact]
@@ -240,7 +246,11 @@ public sealed class ShoppingListManagementSpecificationTests
         };
         var shopping = new FakeShoppingListService();
         mealPlans.OnShoppingGenerated = () =>
-            shopping.Seed(planId, "Powolna lista", [CreateItem("Pomidor", "2 szt Pomidor")]);
+            shopping.Seed(
+                planId,
+                "Powolna lista",
+                [CreateItem("Pomidor", "2 szt Pomidor", quantityText: "2", unit: "szt")]
+            );
         context.Services.AddSingleton<IMealPlanService>(mealPlans);
         context.Services.AddSingleton<IShoppingListService>(shopping);
         context
@@ -265,7 +275,15 @@ public sealed class ShoppingListManagementSpecificationTests
 
         generationCompletion.SetResult(true);
         await firstClick;
-        cut.WaitForAssertion(() => Assert.Contains("2 szt Pomidor", cut.Markup));
+        cut.WaitForAssertion(() =>
+        {
+            var generatedItem = cut.Find(".shopping-item");
+            Assert.Equal("Pomidor", generatedItem.QuerySelector(".shopping-item-copy strong")?.TextContent);
+            Assert.Equal(
+                "2 szt",
+                generatedItem.QuerySelector(".shopping-item-quantity")?.TextContent.Trim()
+            );
+        });
     }
 
     [Fact]
@@ -312,8 +330,10 @@ public sealed class ShoppingListManagementSpecificationTests
         string name,
         string displayText,
         ShoppingChecklistState state = ShoppingChecklistState.NieMam,
-        bool isManual = false
-    ) => new(Guid.NewGuid(), name, null, null, state, isManual, 0, displayText);
+        bool isManual = false,
+        string? quantityText = null,
+        string? unit = null
+    ) => new(Guid.NewGuid(), name, quantityText, unit, state, isManual, 0, displayText);
 
     private sealed class EmptyMealPlanService : IMealPlanService
     {
