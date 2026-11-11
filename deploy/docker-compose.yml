@@ -71,7 +71,11 @@ services:
       HTTPS_PROXY: ${HTTPS_PROXY:-http://http-proxy:8888}
       NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,api,postgres,*.home.arpa,192.168.0.0/16}
     volumes:
-      - ${DATA_ROOT:?DATA_ROOT must be provided}/recipe-images:/data/recipe-images
+      - type: bind
+        source: ${DATA_ROOT:?DATA_ROOT must be provided}/recipe-images
+        target: /data/recipe-images
+        bind:
+          create_host_path: false
     expose:
       - "8080"
     healthcheck:

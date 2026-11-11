@@ -10,7 +10,7 @@ Do not commit `POSTGRES_PASSWORD`, BWS tokens or project IDs, a production `depl
 
 ## Deployment boundary
 
-The Stack must reuse the verified existing Compose project name, PostgreSQL volume, and `DATA_ROOT`. Homelab prepares `${DATA_ROOT}/recipe-images` as owner `1654:1654` with mode `0750` before deployment.
+The Stack must reuse the verified existing Compose project name, PostgreSQL volume, and `DATA_ROOT`. Before deploying or starting it, homelab must create `${DATA_ROOT}/recipe-images`; Compose does not create the bind source. Set owner `1654:1654` and mode `0750`.
 
 The Web service is the only service routed through the shared edge at `what-to-cook-web:8080`. PostgreSQL and API stay internal. Preserve forwarded headers and WebSocket upgrades for Blazor SignalR.
 
