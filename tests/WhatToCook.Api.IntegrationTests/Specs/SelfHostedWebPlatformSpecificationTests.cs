@@ -271,7 +271,78 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
             OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal
         );
         Assert.Equal("bind", recipeImagesVolume.GetProperty("type").GetString());
-        Assert.False(recipeImagesVolume.GetProperty("bind").GetProperty("create_host_path").GetBoolean());
+        static bool? GetCreateHostPath(JsonElement volume)
+        {
+            var bind = volume.GetProperty("bind");
+            if (!bind.TryGetProperty("create_host_path", out var value))
+            {
+                return null;
+            }
+
+            Assert.True(
+                value.ValueKind is JsonValueKind.True or JsonValueKind.False,
+                $"bind.create_host_path must render as a bool when present, not {value.ValueKind}."
+            );
+            return value.GetBoolean();
+        }
+
+        var bindProbeFile = Path.Combine(
+            Path.GetTempPath(),
+            $"wtc-bind-contract-{Guid.NewGuid():N}.yml"
+        );
+        try
+        {
+            File.WriteAllText(
+                bindProbeFile,
+                """
+                services:
+                  probe:
+                    image: scratch
+                    volumes:
+                      - type: bind
+                        source: ./explicit-false
+                        target: /explicit-false
+                        bind:
+                          create_host_path: false
+                      - ./implicit:/implicit
+                      - type: bind
+                        source: ./explicit-true
+                        target: /explicit-true
+                        bind:
+                          create_host_path: true
+                """
+            );
+            var bindProbe = await RunProcessAsync(
+                "docker",
+                $"compose -f \"{bindProbeFile}\" --project-name wtc-bind-contract config --format json",
+                Path.GetDirectoryName(bindProbeFile)!,
+                new Dictionary<string, string?>(),
+                timeoutMs: 30_000
+            );
+            Assert.Equal(0, bindProbe.ExitCode);
+            using var bindProbeDocument = JsonDocument.Parse(bindProbe.Output);
+            var probeVolumes = bindProbeDocument
+                .RootElement.GetProperty("services")
+                .GetProperty("probe")
+                .GetProperty("volumes");
+            var explicitFalseVolume = probeVolumes
+                .EnumerateArray()
+                .Single(volume => volume.GetProperty("target").GetString() == "/explicit-false");
+            var implicitVolume = probeVolumes
+                .EnumerateArray()
+                .Single(volume => volume.GetProperty("target").GetString() == "/implicit");
+            var explicitTrueVolume = probeVolumes
+                .EnumerateArray()
+                .Single(volume => volume.GetProperty("target").GetString() == "/explicit-true");
+            var explicitFalse = GetCreateHostPath(explicitFalseVolume);
+            Assert.NotEqual(explicitFalse, GetCreateHostPath(implicitVolume));
+            Assert.NotEqual(explicitFalse, GetCreateHostPath(explicitTrueVolume));
+            Assert.Equal(explicitFalse, GetCreateHostPath(recipeImagesVolume));
+        }
+        finally
+        {
+            TryDeleteFile(bindProbeFile);
+        }
         var postgresDataVolume = postgres
             .GetProperty("volumes")
             .EnumerateArray()
