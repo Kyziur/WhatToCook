@@ -33,10 +33,7 @@ The homelab Stack configuration selects the canonical Git repository and branch,
 
 Keep API and PostgreSQL on internal Docker networks. Expose only the Web service through the shared homelab edge at `what-to-cook-web:8080`. The reverse proxy must preserve forwarded headers and WebSocket upgrades for Blazor SignalR. Do not publish host ports or proxy API or PostgreSQL directly.
 
-Traefik labels on Web are opt-in through `WTC_TRAEFIK_ENABLED` (default
-`false`). They require the homelab's reviewed `tailnet-https@file`
-middleware. Caddy remains authoritative until an operator-approved cutover;
-these labels do not expose API or PostgreSQL.
+Web carries no Docker ingress labels; routing to `what-to-cook-web:8080` is defined only by the homelab Traefik file provider (`infra/infra-edge/traefik/dynamic` and Caddyfile in the homelab repository). Docker-label routing is not used because labels on containers can be created or altered by anyone with Docker access. Caddy remains authoritative until an operator-approved cutover; no service in this repository exposes API or PostgreSQL.
 
 ## Compose and persistence
 
