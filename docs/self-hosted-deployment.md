@@ -39,7 +39,9 @@ Keep API and PostgreSQL on internal Docker networks. Expose only the Web service
 
 The PostgreSQL volume is logically named `postgres-data`, but its Docker name depends on the Compose project name. Configure Komodo with the verified existing project name or perform an explicit volume migration. Never create a parallel empty database by inference.
 
-The API image runs as `1654:1654`. Before deployment, homelab MUST create `${DATA_ROOT}/recipe-images`, set its owner to `1654:1654`, and set mode `0750`. This makes the host bind mount writable by the container without granting root access.
+The API image runs as `1654:1654`. Before deploying or starting the Stack, homelab MUST create `${DATA_ROOT}/recipe-images`, set its owner to `1654:1654`, and set mode `0750`. This makes the host bind mount writable by the container without granting root access.
+
+`bind.create_host_path: false` prevents automatic creation on the target Linux Docker Engine. In the tested Docker Desktop configuration, however, a missing shared `C:` path was created even by `docker run --mount`; always explicitly prepare and verify the host directory before deployment.
 
 PostgreSQL is not published on a host port. Its healthcheck must pass before the API starts; the API healthcheck must pass before the Web service starts. The deployment smoke check must include a database-backed API request, not only Web liveness.
 
