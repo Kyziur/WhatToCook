@@ -166,8 +166,14 @@ public sealed class ShoppingListManagementSpecificationTests
         Assert.Equal(1, mealPlans.ShoppingGenerationCalls);
         Assert.DoesNotContain("Regeneracja usunie", cut.Markup);
         var generatedItem = cut.Find(".shopping-item");
-        Assert.Equal("Pomidor", generatedItem.QuerySelector(".shopping-item-copy strong")?.TextContent);
-        Assert.Equal("2 szt", generatedItem.QuerySelector(".shopping-item-quantity")?.TextContent.Trim());
+        Assert.Equal(
+            "Pomidor",
+            generatedItem.QuerySelector(".shopping-item-copy strong")?.TextContent
+        );
+        Assert.Equal(
+            "2 szt",
+            generatedItem.QuerySelector(".shopping-item-quantity")?.TextContent.Trim()
+        );
     }
 
     [Fact]
@@ -278,7 +284,10 @@ public sealed class ShoppingListManagementSpecificationTests
         cut.WaitForAssertion(() =>
         {
             var generatedItem = cut.Find(".shopping-item");
-            Assert.Equal("Pomidor", generatedItem.QuerySelector(".shopping-item-copy strong")?.TextContent);
+            Assert.Equal(
+                "Pomidor",
+                generatedItem.QuerySelector(".shopping-item-copy strong")?.TextContent
+            );
             Assert.Equal(
                 "2 szt",
                 generatedItem.QuerySelector(".shopping-item-quantity")?.TextContent.Trim()
