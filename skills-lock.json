@@ -8,6 +8,14 @@
       "sourceType": "github",
       "skillPath": "skills/documentation-quality/SKILL.md",
       "computedHash": "d3f651061e6b3deffcb1985e7dd341af62cf8c32cac0e7cc1e53a701cdd4cbd6"
+    },
+    "pragmatic-senior": {
+      "source": "Kyziur/agent-skills",
+      "sourceUrl": "https://github.com/Kyziur/agent-skills",
+      "ref": "5c60211007faf87cfa660553162db503c2be6c1f",
+      "sourceType": "github",
+      "skillPath": "skills/pragmatic-senior/SKILL.md",
+      "computedHash": "ff9f025f5b7341c9385a3f148273c9849eee9feb5e792f7fd2a38542713bdff1"
     }
   }
 }
