@@ -8,7 +8,7 @@
 - `domowe` (75% selectivity) caused PostgreSQL to use bitmap GIN; count became slower in this run.
 - `zu` (two characters) stayed on sequential/B-tree scans.
 - Search SQL translation was explicitly verified to contain `LIKE`; the testing extension and index were never added to migrations.
-- Timing numbers and planner choices are captured in [the performance note](../../../docs/performance/recipe-title-substring-search.md). The dataset is synthetic and warmed; no production latency guarantee is claimed.
+- The original timing and query-plan details remain in the [historical performance note](https://github.com/Kyziur/WhatToCook/blob/39b7a5c7011a555db9b42b7daaf95195633b6a38/docs/performance/recipe-title-substring-search.md). The current [performance decisions](../../../docs/performance.md) retain the trigger for reconsidering this optimization. The dataset is synthetic and warmed; no production latency guarantee is claimed.
 
 ## Decision
 

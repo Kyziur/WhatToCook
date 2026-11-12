@@ -1,37 +1,19 @@
 # WhatToCook
 
-WhatToCook is a self-hosted recipe catalog, meal planner, and shopping list for a household LAN.
+WhatToCook helps a household **save recipes, plan meals, and generate shopping lists** without relying on a hosted recipe service. It is designed for a trusted home network, not for publicly accessible or multi-user accounts.
 
-## Local development
+The app has three main workflows: keep a recipe catalog (including URL imports and photos), assemble a meal plan, and turn planned meals into a shopping list. The Web UI is Blazor Interactive Server; an internal .NET API stores data in PostgreSQL.
 
-Requires the **.NET 10 SDK** selected by [`global.json`](global.json), **Node.js 22** for browser tests, and a running **Docker Engine** (Docker Desktop on Windows) for PostgreSQL and integration tests.
+## Run locally
 
-### Start the application
+From the repository root, install the [.NET 10 SDK](global.json) and start Docker (Docker Desktop on Windows). Then run:
 
-From the repository root:
-
-```shell
+```powershell
 dotnet restore WhatToCook.slnx
-dotnet build WhatToCook.slnx
 dotnet run --project src/WhatToCook.AppHost
 ```
 
-`restore` downloads .NET packages, `build` compiles the solution, and `run` starts the Aspire-managed PostgreSQL 17, API, and Blazor Web application. Use the Web address printed by Aspire. PostgreSQL data uses the existing local Aspire volume; do not delete or replace it as a troubleshooting shortcut.
-
-**Use the AppHost for normal development.** Running the API by itself requires a database connection string supplied through Aspire, environment variables, or user secrets; production credentials do not belong in this repository.
-
-### Run tests
-
-Keep Docker running; integration tests use PostgreSQL through Testcontainers.
-
-```shell
-dotnet test WhatToCook.slnx
-npm ci
-npx playwright install chromium
-npx playwright test --config=playwright.config.ts
-```
-
-These commands run the .NET tests, install the pinned Node dependencies, install the Playwright browser, and run the desktop/mobile E2E suite. Playwright launches its own temporary PostgreSQL, API (`127.0.0.1:5181`), and Web (`127.0.0.1:5180`) servers; stop other processes occupying those ports. A normal local `dotnet build` uses Debug, which matches the Playwright default. CI builds Release and sets `PLAYWRIGHT_DOTNET_CONFIGURATION=Release`.
+The first command restores NuGet dependencies. The second starts the Aspire-managed PostgreSQL, API, and Web app; open the Web URL reported by Aspire. **Do not delete the local PostgreSQL volume** as a troubleshooting shortcut.
 
 ### When setup fails
 
@@ -40,16 +22,26 @@ These commands run the .NET tests, install the pinned Node dependencies, install
 - If Playwright cannot find Chromium, run `npx playwright install chromium` again. If E2E startup fails, first check whether ports 5180/5181 are already occupied.
 - If direct API startup reports a missing database connection string, use the AppHost command above rather than adding credentials to source files.
 
-Repository change conventions and verification requirements are in [`AGENTS.md`](AGENTS.md); product requirements are in [`openspec/specs`](openspec/specs).
+## Verify a change
 
-## Architecture and trust boundary
+With Docker running, use these commands from the repository root:
 
-[Trust-boundary decision](docs/architecture/trust-boundary.md) explains how browsers, Blazor Web, the internal API and PostgreSQL are separated, and which access-control decisions are required **before** enabling external users or public routes. It does not change deployment or introduce authentication.
+```powershell
+dotnet build WhatToCook.slnx
+dotnet test WhatToCook.slnx
+npm ci
+npx playwright install chromium
+npx playwright test --config=playwright.config.ts
+```
 
-## Production deployment
+They build the solution, run .NET tests (including PostgreSQL Testcontainers), install pinned Node dependencies, install Chromium, and run browser E2E tests, respectively. Browser tests require Node.js 22 and use ports **5180/5181** for their temporary Web/API processes; free those ports first. For the complete handoff/formatting policy, see [AGENTS.md](AGENTS.md).
 
-Production deployment is owned by the homelab repository and Komodo. This repository provides the application Compose contract in `deploy/docker-compose.yml`; it does not contain production secret values or the Komodo configuration.
+## Find the answer
 
-Bitwarden Secrets Manager supplies deployment secrets through a trusted host-side wrapper or Komodo Action. Do not put secret values in GitHub or in a Komodo Stack `environment` block.
+- [Architecture and access boundary](docs/architecture/trust-boundary.md) — what talks to what, and why the API must stay private.
+- [Self-hosted deployment](docs/self-hosted-deployment.md) — ownership, preflight, stop conditions and verification; **no production deployment is performed from this README**.
+- [Performance decisions](docs/performance.md) — what was measured and what not to optimize yet.
+- [Repowise setup](docs/development/repowise-mcp.md) — optional local agent index and freshness checks.
+- [OpenSpec](openspec/specs) — intended product contracts; [audit tracker](docs/audits/2026-11-02-repository-audit.md) — dated findings and outstanding operational checks.
 
-See [`docs/self-hosted-deployment.md`](docs/self-hosted-deployment.md) for the Komodo/Bitwarden contract, persistence requirements, backup and restore, rotation, and verification checklist. Raspberry Pi-specific migration notes are in [`docs/deploy-raspberry.md`](docs/deploy-raspberry.md).
+**Important:** The [homelab repository](https://github.com/Kyziur/homelab) owns live Komodo configuration, external access, secrets, backups, and recovery. Repository Compose configuration does not prove the running host is secure or ready to migrate.
