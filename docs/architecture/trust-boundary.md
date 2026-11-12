@@ -8,10 +8,10 @@ flowchart LR
   Web -->|"Server-side HTTP"| API["API · .NET"]
   API -->|"EF Core"| DB[("PostgreSQL")]
   API -->|"Bind mount"| Photos[("Recipe photos")]
-  API -->|"Controlled egress"| Sources["Recipe import sources"]
+  API -->|"Egress via HTTP_PROXY"| Sources["Recipe import sources"]
 ```
 
-[Compose](../../deploy/docker-compose.yml) places **only Web** on the shared `edge` network (alias `what-to-cook-web`); the API and database are not published as browser-facing services. API also joins `egress` and `observability`. Homelab owns the reverse proxy, TLS/WebSocket forwarding and external network policies.
+[Compose](../../deploy/docker-compose.yml) places **only Web** on the shared `edge` network (alias `what-to-cook-web`); the API and database are not published as browser-facing services. API also joins `egress` and `observability`, and sends outbound import requests through `HTTP_PROXY`/`HTTPS_PROXY` (default `http://http-proxy:8888`). Homelab owns the reverse proxy, TLS/WebSocket forwarding and external network policies; the `http-proxy` service is not defined in this Compose file.
 
 ## Trust rule
 

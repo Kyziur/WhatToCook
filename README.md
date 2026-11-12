@@ -15,6 +15,13 @@ dotnet run --project src/WhatToCook.AppHost
 
 The first command restores NuGet dependencies. The second starts the Aspire-managed PostgreSQL, API, and Web app; open the Web URL reported by Aspire. **Do not delete the local PostgreSQL volume** as a troubleshooting shortcut.
 
+### When setup fails
+
+- `docker info` checks whether the Docker daemon is reachable. Start Docker Desktop/the daemon before Aspire, Testcontainers, or Playwright E2E tests.
+- `dotnet --version` checks that the .NET 10 SDK selected by `global.json` can be resolved.
+- If Playwright cannot find Chromium, run `npx playwright install chromium` again. If E2E startup fails, first check whether ports 5180/5181 are already occupied.
+- If direct API startup reports a missing database connection string, use the AppHost command above rather than adding credentials to source files.
+
 ## Verify a change
 
 With Docker running, use these commands from the repository root:
