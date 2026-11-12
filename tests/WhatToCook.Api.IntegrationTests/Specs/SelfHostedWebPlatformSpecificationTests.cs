@@ -304,8 +304,7 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
             "/data/recipe-images",
             api.GetProperty("environment").GetProperty("Storage__RecipeImagesPath").GetString()
         );
-        var recipeImagesVolume = api
-            .GetProperty("volumes")
+        var recipeImagesVolume = api.GetProperty("volumes")
             .EnumerateArray()
             .Single(volume => volume.GetProperty("target").GetString() == "/data/recipe-images");
         var expectedImageRoot = Path.GetFullPath(Path.Combine(dataRoot, "recipe-images"));
