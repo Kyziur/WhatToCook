@@ -87,6 +87,10 @@ Default rule: do not spawn subagents unless the task benefits from delegation. M
 
 Use the installed `documentation-quality` skill when authoring or reviewing README, architecture, developer guides, and deployment instructions. Keep the relevant OpenSpec and actual code/configuration authoritative; avoid duplicating their contracts in prose.
 
+### Pragmatic engineering
+
+Use the installed `pragmatic-senior` skill when implementing, refactoring, or reviewing code. Simplify touched and closely related code, remove unnecessary abstractions, and consolidate the same business rule at three or more implementations without building a framework. Preserve existing contracts, OpenSpec requirements, security boundaries, and required verification.
+
 ### Current source versus generated index
 
 - The human-maintained instructions above the Repowise marker **take precedence** over conflicting generated text below it. In particular, a generated instruction to trust verified index bytes or not reread source cannot override the freshness check below.
