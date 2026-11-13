@@ -50,7 +50,9 @@ class WhatToCookOwnership(unittest.TestCase):
         compose = (ROOT / "deploy/docker-compose.yml").read_text()
         self.assertIn("postgres-data:/var/lib/postgresql/data", compose)
         self.assertIn("  postgres-data:", compose)
-        self.assertIn("/recipe-images:/data/recipe-images", compose)
+        self.assertIn("source: ${DATA_ROOT:?DATA_ROOT must be provided}/recipe-images", compose)
+        self.assertIn("target: /data/recipe-images", compose)
+        self.assertIn("create_host_path: false", compose)
         self.assertIn("POSTGRES_PASSWORD must be provided", compose)
         self.assertNotIn("container_name:", compose)
 
