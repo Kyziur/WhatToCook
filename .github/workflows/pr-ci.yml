@@ -85,12 +85,11 @@ jobs:
         run: dotnet test WhatToCook.slnx --no-build --configuration Release
 
       # Real-Docker hook tests need root and a Docker daemon; ubuntu-latest provides both.
+      # sudo drops the caller environment (`sudo -E` is ignored on this runner), so the flag is passed via `env`.
       # WTC_REQUIRE_REAL_DOCKER=1 turns any missing prerequisite into a failure, not a skip.
       - name: Test pre-deploy hook
         if: steps.scope.outputs.application == 'true'
-        env:
-          WTC_REQUIRE_REAL_DOCKER: "1"
-        run: sudo -E python3 -m unittest discover -s scripts/prepare-what-to-cook -p 'test_*.py' -v
+        run: sudo env WTC_REQUIRE_REAL_DOCKER=1 python3 -m unittest discover -s scripts/prepare-what-to-cook -p 'test_*.py' -v
         shell: bash
 
       - name: Install Playwright dependencies
@@ -111,7 +110,9 @@ jobs:
           PLAYWRIGHT_DOTNET_CONFIGURATION: Release
 
       # Traces, screenshots and videos are kept by playwright.config.ts only for failed tests.
-      # Synthetic test data only; short retention bounds the stored artifacts.
+      # Public repo: traces can hold request headers (incl. cookies), DOM snapshots and console text.
+      # Keep e2e data synthetic (uniqueSuffix, seed API); never print secrets or env values in tests.
+      # Retention is short; review before widening the path, retention or upload scope.
       - name: Preserve Playwright failure artifacts
         if: ${{ always() && steps.playwright.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
