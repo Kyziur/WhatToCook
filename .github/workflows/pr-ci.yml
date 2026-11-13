@@ -111,8 +111,9 @@ jobs:
 
       # Traces, screenshots and videos are kept by playwright.config.ts only for failed tests.
       # Public repo: traces can hold request headers (incl. cookies), DOM snapshots and console text.
-      # Keep e2e data synthetic (uniqueSuffix, seed API); never print secrets or env values in tests.
-      # Retention is short; review before widening the path, retention or upload scope.
+      # Never add secrets.*, real credentials or auth headers to this step or to e2e tests: failure
+      # artifacts are downloadable by anyone on this public repo. Keep retention short; review before
+      # widening the path, retention or upload scope.
       - name: Preserve Playwright failure artifacts
         if: ${{ always() && steps.playwright.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
