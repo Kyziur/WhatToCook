@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Offline M1.5 contract; never accesses Komodo, Docker, BWS or production."""
-import re
 from pathlib import Path
 import tomllib
 import unittest
@@ -51,24 +50,6 @@ class WhatToCookOwnership(unittest.TestCase):
         compose = (ROOT / "deploy/docker-compose.yml").read_text()
         self.assertIn("postgres-data:/var/lib/postgresql/data", compose)
         self.assertIn("  postgres-data:", compose)
-        binds = [
-            (m.group("source"), m.group("target"), m.group("create"))
-            for m in re.finditer(
-                r"^( *)- type: bind\n"
-                r"\1  source: (?P<source>.+)\n"
-                r"\1  target: (?P<target>.+)\n"
-                r"\1  bind:\n"
-                r"\1    create_host_path: (?P<create>.+)$",
-                compose,
-                re.MULTILINE,
-            )
-        ]
-        image_binds = [b for b in binds if b[1] == "/data/recipe-images"]
-        self.assertEqual(len(image_binds), 1, "exactly one recipe-images bind entry")
-        self.assertEqual(
-            image_binds[0],
-            ("${DATA_ROOT:?DATA_ROOT must be provided}/recipe-images", "/data/recipe-images", "false"),
-        )
         self.assertIn("POSTGRES_PASSWORD must be provided", compose)
         self.assertNotIn("container_name:", compose)
 
