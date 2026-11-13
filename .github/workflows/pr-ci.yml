@@ -34,10 +34,13 @@ jobs:
           if [ -z "${BASE_SHA:-}" ] || ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
             changed=ALL
           else
-            changed="$(git diff --name-only "$BASE_SHA" HEAD)"
+            changed="$(git diff --no-renames --name-only "$BASE_SHA" HEAD)"
           fi
           relevant() { [ "$changed" = ALL ] || grep -Eq "$1" <<<"$changed"; }
-          if relevant '^(src/|tests/|scripts/|deploy/|[.]config/|[.]github/workflows/pr-ci[.]yml|playwright[.]config[.]ts|package(-lock)?[.]json|global[.]json|dotnet-tools[.]json|[.]dockerignore|.*[.](slnx|csproj|props)|[.]editorconfig)'; then echo "application=true" >> "$GITHUB_OUTPUT"; else echo "application=false" >> "$GITHUB_OUTPUT"; fi
+          # Komodo-only edits are checked by the separate resource-sync contract workflow.
+          # Keep any other deploy/ input (and unknown base) on the full app CI path.
+          application_changed="$(grep -v '^deploy/komodo[.]toml$' <<<"$changed" || true)"
+          if [ "$changed" = ALL ] || grep -Eq '^(src/|tests/|scripts/|deploy/|[.]config/|[.]github/workflows/pr-ci[.]yml|playwright[.]config[.]ts|package(-lock)?[.]json|global[.]json|dotnet-tools[.]json|[.]dockerignore|.*[.](slnx|csproj|props)|[.]editorconfig)' <<<"$application_changed"; then echo "application=true" >> "$GITHUB_OUTPUT"; else echo "application=false" >> "$GITHUB_OUTPUT"; fi
           if relevant '^([.]agents/|[.]github/agents/|[.]omp/|AGENTS[.]md|[.]mcp[.]json|skills-lock[.]json|docs/audits/|[.]github/workflows/pr-ci[.]yml)'; then echo "guidance=true" >> "$GITHUB_OUTPUT"; else echo "guidance=false" >> "$GITHUB_OUTPUT"; fi
           if relevant '^(src/WhatToCook[.]Api/|tests/WhatToCook[.]Api[.]IntegrationTests/|global[.]json|[.]github/workflows/pr-ci[.]yml|.*[.](csproj|props))'; then echo "image=true" >> "$GITHUB_OUTPUT"; else echo "image=false" >> "$GITHUB_OUTPUT"; fi
 
