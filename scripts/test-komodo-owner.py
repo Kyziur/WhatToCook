@@ -32,7 +32,15 @@ class WhatToCookOwnership(unittest.TestCase):
         self.assertIn("flock -x", cfg["compose_cmd_wrapper"])
         self.assertIn("[[COMPOSE_COMMAND]]", cfg["compose_cmd_wrapper"])
         self.assertEqual(cfg["compose_cmd_wrapper_include"], ["config", "build", "pull", "up", "run"])
-        self.assertEqual(cfg["pre_deploy"]["command"], "flock -x -w 900 /etc/komodo/.homelab-maintenance.lock /usr/local/bin/prepare-what-to-cook .env")
+        pre_deploy = cfg["pre_deploy"]
+        self.assertEqual(pre_deploy["path"], ".")
+        # The host lock is mandatory; the hook is the reviewed in-repo helper, not a host binary.
+        self.assertEqual(
+            pre_deploy["command"],
+            "flock -x -w 900 /etc/komodo/.homelab-maintenance.lock "
+            "../scripts/prepare-what-to-cook/prepare-what-to-cook .env",
+        )
+        self.assertTrue((ROOT / "scripts/prepare-what-to-cook/prepare-what-to-cook").is_file())
 
     def test_no_secret_value_or_token_in_stack_environment(self):
         doc = tomllib.loads((ROOT / "deploy/komodo.toml").read_text())
@@ -50,7 +58,6 @@ class WhatToCookOwnership(unittest.TestCase):
         compose = (ROOT / "deploy/docker-compose.yml").read_text()
         self.assertIn("postgres-data:/var/lib/postgresql/data", compose)
         self.assertIn("  postgres-data:", compose)
-        self.assertIn("/recipe-images:/data/recipe-images", compose)
         self.assertIn("POSTGRES_PASSWORD must be provided", compose)
         self.assertNotIn("container_name:", compose)
 

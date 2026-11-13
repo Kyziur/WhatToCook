@@ -1,0 +1,2 @@
+scripts/prepare-what-to-cook/prepare-what-to-cook text eol=lf
+scripts/prepare-what-to-cook/*.py text eol=lf
