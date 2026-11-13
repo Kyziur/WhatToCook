@@ -38,4 +38,4 @@ DOCKER_PLATFORM = linux/arm64/v8
 # Serialize the mutating pre-deploy directory preparation with backups too.
 [stack.config.pre_deploy]
 path = "."
-command = "flock -x -w 900 /etc/komodo/.homelab-maintenance.lock /usr/local/bin/prepare-what-to-cook .env"
+command = "flock -x -w 900 /etc/komodo/.homelab-maintenance.lock ../scripts/prepare-what-to-cook/prepare-what-to-cook .env"

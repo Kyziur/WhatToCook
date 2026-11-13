@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# Fail-closed WhatToCook pre-deploy host directory preparation.
+# Owned by the WhatToCook repository. The WhatToCook Komodo Stack
+# (`deploy/komodo.toml`, branch `main`) runs it from the Stack run directory `deploy/`
+# as `flock ... ../scripts/prepare-what-to-cook/prepare-what-to-cook .env`.
+# Accepts ONLY the reviewed /srv/whattocook DATA_ROOT. No evaluation of .env,
+# no arbitrary host-path chroot, and no mount of the host filesystem root.
+# The Komodo Stack must hold /etc/komodo/.homelab-maintenance.lock while running.
+set -euo pipefail
+
+die() { printf 'WhatToCook path preparation refused: %s\n' "$*" >&2; exit 1; }
+
+[ "$#" -eq 1 ] || die "usage: prepare-what-to-cook ENV_FILE"
+env_file="$1"
+[ -f "$env_file" ] && [ ! -L "$env_file" ] || die "missing or linked generated dotenv file"
+command -v docker >/dev/null 2>&1 || die "Docker CLI unavailable in Periphery"
+
+# A generated dotenv is untrusted input, even when produced by Resource Sync.
+# The original implementation accepted the last matching key and any absolute
+# path, letting a forged/duplicate DATA_ROOT redirect privileged host chown.
+matches="$(grep -Ec '^[[:space:]]*DATA_ROOT[[:space:]]*=' "$env_file" || true)"
+[ "$matches" = 1 ] || die "expected exactly one DATA_ROOT key"
+data_root="$(grep -E '^[[:space:]]*DATA_ROOT[[:space:]]*=' "$env_file" | cut -d= -f2- \
+  | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+case "$data_root" in
+  /srv/whattocook|\"/srv/whattocook\") ;;
+  *) die "DATA_ROOT must match the fixed /srv/whattocook directory" ;;
+esac
+
+# Running on the HOST Docker daemon. The only writable host mount is /srv,
+# not /; the script cannot create or chown any other host tree. The trusted
+# parent /srv/whattocook must be root-owned and not group/other writable.
+# The app-owned recipe-images leaf may be UID 1654, but its parent may not.
+# Fail rather than mutate an existing untrusted/symlinked leaf.
+HOST_SCRIPT="$(cat <<'HOST_SCRIPT'
+set -eu
+
+fail() { echo "Untrusted WhatToCook host path" >&2; exit 1; }
+
+trusted_parent() {
+  path="$1"
+  [ -d "$path" ] && [ ! -L "$path" ] || fail
+  [ "$(stat -c '%u:%g' "$path")" = "0:0" ] || fail
+  mode="$(stat -c '%a' "$path")" || fail
+  case "$mode" in ''|*[!0-7]*) fail ;; esac
+  [ "$((0$mode & 022))" -eq 0 ] || fail
+}
+
+trusted_parent /host-srv
+parent=/host-srv/whattocook
+if [ ! -e "$parent" ] && [ ! -L "$parent" ]; then
+  mkdir -m 0755 -- "$parent" || fail
+fi
+trusted_parent "$parent"
+
+leaf="$parent/recipe-images"
+[ ! -L "$leaf" ] || fail
+if [ ! -e "$leaf" ]; then
+  mkdir -m 0750 -- "$leaf" || fail
+fi
+[ -d "$leaf" ] && [ ! -L "$leaf" ] || fail
+leaf_uid="$(stat -c '%u' "$leaf")" || fail
+case "$leaf_uid" in 0|1654) ;; *) fail ;; esac
+chown 1654:1654 "$leaf" || fail
+chmod 0750 "$leaf" || fail
+[ "$(stat -c '%u:%g:%a' "$leaf")" = "1654:1654:750" ] || fail
+HOST_SCRIPT
+)"
+
+docker run --rm --network none --read-only --security-opt no-new-privileges \
+  --cap-drop ALL --cap-add CHOWN --cap-add FOWNER --cap-add DAC_OVERRIDE \
+  --pids-limit 32 \
+  --mount type=bind,source=/srv,target=/host-srv \
+  --entrypoint sh busybox:1.36@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662 -ec "$HOST_SCRIPT" || die "host directory safety gate failed"
+
+echo "PASS: fixed WhatToCook recipe-image directory has the required owner and mode."
