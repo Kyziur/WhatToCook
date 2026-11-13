@@ -84,6 +84,15 @@ jobs:
         if: steps.scope.outputs.application == 'true'
         run: dotnet test WhatToCook.slnx --no-build --configuration Release
 
+      # Real-Docker hook tests need root and a Docker daemon; ubuntu-latest provides both.
+      # WTC_REQUIRE_REAL_DOCKER=1 turns any missing prerequisite into a failure, not a skip.
+      - name: Test pre-deploy hook
+        if: steps.scope.outputs.application == 'true'
+        env:
+          WTC_REQUIRE_REAL_DOCKER: "1"
+        run: sudo -E python3 -m unittest discover -s scripts/prepare-what-to-cook -p 'test_*.py' -v
+        shell: bash
+
       - name: Install Playwright dependencies
         if: steps.scope.outputs.application == 'true'
         run: npm ci && npx playwright install --with-deps chromium

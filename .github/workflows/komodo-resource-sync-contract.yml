@@ -5,6 +5,7 @@ on:
     paths:
       - "deploy/komodo.toml"
       - "deploy/docker-compose.yml"
+      - "scripts/prepare-what-to-cook/**"
       - "scripts/test-komodo-owner.py"
       - ".github/workflows/komodo-resource-sync-contract.yml"
   workflow_dispatch:
