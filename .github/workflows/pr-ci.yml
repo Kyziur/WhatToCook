@@ -85,12 +85,11 @@ jobs:
         run: dotnet test WhatToCook.slnx --no-build --configuration Release
 
       # Real-Docker hook tests need root and a Docker daemon; ubuntu-latest provides both.
+      # sudo drops the caller environment (`sudo -E` is ignored on this runner), so the flag is passed via `env`.
       # WTC_REQUIRE_REAL_DOCKER=1 turns any missing prerequisite into a failure, not a skip.
       - name: Test pre-deploy hook
         if: steps.scope.outputs.application == 'true'
-        env:
-          WTC_REQUIRE_REAL_DOCKER: "1"
-        run: sudo -E python3 -m unittest discover -s scripts/prepare-what-to-cook -p 'test_*.py' -v
+        run: sudo env WTC_REQUIRE_REAL_DOCKER=1 python3 -m unittest discover -s scripts/prepare-what-to-cook -p 'test_*.py' -v
         shell: bash
 
       - name: Install Playwright dependencies
@@ -103,11 +102,26 @@ jobs:
         run: node --test tests/ci/image-transfer-browser.test.mjs
 
       - name: Playwright smoke suite
+        id: playwright
         if: steps.scope.outputs.application == 'true'
         run: PLAYWRIGHT_HTML_OPEN=never npx playwright test --config=playwright.config.ts
         shell: bash
         env:
           PLAYWRIGHT_DOTNET_CONFIGURATION: Release
+
+      # Traces, screenshots and videos are kept by playwright.config.ts only for failed tests.
+      # Public repo: traces can hold request headers (incl. cookies), DOM snapshots and console text.
+      # Never add secrets.*, real credentials or auth headers to this step or to e2e tests: failure
+      # artifacts are downloadable by anyone on this public repo. Keep retention short; review before
+      # widening the path, retention or upload scope.
+      - name: Preserve Playwright failure artifacts
+        if: ${{ always() && steps.playwright.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failure-artifacts
+          path: tests/e2e/artifacts/test-results
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Validate agent guidance and audit tracker
         if: steps.scope.outputs.application == 'true' || steps.scope.outputs.guidance == 'true'

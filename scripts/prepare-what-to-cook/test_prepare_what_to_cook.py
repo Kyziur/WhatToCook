@@ -18,7 +18,7 @@ cases. Every refusal is asserted by its stderr message, not by exit status alone
 
 Set WTC_TEST_BASH to a bash binary (Git for Windows: C:/Program Files/Git/bin/bash.exe).
 Set WTC_REQUIRE_REAL_DOCKER=1 in CI: any missing prerequisite then fails instead of skipping.
-Run: sudo -E WTC_REQUIRE_REAL_DOCKER=1 python3 -m unittest discover -s scripts/prepare-what-to-cook -p 'test_*.py' -v
+Run: sudo env WTC_REQUIRE_REAL_DOCKER=1 python3 -m unittest discover -s scripts/prepare-what-to-cook -p 'test_*.py' -v
 """
 
 import os
