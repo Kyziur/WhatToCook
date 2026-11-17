@@ -1,21 +1,37 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "documentation-quality": {
       "source": "Kyziur/agent-skills",
-      "sourceUrl": "https://github.com/Kyziur/agent-skills",
-      "ref": "a796b982041d4c70e585256cc4cf218f5c6dd430",
+      "ref": "a64a4dd6cc7296eed19a211fe900931168131cd5",
+      "commit": "a64a4dd6cc7296eed19a211fe900931168131cd5",
       "sourceType": "github",
       "skillPath": "skills/documentation-quality/SKILL.md",
-      "computedHash": "d3f651061e6b3deffcb1985e7dd341af62cf8c32cac0e7cc1e53a701cdd4cbd6"
+      "computedHash": "dd95e1bdabf71732c9528006a2022313e1cad69841bb8fac4010da8084719eac"
+    },
+    "operational-change": {
+      "source": "Kyziur/agent-skills",
+      "ref": "a64a4dd6cc7296eed19a211fe900931168131cd5",
+      "commit": "a64a4dd6cc7296eed19a211fe900931168131cd5",
+      "sourceType": "github",
+      "skillPath": "skills/operational-change/SKILL.md",
+      "computedHash": "42e8a91b1bcc241f2a38d8ce55e8dad887db38a9987b9e3437e4ea7305d019c4"
     },
     "pragmatic-senior": {
       "source": "Kyziur/agent-skills",
-      "sourceUrl": "https://github.com/Kyziur/agent-skills",
-      "ref": "5c60211007faf87cfa660553162db503c2be6c1f",
+      "ref": "a64a4dd6cc7296eed19a211fe900931168131cd5",
+      "commit": "a64a4dd6cc7296eed19a211fe900931168131cd5",
       "sourceType": "github",
       "skillPath": "skills/pragmatic-senior/SKILL.md",
-      "computedHash": "ff9f025f5b7341c9385a3f148273c9849eee9feb5e792f7fd2a38542713bdff1"
+      "computedHash": "59b276f40719b414b2679216379941798f747196470e1545e99b2d382343098e"
+    },
+    "task-delivery": {
+      "source": "Kyziur/agent-skills",
+      "ref": "a64a4dd6cc7296eed19a211fe900931168131cd5",
+      "commit": "a64a4dd6cc7296eed19a211fe900931168131cd5",
+      "sourceType": "github",
+      "skillPath": "skills/task-delivery/SKILL.md",
+      "computedHash": "5250ddaa1d6a4166eec8ff36bfd75390932580c5e58fcdf28d0895f2fe1d8f18"
     }
   }
 }
