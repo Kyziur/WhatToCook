@@ -26,10 +26,13 @@ jobs:
         with:
           persist-credentials: false
 
-      # Rewrite every tracked file under the matrix core.autocrlf value; the LF policy must hold either way.
+      # Re-materialise every tracked file under the matrix core.autocrlf value. checkout-index does not
+      # rewrite files that already exist, so delete them first; the LF policy must hold either way.
       - name: Force checkout under core.autocrlf
         shell: bash
-        run: git -c core.autocrlf=${{ matrix.autocrlf }} checkout-index --all --force
+        run: |
+          git ls-files -z | xargs -0 rm -f
+          git -c core.autocrlf=${{ matrix.autocrlf }} checkout-index --all
 
       - name: Setup Python
         uses: actions/setup-python@v5
