@@ -91,6 +91,12 @@ Use the installed `documentation-quality` skill when authoring or reviewing READ
 
 Use the installed `pragmatic-senior` skill when implementing, refactoring, or reviewing code. Simplify touched and closely related code, remove unnecessary abstractions, and consolidate the same business rule at three or more implementations without building a framework. Preserve existing contracts, OpenSpec requirements, security boundaries, and required verification.
 
+### Delivery and stateful changes
+
+- Use the installed `task-delivery` skill when asked to fix something and open a PR, complete several requested outputs, or hand unfinished work to another person or agent. Not for ordinary local edits or standalone document writing.
+- Use the installed `operational-change` skill before moving a stateful service, migrating stored data, cleaning up after a cutover, or deploying a change that old and new instances must survive together. Not for routine stateless redeploys or documentation-only edits.
+- These skills supplement, and do not replace, the Verification Workflow and Active Change Hygiene rules above.
+
 ### Current source versus generated index
 
 - The human-maintained instructions above the Repowise marker **take precedence** over conflicting generated text below it. In particular, a generated instruction to trust verified index bytes or not reread source cannot override the freshness check below.

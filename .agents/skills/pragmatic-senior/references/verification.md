@@ -1,53 +1,46 @@
-# Verification and operational risk
+# Verification and CI
 
-Use this reference when a change touches data, contracts, or deployment, or when choosing what to test and how to report it.
+Read when selecting tests, editing CI pipelines, changing data or deployments, or preparing a completion report.
 
-## Verify the claim, not just the build
+## Verify behavior proportionately
 
-Choose checks based on the changed behavior and regression risk:
+- Reproduce the failure or identify the expected behavior before changing it when feasible.
+- Prefer observable regression tests, relevant integration/contract checks, and a realistic invocation over mocks that assert implementation details.
+- Exercise the path a consumer actually runs: the real invocation with its shell, working directory, and platform-specific file attributes where the consumer is sensitive to them, and the failure it would observe (exit status, output, written file). Grepping a script's source proves only that the text exists.
+- Check that refactoring or deletion preserves supported behavior; retain useful regression tests.
+- Run the narrowest meaningful available checks. Record commands and outcomes; explain what could not be run.
 
-- Reproduce the bug or identify the failing scenario before fixing it when feasible.
-- Cover observable behavior and important failures, especially contract and boundary cases.
-- Prefer a small relevant test suite plus a realistic invocation over a large collection of implementation-coupled mocks.
-- For refactoring or deletion, confirm the remaining contracts and critical behavior still work; do not delete regression tests for behavior you retain.
-- Report checks that could not run and the specific uncertainty they leave.
+A compilation pass does not prove runtime behavior. Don't duplicate the same assertion merely to increase coverage or job counts.
 
-A meaningful regression test is worth its maintenance cost; asserting mocked implementation details without behavior is not.
+## CI workflows: cost and ownership
 
-## Where trust actually changes
+Keep required PR gates small, deterministic, and stable. Evaluate each proposed check by its actual failure mode, coverage already provided, correct execution boundary, and recurring cost. Do not add a job, matrix axis, scheduled task, or custom change-detection framework for a hypothetical benefit.
 
-Do not repeat identical validation without a reason. A well-defined internal type or validated value may carry reliable guarantees, but a type alone does not establish every domain invariant. Trust or consistency may change when data arrives from somewhere the current code does not control:
+- Run expensive integration suites, container builds, or platform-specific tests when the affected change or target release warrants them. A documentation-only edit should not trigger unrelated application fixtures. Use supported target platforms to choose matrix dimensions.
+- Keep required check names compatible with branch-protection rules. A required workflow skipped by top-level path filters can remain pending; prefer a stable lightweight gate with conditional work inside it, or make optional jobs non-required.
+- Consolidate checks that test the same invariant. When removing a workflow, check whether it owns a unique regression assertion and retire obsolete tests or scripts alongside superseded jobs.
+- Pin executable/container dependencies to a reproducible version or digest when the threat and maintenance model justify it. Verify that image builds and published artifacts support target architectures; do not hardcode version literals into unrelated regression checks.
+- Avoid periodic CI that reruns unchanged source without a meaningful external drift risk. Treat readiness, permissions, network isolation, and restore behavior as deployed-state claims when source checks cannot prove them.
+- Keep one-time migration and cutover gates only while the operation remains relevant. Preserve reusable restoration or safety checks where the underlying operation is still supported.
 
-- user input, network responses, files, and external messages,
-- deserialized payloads and records written by older versions of the code,
-- background jobs or other processes that can modify state between a check and its use.
+## Neutral calibration scenarios
 
-Check at the boundary that owns each risk. Keep layered enforcement when the protections are different: request-shape validation is not a substitute for a database `UNIQUE` constraint against concurrent writes. Avoid logging tokens, credentials, personal data, or entire payloads by default; log safe identifiers and causes instead.
+- A service requires network isolation. One source-level policy check may guard its configuration, while an authorized deployment test is needed to prove runtime traffic cannot escape. Repeating the same configuration assertion across workflows adds cost, not assurance.
+- A library change affects native binary support for two target architectures. Verify on those architectures or inspect the published artifact accordingly; skip the matrix for unrelated text changes.
+- A database migration includes a restore procedure. Keep the restore verification while the migration is active, then remove temporary cutover automation without removing still-useful recovery coverage.
+- An API validates input format; a database `UNIQUE` constraint protects integrity under concurrent requests. These checks guard different failure modes and should both remain.
 
-## Performance changes
+## Errors, trust, and operational risk
 
-Before adding caching, batching infrastructure, parallelism, or bespoke optimization, identify the relevant workload and measure the bottleneck. Record what the optimization costs (invalidation, memory, concurrency, eventual consistency).
+Enforce relevant invariants at the boundaries where they can fail, including external inputs, persisted legacy data, and concurrent state changes. Avoid logging secrets, personal data, or whole payloads; keep errors actionable.
 
-## Deployments, data, and contracts
+Before modifying schemas, durable data, messages, public APIs, permissions, or infrastructure:
 
-Before changing a database schema, persistent format, external event, public API, security rule, or infrastructure stack:
-
-1. Identify current consumers, versions, persisted data, and ordering constraints.
-2. Determine whether the change is backwards compatible. If not, plan the migration or an explicit coordinated cutover.
-3. Define a safe deployment sequence and a realistic rollback or recovery path. Not every data migration is reversible.
-4. Identify preflight and post-deploy checks plus stop conditions.
-5. Follow the environment's permissions and required human approval. Never use production as a speculative test.
-
-**Infrastructure example:** For a service moved between independently managed Compose stacks, verify volume ownership, network connectivity, ordering, and isolation. A green Compose config parse does not prove the service is deployable.
-
-**Application example:** For a change in message serialization or ORM persistence mapping, a passing unit test does not prove compatibility with existing stored records or consumers. Add a contract or migration check where the risk is real.
+1. Identify current consumers and compatibility or ordering constraints.
+2. Define the migration/release sequence and recovery or rollback limits.
+3. Select preflight, post-change, and stop conditions.
+4. Follow local authorization rules. Never use live systems as speculative test environments.
 
 ## Honest completion report
 
-Distinguish:
-
-- **verified**: the command you ran and its result,
-- **reasoned**: reviewed but not executed,
-- **unknown**: environment or evidence unavailable.
-
-Never invent successful test runs, monitoring coverage, or rollback guarantees.
+Distinguish observed verification (command and result), reasoned analysis, and unverified runtime assumptions. Never claim CI, deployment safety, or recovery success from source inspection alone.
