@@ -1,2 +1,23 @@
 scripts/prepare-what-to-cook/prepare-what-to-cook text eol=lf
 scripts/prepare-what-to-cook/*.py text eol=lf
+# Line endings: LF is the committed policy for all repository text.
+# `eol=lf` overrides core.autocrlf, so Windows checkouts stay LF without global Git config.
+# A text path may use `eol=crlf` only for a byte-exact CRLF fixture; list it here with the reason. None exist today.
+* text=auto eol=lf
+
+# Binary assets: never normalized or diffed as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.zip binary
+*.gz binary
+
+# Unix entry points, including extensionless scripts, are pinned explicitly.

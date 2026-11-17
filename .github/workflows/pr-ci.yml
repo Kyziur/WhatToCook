@@ -1,5 +1,38 @@
 name: PR CI
 
+  line-endings:
+    name: Line endings (${{ matrix.os }}, core.autocrlf=${{ matrix.autocrlf }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        autocrlf: ["true", "false"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Rewrite every tracked file under the matrix core.autocrlf value; the LF policy must hold either way.
+      - name: Force checkout under core.autocrlf
+        shell: bash
+        run: git -c core.autocrlf=${{ matrix.autocrlf }} checkout-index --all --force
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check index and checkout line endings
+        shell: bash
+        run: python scripts/ci/check-line-endings.py
+
+      - name: Test line-ending checker
+        shell: bash
+        run: python -m unittest discover -s scripts/ci -p 'test_*.py' -v
+
 on:
   pull_request:
 
