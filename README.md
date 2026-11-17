@@ -1,13 +1,4 @@
 # WhatToCook
-### Line endings
-
-Repository text is LF. `.gitattributes` sets `* text=auto eol=lf`, so committed and checked-out text stays LF even with `core.autocrlf=true` (the Git for Windows default). Do not change global Git config to work around it.
-
-- Diagnose with `git ls-files --eol <path>`: `i/` is the committed index, `w/` is the working tree. Text should show `i/lf w/lf`.
-- Check the repository with `python scripts/ci/check-line-endings.py`. The PR CI `line-endings` job runs it on Linux and Windows with `core.autocrlf` true and false.
-- Only a byte-exact fixture may keep CRLF, via an explicit `eol=crlf` attribute listed in `.gitattributes` with its reason.
-- To refresh an existing clone that has CRLF files, first confirm `git status --short` is empty, then run `git rm -r --cached -q . && git reset --hard`. If there are local changes, commit or stash them first; never reset over them.
-
 
 WhatToCook helps a household **save recipes, plan meals, and generate shopping lists** without relying on a hosted recipe service. It is designed for a trusted home network, not for publicly accessible or multi-user accounts.
 
@@ -52,7 +43,6 @@ Repository text is LF. `.gitattributes` sets `* text=auto eol=lf`, so committed 
 - Diagnose with `git ls-files --eol <path>`: `i/` is the committed index, `w/` is the working tree. Text should show `i/lf w/lf`.
 - Check the repository with `python scripts/ci/check-line-endings.py`. The PR CI `line-endings` job runs it on Linux and Windows with `core.autocrlf` true and false.
 - Only a byte-exact fixture may keep CRLF, via an explicit `eol=crlf` attribute listed in `.gitattributes` with its reason.
-- To refresh an existing clone that has CRLF files, first confirm `git status --short` is empty, then run `git rm -r --cached -q . && git reset --hard`. If there are local changes, commit or stash them first; never reset over them.
 
 ## Find the answer
 
