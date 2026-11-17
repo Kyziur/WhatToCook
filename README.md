@@ -36,14 +36,6 @@ npx playwright test --config=playwright.config.ts
 
 They build the solution, run .NET tests (including PostgreSQL Testcontainers), install pinned Node dependencies, install Chromium, and run browser E2E tests, respectively. Browser tests require Node.js 22 and use ports **5180/5181** for their temporary Web/API processes; free those ports first. For the complete handoff/formatting policy, see [AGENTS.md](AGENTS.md).
 
-### Line endings
-
-Repository text is LF. `.gitattributes` sets `* text=auto eol=lf`, so committed and checked-out text stays LF even with `core.autocrlf=true` (the Git for Windows default). Do not change global Git config to work around it.
-
-- Diagnose with `git ls-files --eol <path>`: `i/` is the committed index, `w/` is the working tree. Text should show `i/lf w/lf`.
-- Check the repository with `python scripts/ci/check-line-endings.py`. The PR CI `line-endings` job runs it on Linux and Windows with `core.autocrlf` true and false.
-- Only a byte-exact fixture may keep CRLF, via an explicit `eol=crlf` attribute listed in `.gitattributes` with its reason.
-
 ## Find the answer
 
 - [Architecture and access boundary](docs/architecture/trust-boundary.md) — what talks to what, and why the API must stay private.
