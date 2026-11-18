@@ -15,6 +15,7 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+using var dataProtectionCertificate = builder.Services.AddWebDataProtection(builder.Configuration);
 
 // .NET 10 publishes these meters; only the Web host owns Blazor circuits.
 // ServiceDefaults already handles OTLP export when configured.

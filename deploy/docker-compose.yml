@@ -116,6 +116,13 @@ services:
       ASPNETCORE_URLS: http://0.0.0.0:8080
       Api__BaseUrl: http://api:8080
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      DataProtection__KeyRingPath: /var/lib/whattocook/data-protection
+      DataProtection__CertificatePath: /run/secrets/web-data-protection.pem
+    volumes:
+      - web-data-protection:/var/lib/whattocook/data-protection
+    secrets:
+      - source: web-data-protection-certificate
+        target: web-data-protection.pem
     expose:
       - "8080"
     healthcheck:
@@ -143,5 +150,10 @@ networks:
     external: true
     name: egress
 
+secrets:
+  web-data-protection-certificate:
+    file: ${DATA_ROOT:?DATA_ROOT must be provided}/secrets/web-data-protection.pem
+
 volumes:
   postgres-data:
+  web-data-protection:

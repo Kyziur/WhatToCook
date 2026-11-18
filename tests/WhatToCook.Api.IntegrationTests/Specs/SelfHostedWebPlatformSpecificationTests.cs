@@ -3,8 +3,11 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace WhatToCook.Api.IntegrationTests.Specs;
 
@@ -129,6 +132,8 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
             Path.GetTempPath(),
             $"wtc-selfhost-override-{Guid.NewGuid():N}.yml"
         );
+        var composeArguments =
+            $"compose -f \"{composeFile}\" -f \"{composeOverrideFile}\" --project-name {projectName}";
         var dockerPlatform = RuntimeInformation.ProcessArchitecture switch
         {
             Architecture.Arm64 => "linux/arm64/v8",
@@ -148,6 +153,7 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
 
         try
         {
+            WriteWebDataProtectionCertificate(dataRoot);
             File.WriteAllText(
                 composeOverrideFile,
                 """
@@ -241,6 +247,147 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
             using var photoResponse = await apiClient.GetAsync($"recipe-images/{photoName}");
             photoResponse.EnsureSuccessStatusCode();
             Assert.Equal(imageBytes, await photoResponse.Content.ReadAsByteArrayAsync());
+
+            // Antiforgery state minted before a web-only recreation must still decrypt in the
+            // recreated container: the framework reuses the existing cookie instead of replacing it.
+            // Tampered and cookie-less submissions remain rejected.
+            var pageUri = new Uri($"http://127.0.0.1:{publicHttpPort}/recipes/new");
+            var antiforgeryCookies = new CookieContainer();
+            using var antiforgeryClient = CreateAntiforgeryClient(antiforgeryCookies);
+            var issuedForm = await GetRecipeEditorFormAsync(antiforgeryClient, pageUri);
+            Assert.True(
+                HasAntiforgeryCookie(antiforgeryCookies, pageUri),
+                "GET /recipes/new did not issue an antiforgery cookie."
+            );
+            var issuedAntiforgeryCookieValue = antiforgeryCookies
+                .GetCookies(pageUri)
+                .Single(cookie =>
+                    cookie.Name.StartsWith(".AspNetCore.Antiforgery", StringComparison.Ordinal)
+                )
+                .Value;
+
+            async Task<string> ContainerIdAsync(string service) =>
+                await GetComposeServiceContainerIdAsync(
+                    composeArguments,
+                    service,
+                    deployDirectory,
+                    env
+                );
+
+            var keyFilesBeforeRecreate = await ListDataProtectionKeyFilesAsync(
+                composeArguments,
+                deployDirectory,
+                env
+            );
+            Assert.NotEmpty(keyFilesBeforeRecreate);
+            var webContainerBeforeRecreate = await ContainerIdAsync("web");
+            var apiContainerBeforeRecreate = await ContainerIdAsync("api");
+            var postgresContainerBeforeRecreate = await ContainerIdAsync("postgres");
+
+            var recreateWeb = await RunProcessAsync(
+                "docker",
+                $"{composeArguments} up -d --force-recreate --no-deps --wait web",
+                deployDirectory,
+                env,
+                timeoutMs: 300_000
+            );
+            Assert.True(
+                recreateWeb.ExitCode == 0,
+                $"docker compose force-recreate web failed.{Environment.NewLine}{recreateWeb.Output}"
+            );
+            var webContainerAfterRecreate = await ContainerIdAsync("web");
+            Assert.NotEqual(webContainerBeforeRecreate, webContainerAfterRecreate);
+            Assert.Equal(apiContainerBeforeRecreate, await ContainerIdAsync("api"));
+            Assert.Equal(postgresContainerBeforeRecreate, await ContainerIdAsync("postgres"));
+
+            // Runtime proof: the recreated container's key directory keeps the image-owned
+            // app UID/GID and 0700 mode. Only metadata is read; no key material.
+            var keyDirectoryStat = await RunProcessAsync(
+                "docker",
+                $"{composeArguments} exec -T web stat -c %u:%g:%a {WebKeyRingPath}",
+                deployDirectory,
+                env,
+                timeoutMs: 60_000
+            );
+            Assert.True(
+                keyDirectoryStat.ExitCode == 0,
+                $"Inspecting web Data Protection directory failed.{Environment.NewLine}{keyDirectoryStat.Output}"
+            );
+            Assert.Equal("1654:1654:700", keyDirectoryStat.Output.Trim());
+
+            // The certificate must be mounted read-only into the recreated web container.
+            var webInspect = await RunProcessAsync(
+                "docker",
+                $"inspect --format \"{{{{json .Mounts}}}}\" {webContainerAfterRecreate}",
+                deployDirectory,
+                env,
+                timeoutMs: 30_000
+            );
+            Assert.True(
+                webInspect.ExitCode == 0,
+                $"docker inspect web mounts failed.{Environment.NewLine}{webInspect.Output}"
+            );
+            using var mounts = JsonDocument.Parse(webInspect.Output);
+            var certificateMount = mounts
+                .RootElement.EnumerateArray()
+                .Single(mount =>
+                    mount.GetProperty("Destination").GetString() == WebCertificateTarget
+                );
+            Assert.False(certificateMount.GetProperty("RW").GetBoolean());
+
+            // Reuse the pre-recreation CookieContainer. The framework decrypts the existing
+            // antiforgery cookie and keeps it; a replacement Set-Cookie would mean the recreated
+            // web could not decrypt it. Cookie values are compared as booleans and never printed.
+            using var reissuedPageResponse = await antiforgeryClient.GetAsync(pageUri);
+            Assert.Equal(HttpStatusCode.OK, reissuedPageResponse.StatusCode);
+            Assert.False(
+                reissuedPageResponse.Headers.TryGetValues("Set-Cookie", out var setCookieHeaders)
+                    && setCookieHeaders.Any(header =>
+                        header.StartsWith(".AspNetCore.Antiforgery", StringComparison.Ordinal)
+                    ),
+                "Recreated web replaced the pre-recreation antiforgery cookie instead of decrypting it."
+            );
+            var reissuedForm = ParseRecipeEditorForm(
+                await reissuedPageResponse.Content.ReadAsStringAsync()
+            );
+            Assert.False(string.IsNullOrEmpty(reissuedForm.RequestToken));
+            Assert.True(
+                string.Equals(
+                    issuedAntiforgeryCookieValue,
+                    antiforgeryCookies
+                        .GetCookies(pageUri)
+                        .Single(cookie =>
+                            cookie.Name.StartsWith(
+                                ".AspNetCore.Antiforgery",
+                                StringComparison.Ordinal
+                            )
+                        )
+                        .Value,
+                    StringComparison.Ordinal
+                ),
+                "Antiforgery cookie value changed across web recreation."
+            );
+
+            var tamperedForm = WithRequestToken(issuedForm, TamperToken(issuedForm.RequestToken));
+            var tamperedStatus = await PostRecipeEditorFormAsync(
+                antiforgeryClient,
+                pageUri,
+                tamperedForm
+            );
+            Assert.Equal(HttpStatusCode.BadRequest, tamperedStatus);
+
+            using var cookielessClient = CreateAntiforgeryClient(new CookieContainer());
+            var cookielessStatus = await PostRecipeEditorFormAsync(
+                cookielessClient,
+                pageUri,
+                issuedForm
+            );
+            Assert.Equal(HttpStatusCode.BadRequest, cookielessStatus);
+
+            Assert.Equal(
+                keyFilesBeforeRecreate,
+                await ListDataProtectionKeyFilesAsync(composeArguments, deployDirectory, env)
+            );
         }
         finally
         {
@@ -394,6 +541,53 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
             .EnumerateArray()
             .Single(x => x.GetProperty("target").GetString() == "/var/lib/postgresql/data");
         Assert.Equal("volume", postgresDataVolume.GetProperty("type").GetString());
+
+        var webEnvironment = web.GetProperty("environment");
+        Assert.Equal(
+            WebKeyRingPath,
+            webEnvironment.GetProperty("DataProtection__KeyRingPath").GetString()
+        );
+        Assert.Equal(
+            WebCertificateTarget,
+            webEnvironment.GetProperty("DataProtection__CertificatePath").GetString()
+        );
+        Assert.Equal(
+            new[] { "DataProtection__CertificatePath", "DataProtection__KeyRingPath" },
+            webEnvironment
+                .EnumerateObject()
+                .Select(property => property.Name)
+                .Where(name => name.StartsWith("DataProtection__", StringComparison.Ordinal))
+                .Order(StringComparer.Ordinal)
+                .ToArray()
+        );
+
+        var webKeyRingVolume = Assert.Single(web.GetProperty("volumes").EnumerateArray().ToArray());
+        Assert.Equal(WebKeyRingPath, webKeyRingVolume.GetProperty("target").GetString());
+        Assert.Equal("volume", webKeyRingVolume.GetProperty("type").GetString());
+        Assert.Equal(WebKeyRingVolume, webKeyRingVolume.GetProperty("source").GetString());
+        Assert.True(root.GetProperty("volumes").TryGetProperty(WebKeyRingVolume, out _));
+
+        var webSecret = Assert.Single(web.GetProperty("secrets").EnumerateArray().ToArray());
+        Assert.Equal(WebCertificateSecret, webSecret.GetProperty("source").GetString());
+        Assert.Equal(
+            WebCertificateTarget,
+            ResolveSecretTarget(webSecret.GetProperty("target").GetString()!)
+        );
+        var certificateSecret = root.GetProperty("secrets").GetProperty(WebCertificateSecret);
+        Assert.Equal(
+            Path.GetFullPath(Path.Combine(dataRoot, "secrets", WebCertificateFileName)),
+            Path.GetFullPath(certificateSecret.GetProperty("file").GetString()!),
+            OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal
+        );
+
+        Assert.False(
+            MountsWebDataProtection(api),
+            "api must not mount web Data Protection key ring or certificate."
+        );
+        Assert.False(
+            MountsWebDataProtection(postgres),
+            "postgres must not mount web Data Protection key ring or certificate."
+        );
 
         var missingMount = new Dictionary<string, string?>(env, StringComparer.Ordinal)
         {
@@ -615,4 +809,242 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
             // Ignore temp cleanup errors.
         }
     }
+
+    private const string WebKeyRingPath = "/var/lib/whattocook/data-protection";
+    private const string WebKeyRingVolume = "web-data-protection";
+    private const string WebCertificateSecret = "web-data-protection-certificate";
+    private const string WebCertificateTarget = "/run/secrets/web-data-protection.pem";
+    private const string WebCertificateFileName = "web-data-protection.pem";
+    private const string AntiforgeryFieldName = "__RequestVerificationToken";
+    private const string RecipeEditorFormName = "recipe-editor";
+    private static readonly Regex FormElementPattern = new(
+        @"<form\b[^>]*>.*?</form>",
+        RegexOptions.IgnoreCase | RegexOptions.Singleline
+    );
+    private static readonly Regex InputElementPattern = new(
+        @"<input\b[^>]*>",
+        RegexOptions.IgnoreCase
+    );
+    private static readonly Regex AttributePattern = new(
+        "\\s(name|type|value)=\"([^\"]*)\"",
+        RegexOptions.IgnoreCase
+    );
+
+    private sealed class RecipeEditorForm(IReadOnlyList<KeyValuePair<string, string>> fields)
+    {
+        public IReadOnlyList<KeyValuePair<string, string>> Fields { get; } = fields;
+
+        public string RequestToken =>
+            Fields.Single(input => input.Key == AntiforgeryFieldName).Value;
+    }
+
+    private static void WriteWebDataProtectionCertificate(string dataRoot)
+    {
+        var secretsDirectory = Path.Combine(dataRoot, "secrets");
+        Directory.CreateDirectory(secretsDirectory);
+        var certificatePath = Path.Combine(secretsDirectory, WebCertificateFileName);
+
+        // Combined PEM (certificate + unencrypted PKCS#8 RSA key) shaped like the production
+        // file secret. It lives only in this disposable directory and is never logged.
+        using var rsa = RSA.Create(2048);
+        var request = new CertificateRequest(
+            "CN=WhatToCook.Web integration test",
+            rsa,
+            HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1
+        );
+        using var certificate = request.CreateSelfSigned(
+            DateTimeOffset.UtcNow.AddDays(-1),
+            DateTimeOffset.UtcNow.AddDays(30)
+        );
+        File.WriteAllText(
+            certificatePath,
+            certificate.ExportCertificatePem() + "\n" + rsa.ExportPkcs8PrivateKeyPem()
+        );
+
+        if (OperatingSystem.IsLinux())
+        {
+            // The runner cannot chown this disposable fixture to UID 1654, so grant read bits
+            // only. Production provisioning MUST use owner 1654 and mode 0400.
+            File.SetUnixFileMode(
+                certificatePath,
+                UnixFileMode.UserRead | UnixFileMode.GroupRead | UnixFileMode.OtherRead
+            );
+        }
+    }
+
+    private static async Task<string> GetComposeServiceContainerIdAsync(
+        string composeArguments,
+        string service,
+        string workingDirectory,
+        IReadOnlyDictionary<string, string?> env
+    )
+    {
+        var result = await RunProcessAsync(
+            "docker",
+            $"{composeArguments} ps -q {service}",
+            workingDirectory,
+            env,
+            timeoutMs: 30_000
+        );
+        Assert.True(
+            result.ExitCode == 0,
+            $"docker compose ps -q {service} failed.{Environment.NewLine}{result.Output}"
+        );
+        var containerId = result.Output.Trim();
+        Assert.Matches("^[0-9a-f]{64}$", containerId);
+        return containerId;
+    }
+
+    private static async Task<string[]> ListDataProtectionKeyFilesAsync(
+        string composeArguments,
+        string workingDirectory,
+        IReadOnlyDictionary<string, string?> env
+    )
+    {
+        // Names only: key XML content is never read or printed.
+        var listing = await RunProcessAsync(
+            "docker",
+            $"{composeArguments} exec -T web ls -1 {WebKeyRingPath}",
+            workingDirectory,
+            env,
+            timeoutMs: 60_000
+        );
+        Assert.True(
+            listing.ExitCode == 0,
+            $"Listing web Data Protection key ring failed.{Environment.NewLine}{listing.Output}"
+        );
+        return listing
+            .Output.Split(
+                '\n',
+                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
+            )
+            .Where(name =>
+                name.StartsWith("key-", StringComparison.Ordinal)
+                && name.EndsWith(".xml", StringComparison.Ordinal)
+            )
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static HttpClient CreateAntiforgeryClient(CookieContainer cookies) =>
+        new(
+            new HttpClientHandler
+            {
+                CookieContainer = cookies,
+                UseCookies = true,
+                AllowAutoRedirect = false,
+            },
+            disposeHandler: true
+        )
+        {
+            Timeout = TimeSpan.FromSeconds(20),
+        };
+
+    private static async Task<RecipeEditorForm> GetRecipeEditorFormAsync(
+        HttpClient client,
+        Uri pageUri
+    )
+    {
+        using var response = await client.GetAsync(pageUri);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return ParseRecipeEditorForm(await response.Content.ReadAsStringAsync());
+    }
+
+    private static RecipeEditorForm ParseRecipeEditorForm(string html)
+    {
+        var formHtml = FormElementPattern
+            .Matches(html)
+            .Select(match => match.Value)
+            .FirstOrDefault(form =>
+                form.Contains(RecipeEditorFormName, StringComparison.Ordinal)
+                && form.Contains(AntiforgeryFieldName, StringComparison.Ordinal)
+            );
+        Assert.True(
+            formHtml is not null,
+            "GET /recipes/new did not render a recipe-editor form with an antiforgery token."
+        );
+
+        var fields = new List<KeyValuePair<string, string>>();
+        foreach (Match input in InputElementPattern.Matches(formHtml!))
+        {
+            var attributes = AttributePattern
+                .Matches(input.Value)
+                .ToDictionary(
+                    match => match.Groups[1].Value,
+                    match => WebUtility.HtmlDecode(match.Groups[2].Value),
+                    StringComparer.OrdinalIgnoreCase
+                );
+            if (
+                attributes.TryGetValue("type", out var type)
+                && string.Equals(type, "hidden", StringComparison.OrdinalIgnoreCase)
+                && attributes.TryGetValue("name", out var name)
+            )
+            {
+                fields.Add(
+                    new KeyValuePair<string, string>(
+                        name,
+                        attributes.GetValueOrDefault("value") ?? string.Empty
+                    )
+                );
+            }
+        }
+
+        Assert.True(
+            fields.Count(field => field.Key == AntiforgeryFieldName) == 1,
+            "recipe-editor form must contain exactly one antiforgery request token."
+        );
+        return new RecipeEditorForm(fields);
+    }
+
+    private static bool HasAntiforgeryCookie(CookieContainer cookies, Uri uri) =>
+        cookies
+            .GetCookies(uri)
+            .Any(cookie =>
+                cookie.Name.StartsWith(".AspNetCore.Antiforgery", StringComparison.Ordinal)
+            );
+
+    private static async Task<HttpStatusCode> PostRecipeEditorFormAsync(
+        HttpClient client,
+        Uri pageUri,
+        RecipeEditorForm form
+    )
+    {
+        using var content = new FormUrlEncodedContent(form.Fields);
+        using var response = await client.PostAsync(pageUri, content);
+        return response.StatusCode;
+    }
+
+    private static RecipeEditorForm WithRequestToken(RecipeEditorForm form, string requestToken) =>
+        new(
+            form.Fields.Select(field =>
+                    field.Key == AntiforgeryFieldName
+                        ? new KeyValuePair<string, string>(field.Key, requestToken)
+                        : field
+                )
+                .ToList()
+        );
+
+    private static string TamperToken(string token) => token[..^1] + (token[^1] == 'A' ? 'B' : 'A');
+
+    private static bool MountsWebDataProtection(JsonElement service)
+    {
+        var mountsKeyRing =
+            service.TryGetProperty("volumes", out var volumes)
+            && volumes.EnumerateArray().Any(IsWebDataProtectionVolume);
+        var includesCertificateSecret =
+            service.TryGetProperty("secrets", out var secrets)
+            && secrets
+                .EnumerateArray()
+                .Any(secret => secret.GetProperty("source").GetString() == WebCertificateSecret);
+        return mountsKeyRing || includesCertificateSecret;
+    }
+
+    private static bool IsWebDataProtectionVolume(JsonElement volume) =>
+        volume.GetProperty("target").GetString() == WebKeyRingPath
+        || volume.TryGetProperty("source", out var source)
+            && source.GetString() == WebKeyRingVolume;
+
+    private static string ResolveSecretTarget(string target) =>
+        target.StartsWith('/') ? target : $"/run/secrets/{target}";
 }
