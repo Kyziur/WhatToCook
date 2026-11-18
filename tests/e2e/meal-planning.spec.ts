@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./fixtures";
 import { createPlan, uniqueSuffix } from "./helpers";
 
 test.describe("OpenSpec: planning-workspace-ui", () => {

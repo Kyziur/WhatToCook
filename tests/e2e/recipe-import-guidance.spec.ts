@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./fixtures";
 
 test("@ux05 invalid recipe URL explains what to correct", async ({ page }) => {
   await page.goto("/recipes/import");

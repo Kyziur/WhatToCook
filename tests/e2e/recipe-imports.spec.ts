@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./fixtures";
 import { gotoAndWaitForApp, uniqueSuffix } from "./helpers";
 
 test.describe("OpenSpec: recipe-imports", () => {

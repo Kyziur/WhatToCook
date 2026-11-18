@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { expect, test, type APIRequestContext, type Browser, type Locator, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Browser, type Locator, type Page } from "@playwright/test";
+import { disconnectBlazorCircuit, test } from "./fixtures";
 import { summarizeImageCapture } from "../../scripts/perf/image-transfer-metrics.mjs";
 import { gotoAndWaitForApp } from "./helpers";
 
@@ -293,6 +294,9 @@ async function profileVariant(browser: Browser, prefix: string, count: number, v
       expect(firstVisit.transferredBytes).toBeGreaterThan(0);
       profiles.push({ variant, viewport, fixtureBodyBytes, firstVisit, repeatVisit });
     } finally {
+      for (const page of context.pages()) {
+        await disconnectBlazorCircuit(page);
+      }
       await context.close();
     }
   }
@@ -387,6 +391,9 @@ test("@perf06-generated compare real Web transfers of procedural original/640/32
       }
     }
   } finally {
+    for (const page of generatorContext.pages()) {
+      await disconnectBlazorCircuit(page);
+    }
     await generatorContext.close();
     // Archiving prevents pollution even if a profile assertion fails. The E2E
     // harness also removes the entire dedicated image directory on shutdown.

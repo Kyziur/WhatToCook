@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { expect, type BrowserContext, type Page } from "@playwright/test";
+import { disconnectBlazorCircuit, test } from "./fixtures";
 import { gotoAndWaitForApp, visibleLibrarySearch } from "./helpers";
 
 const profileDirectory = path.join(__dirname, "..", "..", ".tmp", "playwright-e2e");
@@ -96,7 +97,10 @@ async function runSessionGroup(context: BrowserContext, phase: string, sessions:
       availableInstruments: final.PublishedInstruments,
     }));
   } finally {
-    await Promise.all(pages.map((page) => page.close()));
+    await Promise.all(pages.map(async (page) => {
+      await disconnectBlazorCircuit(page);
+      await page.close();
+    }));
     fs.writeFileSync(phasePath, `after-${phase}`);
   }
 }
