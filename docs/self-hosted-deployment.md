@@ -33,15 +33,35 @@ The Stack `pre_deploy` hook creates `${DATA_ROOT}/recipe-images` when absent, se
 
 ### Web Data Protection keys
 
-Compose mounts the `web-data-protection` named volume **only in Web**, at `/var/lib/whattocook/data-protection`. The image initializes it as UID/GID **1654:1654**, mode **0700**; Web remains non-root with a read-only root filesystem. Data Protection encrypts the key material using a separate RSA certificate and retains antiforgery validation. The application identity is `WhatToCook.Web` across recreations.
+No certificate, private-key file, or new environment variable needs to be supplied by the operator. On the first normal Compose deployment, `web-data-protection-init` generates a self-signed RSA certificate and private key before Web starts. Later deployments reuse the same material. This is a Data Protection certificate, not the ingress TLS certificate.
 
-**Before the first approved deployment of this configuration**, the homelab operator must provision `${DATA_ROOT}/secrets/web-data-protection.pem`. It must contain an RSA private key and its matching X.509 certificate in PEM format. Generate it once with an approved secret-management tool, or OpenSSL's `req -x509 -newkey rsa:3072 -noenc` in a private temporary directory, then combine the certificate and private-key PEM files. The private key has no passphrase: access is controlled by host permissions and the read-only Web-only file-secret mount, not an environment variable. Do not use the public ingress certificate or generate a replacement on each deployment.
+#### Deploy and verify
 
-Keep `${DATA_ROOT}/secrets` root-owned, mode **0700**, and the regular, non-symlink PEM file owned by **1654:1654**, mode **0400**. Verify trusted, non-symlink parent directories and that no unrelated service mounts the file. Local Compose file-secrets preserve source permissions; `uid`/`mode` declarations do not fix host access. The existing pre-deploy hook prepares recipe images only; it neither creates nor replaces this secret. Missing, unreadable or unusable certificates block startup. Never commit, print, or attach the PEM, key-ring XML, cookies or tokens to logs, CI artifacts or rollout evidence.
+1. Complete [preflight](#preflight--stop-on-any-mismatch). If the stack already uses this initializer, confirm both Data Protection volumes exist under the same Compose project and are covered by the homelab encrypted backup and isolated restore procedures.
+2. Build and deploy the reviewed revision through the existing Komodo Stack, with its normal secret wrapper and maintenance lock. Use the normal stack deployment with dependencies, not `up --no-deps web` on first rollout. Compose builds the initializer and waits for its successful exit before starting Web.
+3. In Komodo, confirm `web-data-protection-init` exited with code **0** and Web is **healthy**. If the initializer fails, stop and inspect its service logs; do not bypass it or delete volumes to get Web running. Complete the [application checks below](#after-an-approved-deployment). The first rollout cannot recover tokens whose keys were already lost; reload the affected page if needed.
+4. Add both new project-scoped volumes, `web-data-protection` and `web-data-protection-certificate`, to the encrypted backup policy before marking rollout complete. Back up and test restoring them together, with tightly restricted access to the certificate backup. Never print or attach PEM, key-ring XML, cookies or tokens to rollout evidence.
 
-Back up the **existing project-scoped volume** and the certificate/private key using the homelab encrypted-backup procedure, with separate access controls. Verify an isolated restore with both before rollout. Do not remove the volume (`down --volumes`), change the Compose project identity or replace the certificate: retained key-ring entries require their original private key. Certificate rotation requires a separately reviewed transition retaining old decryption certificates; replacing the file alone is not a rotation procedure.
+For a read-only check on the Docker host, substitute the project name recorded in preflight for `whattocook`:
 
-The deployment integration test obtains a real Web antiforgery cookie, recreates only Web, and checks that Web decrypts and reuses that cookie rather than replacing it. It also checks rejection of forged and cookie-less HTTP submissions; service-level tests validate the original cookie/request-token pair across independent lifetimes. These tests use disposable storage, not production. For an authorized live recreation, retain a browser session opened **after the initial deployment**, recreate only Web without deleting volumes, verify the interactive recipe workflow and inspect logs for missing-key errors. Record outcomes without token contents. Previously issued tokens whose keys were already lost cannot be recovered, so the initial cutover can require a page reload. **Live host provisioning, backup/restore and rollout remain operator-only and NOT VERIFIED by a PR**.
+```sh
+docker ps -a --filter label=com.docker.compose.project=whattocook \
+  --format '{{.Names}}\t{{.Status}}'
+docker volume ls --filter label=com.docker.compose.project=whattocook \
+  --format '{{.Name}}'
+```
+
+Expect the initializer to show `Exited (0)`, Web to show `healthy`, and both Data Protection volumes to appear. These checks do not require dumping container configuration or reading either volume.
+
+The candidate Stack excludes the completed initializer from aggregate status. If the legacy Stack is still the owner and reports `Unhealthy` solely because the initializer exited successfully, use the checks above; do not activate the candidate Resource Sync to change a status badge.
+
+#### Recovery and access
+
+Web runs as UID/GID **1654:1654**. It writes the encrypted key ring and reads the private certificate from a separate, read-only volume. The initializer has no network, reads the ring without write access, and writes only the certificate volume. Both directories are mode **0700**; the PEM is mode **0400**. API and PostgreSQL mount neither volume.
+
+If the certificate is missing and the ring contains keys, initialization refuses to create a replacement. Restore the original certificate volume from the matching backup, rerun the normal deployment, and verify Web health. Do not use `down --volumes`, rename the Compose project, replace the PEM, or start with an empty key ring as a recovery shortcut. Rotation requires a separate procedure that keeps old decryption certificates available. Live backup/restore and rollout are **not verified by repository tests**.
+
+The deployment integration test exercises the same Compose initializer and recreates Web with the issued antiforgery cookie, verifying decryption and rejection of forged and cookie-less HTTP submissions. Service-level tests also validate the original cookie/request-token pair across independent lifetimes.
 
 ## After an approved deployment
 

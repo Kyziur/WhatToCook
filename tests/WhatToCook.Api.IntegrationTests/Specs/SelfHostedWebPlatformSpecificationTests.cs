@@ -3,8 +3,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -97,97 +95,53 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
     [Fact]
     public async Task ContainerBasedDeployment_ShouldStartSuccessfully()
     {
-        var repositoryRoot = ResolveRepositoryRoot();
-        var deployDirectory = Path.Combine(repositoryRoot, "deploy");
+        var deployDirectory = Path.Combine(ResolveRepositoryRoot(), "deploy");
         var composeFile = Path.Combine(deployDirectory, "docker-compose.yml");
         Assert.True(File.Exists(composeFile));
 
-        var projectName = $"wtc{Guid.NewGuid():N}"[..15];
         var dataRoot = Path.Combine(Path.GetTempPath(), $"wtc-selfhost-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(dataRoot);
         var imageRoot = Path.Combine(dataRoot, "recipe-images");
         Directory.CreateDirectory(imageRoot);
-        // CI's temporary bind mount is owned by the test runner, not the container's
-        // non-root UID 1654. Allow that UID to exercise readiness in this disposable
-        // directory only. Production setup MUST remain 1654:1654 with mode 0750.
-        if (OperatingSystem.IsLinux())
-        {
-            File.SetUnixFileMode(
-                imageRoot,
-                UnixFileMode.UserRead
-                    | UnixFileMode.UserWrite
-                    | UnixFileMode.UserExecute
-                    | UnixFileMode.GroupRead
-                    | UnixFileMode.GroupWrite
-                    | UnixFileMode.GroupExecute
-                    | UnixFileMode.OtherRead
-                    | UnixFileMode.OtherWrite
-                    | UnixFileMode.OtherExecute
-            );
-        }
+        MakeDisposableImageRootWritable(imageRoot);
 
         var publicHttpPort = GetFreeTcpPort();
         var apiHttpPort = GetFreeTcpPort();
-        var composeOverrideFile = Path.Combine(
-            Path.GetTempPath(),
-            $"wtc-selfhost-override-{Guid.NewGuid():N}.yml"
+        var project = new ComposeProject(
+            ProjectName: $"wtc{Guid.NewGuid():N}"[..15],
+            DeployDirectory: deployDirectory,
+            ComposeFile: composeFile,
+            OverrideFile: Path.Combine(
+                Path.GetTempPath(),
+                $"wtc-selfhost-override-{Guid.NewGuid():N}.yml"
+            ),
+            Env: new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["PUBLIC_HTTP_PORT"] = publicHttpPort.ToString(),
+                ["API_HTTP_PORT"] = apiHttpPort.ToString(),
+                ["DATA_ROOT"] = dataRoot,
+                ["POSTGRES_PASSWORD"] = "wtc-self-host",
+                ["SEED_DATA_ENABLED"] = "false",
+                ["DOCKER_PLATFORM"] = ResolveDockerPlatform(),
+            }
         );
-        var composeArguments =
-            $"compose -f \"{composeFile}\" -f \"{composeOverrideFile}\" --project-name {projectName}";
-        var dockerPlatform = RuntimeInformation.ProcessArchitecture switch
-        {
-            Architecture.Arm64 => "linux/arm64/v8",
-            _ => "linux/amd64",
-        };
-
-        var env = new Dictionary<string, string?>(StringComparer.Ordinal)
-        {
-            ["PUBLIC_HTTP_PORT"] = publicHttpPort.ToString(),
-            ["API_HTTP_PORT"] = apiHttpPort.ToString(),
-            ["DATA_ROOT"] = dataRoot,
-            ["POSTGRES_PASSWORD"] = "wtc-self-host",
-            ["SEED_DATA_ENABLED"] = "false",
-            ["DOCKER_PLATFORM"] = dockerPlatform,
-        };
         var createdNetworks = Array.Empty<string>();
 
         try
         {
-            WriteWebDataProtectionCertificate(dataRoot);
-            File.WriteAllText(
-                composeOverrideFile,
-                """
-                services:
-                  web:
-                    ports:
-                      - "127.0.0.1:${PUBLIC_HTTP_PORT}:8080"
-                  api:
-                    ports:
-                      - "127.0.0.1:${API_HTTP_PORT}:8080"
-                """
-            );
-
+            // No certificate is supplied: web-data-protection-init must create it.
+            File.WriteAllText(project.OverrideFile, PortOverrideYaml);
             createdNetworks = await EnsureDockerNetworksExistAsync(
                 ["edge", "observability", "egress"],
                 deployDirectory
             );
 
-            var upResult = await RunProcessAsync(
-                "docker",
-                $"compose -f \"{composeFile}\" -f \"{composeOverrideFile}\" --project-name {projectName} up -d --build --wait",
-                deployDirectory,
-                env,
-                timeoutMs: 600_000
-            );
-
+            var upResult = await RunComposeAsync(project, "up -d --build --wait", 600_000);
             if (upResult.ExitCode != 0)
             {
-                var postgresLogs = await RunProcessAsync(
-                    "docker",
-                    $"compose -f \"{composeFile}\" -f \"{composeOverrideFile}\" --project-name {projectName} logs --no-color postgres",
-                    deployDirectory,
-                    env,
-                    timeoutMs: 60_000
+                var postgresLogs = await RunComposeAsync(
+                    project,
+                    "logs --no-color postgres",
+                    60_000
                 );
                 Assert.Fail(
                     $"docker compose up failed.{Environment.NewLine}{upResult.Output}{Environment.NewLine}"
@@ -195,211 +149,51 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
                 );
             }
 
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-            var response = await WaitForHealthyResponseAsync(
-                client,
-                new Uri($"http://127.0.0.1:{publicHttpPort}/"),
-                TimeSpan.FromSeconds(90)
+            await AssertPublicHomePageServesAsync(publicHttpPort);
+            await AssertApiPersistsRecipeAndPhotoAsync(apiHttpPort, imageRoot);
+            await AssertFreshBootstrapAsync(project);
+
+            // Antiforgery state minted before the web-only recreation must still decrypt after it.
+            using var antiforgery = await AntiforgeryProbe.IssueAsync(
+                new Uri($"http://127.0.0.1:{publicHttpPort}/recipes/new")
             );
-            var html = await response.Content.ReadAsStringAsync();
 
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.Contains("WhatToCook", html);
+            var keyFiles = await ListDataProtectionKeyFilesAsync(project);
+            Assert.NotEmpty(keyFiles);
+            var apiContainer = await GetServiceContainerIdAsync(project, "api");
+            var postgresContainer = await GetServiceContainerIdAsync(project, "postgres");
 
-            // Temporary Compose stack only: verify PostgreSQL-backed recipe creation and
-            // write/read through the API container image bind mount as non-root UID.
-            using var apiClient = new HttpClient
-            {
-                BaseAddress = new Uri($"http://127.0.0.1:{apiHttpPort}/"),
-                Timeout = TimeSpan.FromSeconds(20),
-            };
-            using var createdResponse = await apiClient.PostAsJsonAsync(
-                "api/recipes",
-                RecipeApiContracts.CreateRecipePayload($"Deployment smoke {Guid.NewGuid():N}")
-            );
-            Assert.Equal(HttpStatusCode.Created, createdResponse.StatusCode);
-            var created =
-                await createdResponse.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>(
-                    JsonOptions
-                );
-            Assert.NotNull(created);
+            await RerunCertificateInitializerAsync(project);
 
-            using var detailsResponse = await apiClient.GetAsync($"api/recipes/{created!.Id}");
-            detailsResponse.EnsureSuccessStatusCode();
-
-            var imageBytes = Convert.FromBase64String(
-                "R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
-            );
-            using var uploadContent = new MultipartFormDataContent();
-            uploadContent.Add(new ByteArrayContent(imageBytes), "file", "smoke.gif");
-            using var uploadResponse = await apiClient.PostAsync(
-                $"api/recipes/{created.Id}/photo",
-                uploadContent
-            );
-            uploadResponse.EnsureSuccessStatusCode();
-            var photoResult = await uploadResponse.Content.ReadFromJsonAsync<JsonElement>(
-                JsonOptions
-            );
-            var photoName = photoResult.GetProperty("mainPhotoPath").GetString();
-            Assert.False(string.IsNullOrWhiteSpace(photoName));
-            Assert.Equal(Path.GetFileName(photoName), photoName);
-            Assert.True(File.Exists(Path.Combine(imageRoot, photoName!)));
-            using var photoResponse = await apiClient.GetAsync($"recipe-images/{photoName}");
-            photoResponse.EnsureSuccessStatusCode();
-            Assert.Equal(imageBytes, await photoResponse.Content.ReadAsByteArrayAsync());
-
-            // Antiforgery state minted before a web-only recreation must still decrypt in the
-            // recreated container: the framework reuses the existing cookie instead of replacing it.
-            // Tampered and cookie-less submissions remain rejected.
-            var pageUri = new Uri($"http://127.0.0.1:{publicHttpPort}/recipes/new");
-            var antiforgeryCookies = new CookieContainer();
-            using var antiforgeryClient = CreateAntiforgeryClient(antiforgeryCookies);
-            var issuedForm = await GetRecipeEditorFormAsync(antiforgeryClient, pageUri);
-            Assert.True(
-                HasAntiforgeryCookie(antiforgeryCookies, pageUri),
-                "GET /recipes/new did not issue an antiforgery cookie."
-            );
-            var issuedAntiforgeryCookieValue = antiforgeryCookies
-                .GetCookies(pageUri)
-                .Single(cookie =>
-                    cookie.Name.StartsWith(".AspNetCore.Antiforgery", StringComparison.Ordinal)
-                )
-                .Value;
-
-            async Task<string> ContainerIdAsync(string service) =>
-                await GetComposeServiceContainerIdAsync(
-                    composeArguments,
-                    service,
-                    deployDirectory,
-                    env
-                );
-
-            var keyFilesBeforeRecreate = await ListDataProtectionKeyFilesAsync(
-                composeArguments,
-                deployDirectory,
-                env
-            );
-            Assert.NotEmpty(keyFilesBeforeRecreate);
-            var webContainerBeforeRecreate = await ContainerIdAsync("web");
-            var apiContainerBeforeRecreate = await ContainerIdAsync("api");
-            var postgresContainerBeforeRecreate = await ContainerIdAsync("postgres");
-
-            var recreateWeb = await RunProcessAsync(
-                "docker",
-                $"{composeArguments} up -d --force-recreate --no-deps --wait web",
-                deployDirectory,
-                env,
-                timeoutMs: 300_000
+            var webContainerBeforeRecreate = await GetServiceContainerIdAsync(project, "web");
+            var recreateWeb = await RunComposeAsync(
+                project,
+                "up -d --force-recreate --no-deps --wait web",
+                300_000
             );
             Assert.True(
                 recreateWeb.ExitCode == 0,
                 $"docker compose force-recreate web failed.{Environment.NewLine}{recreateWeb.Output}"
             );
-            var webContainerAfterRecreate = await ContainerIdAsync("web");
-            Assert.NotEqual(webContainerBeforeRecreate, webContainerAfterRecreate);
-            Assert.Equal(apiContainerBeforeRecreate, await ContainerIdAsync("api"));
-            Assert.Equal(postgresContainerBeforeRecreate, await ContainerIdAsync("postgres"));
+            Assert.NotEqual(
+                webContainerBeforeRecreate,
+                await GetServiceContainerIdAsync(project, "web")
+            );
+            Assert.Equal(apiContainer, await GetServiceContainerIdAsync(project, "api"));
+            Assert.Equal(postgresContainer, await GetServiceContainerIdAsync(project, "postgres"));
 
-            // Runtime proof: the recreated container's key directory keeps the image-owned
-            // app UID/GID and 0700 mode. Only metadata is read; no key material.
-            var keyDirectoryStat = await RunProcessAsync(
-                "docker",
-                $"{composeArguments} exec -T web stat -c %u:%g:%a {WebKeyRingPath}",
-                deployDirectory,
-                env,
-                timeoutMs: 60_000
-            );
-            Assert.True(
-                keyDirectoryStat.ExitCode == 0,
-                $"Inspecting web Data Protection directory failed.{Environment.NewLine}{keyDirectoryStat.Output}"
-            );
-            Assert.Equal("1654:1654:700", keyDirectoryStat.Output.Trim());
+            await AssertCertificateMountIsReadOnlyInWebAsync(project);
+            await antiforgery.AssertCookieSurvivesRecreateAsync();
+            Assert.Equal(keyFiles, await ListDataProtectionKeyFilesAsync(project));
 
-            // The certificate must be mounted read-only into the recreated web container.
-            var webInspect = await RunProcessAsync(
-                "docker",
-                $"inspect --format \"{{{{json .Mounts}}}}\" {webContainerAfterRecreate}",
-                deployDirectory,
-                env,
-                timeoutMs: 30_000
-            );
-            Assert.True(
-                webInspect.ExitCode == 0,
-                $"docker inspect web mounts failed.{Environment.NewLine}{webInspect.Output}"
-            );
-            using var mounts = JsonDocument.Parse(webInspect.Output);
-            var certificateMount = mounts
-                .RootElement.EnumerateArray()
-                .Single(mount =>
-                    mount.GetProperty("Destination").GetString() == WebCertificateTarget
-                );
-            Assert.False(certificateMount.GetProperty("RW").GetBoolean());
-
-            // Reuse the pre-recreation CookieContainer. The framework decrypts the existing
-            // antiforgery cookie and keeps it; a replacement Set-Cookie would mean the recreated
-            // web could not decrypt it. Cookie values are compared as booleans and never printed.
-            using var reissuedPageResponse = await antiforgeryClient.GetAsync(pageUri);
-            Assert.Equal(HttpStatusCode.OK, reissuedPageResponse.StatusCode);
-            Assert.False(
-                reissuedPageResponse.Headers.TryGetValues("Set-Cookie", out var setCookieHeaders)
-                    && setCookieHeaders.Any(header =>
-                        header.StartsWith(".AspNetCore.Antiforgery", StringComparison.Ordinal)
-                    ),
-                "Recreated web replaced the pre-recreation antiforgery cookie instead of decrypting it."
-            );
-            var reissuedForm = ParseRecipeEditorForm(
-                await reissuedPageResponse.Content.ReadAsStringAsync()
-            );
-            Assert.False(string.IsNullOrEmpty(reissuedForm.RequestToken));
-            Assert.True(
-                string.Equals(
-                    issuedAntiforgeryCookieValue,
-                    antiforgeryCookies
-                        .GetCookies(pageUri)
-                        .Single(cookie =>
-                            cookie.Name.StartsWith(
-                                ".AspNetCore.Antiforgery",
-                                StringComparison.Ordinal
-                            )
-                        )
-                        .Value,
-                    StringComparison.Ordinal
-                ),
-                "Antiforgery cookie value changed across web recreation."
-            );
-
-            var tamperedForm = WithRequestToken(issuedForm, TamperToken(issuedForm.RequestToken));
-            var tamperedStatus = await PostRecipeEditorFormAsync(
-                antiforgeryClient,
-                pageUri,
-                tamperedForm
-            );
-            Assert.Equal(HttpStatusCode.BadRequest, tamperedStatus);
-
-            using var cookielessClient = CreateAntiforgeryClient(new CookieContainer());
-            var cookielessStatus = await PostRecipeEditorFormAsync(
-                cookielessClient,
-                pageUri,
-                issuedForm
-            );
-            Assert.Equal(HttpStatusCode.BadRequest, cookielessStatus);
-
-            Assert.Equal(
-                keyFilesBeforeRecreate,
-                await ListDataProtectionKeyFilesAsync(composeArguments, deployDirectory, env)
-            );
+            // Last step: this stops the stack (volumes kept), so it runs after all live checks.
+            await AssertWebRefusesStartWithoutCertificateAsync(project);
         }
         finally
         {
-            await RunProcessAsync(
-                "docker",
-                $"compose -f \"{composeFile}\" -f \"{composeOverrideFile}\" --project-name {projectName} down --remove-orphans --volumes",
-                deployDirectory,
-                env,
-                timeoutMs: 180_000
-            );
+            await RunComposeAsync(project, "down --remove-orphans --volumes", 180_000);
             await RemoveDockerNetworksAsync(createdNetworks, deployDirectory);
-            TryDeleteFile(composeOverrideFile);
+            TryDeleteFile(project.OverrideFile);
             TryDeleteDirectory(dataRoot);
         }
     }
@@ -429,64 +223,315 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
 
         using var document = JsonDocument.Parse(rendered.Output);
         var root = document.RootElement;
-        Assert.Equal(projectName, root.GetProperty("name").GetString());
         var services = root.GetProperty("services");
         var api = services.GetProperty("api");
         var web = services.GetProperty("web");
         var postgres = services.GetProperty("postgres");
+        var bootstrap = services.GetProperty(InitServiceName);
 
-        var apiNetworks = api.GetProperty("networks");
-        var webNetworks = web.GetProperty("networks");
-        Assert.False(apiNetworks.TryGetProperty("edge", out _));
-        Assert.True(webNetworks.TryGetProperty("edge", out _));
+        Assert.False(api.GetProperty("networks").TryGetProperty("edge", out _));
+        Assert.True(web.GetProperty("networks").TryGetProperty("edge", out _));
         Assert.False(postgres.GetProperty("networks").TryGetProperty("edge", out _));
-
         Assert.False(api.TryGetProperty("ports", out _));
         Assert.False(postgres.TryGetProperty("ports", out _));
+
+        var recipeImagesVolume = GetVolumeByTarget(api, "/data/recipe-images");
         Assert.Equal(
-            "http://api:8080",
-            web.GetProperty("environment").GetProperty("Api__BaseUrl").GetString()
-        );
-        Assert.Equal(
-            "/data/recipe-images",
-            api.GetProperty("environment").GetProperty("Storage__RecipeImagesPath").GetString()
-        );
-        var recipeImagesVolume = api.GetProperty("volumes")
-            .EnumerateArray()
-            .Single(volume => volume.GetProperty("target").GetString() == "/data/recipe-images");
-        var expectedImageRoot = Path.GetFullPath(Path.Combine(dataRoot, "recipe-images"));
-        var actualImageRoot = Path.GetFullPath(
-            recipeImagesVolume.GetProperty("source").GetString()!
-        );
-        Assert.Equal(
-            expectedImageRoot,
-            actualImageRoot,
+            Path.GetFullPath(Path.Combine(dataRoot, "recipe-images")),
+            Path.GetFullPath(recipeImagesVolume.GetProperty("source").GetString()!),
             OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal
         );
         Assert.Equal("bind", recipeImagesVolume.GetProperty("type").GetString());
-        static bool? GetCreateHostPath(JsonElement volume)
+        await AssertRecipeImagesBindCreateHostPathContractAsync(recipeImagesVolume);
+
+        AssertWebDataProtectionWiring(root, web);
+        AssertBootstrapJobIsIsolated(bootstrap);
+
+        Assert.False(
+            MountsDataProtectionVolumes(api),
+            "api must not mount the web key ring or certificate volumes."
+        );
+        Assert.False(
+            MountsDataProtectionVolumes(postgres),
+            "postgres must not mount the web key ring or certificate volumes."
+        );
+
+        var missingDataRoot = new Dictionary<string, string?>(env, StringComparer.Ordinal)
         {
-            var bind = volume.GetProperty("bind");
-            if (!bind.TryGetProperty("create_host_path", out var value))
-            {
-                return null;
-            }
+            ["DATA_ROOT"] = "",
+        };
+        var invalid = await RunProcessAsync(
+            "docker",
+            $"compose -f \"{composeFile}\" --project-name {projectName} config --quiet",
+            deployDirectory,
+            missingDataRoot,
+            timeoutMs: 30_000
+        );
+        Assert.NotEqual(0, invalid.ExitCode);
+    }
 
-            Assert.True(
-                value.ValueKind is JsonValueKind.True or JsonValueKind.False,
-                $"bind.create_host_path must render as a bool when present, not {value.ValueKind}."
+    [Fact]
+    public void AppHost_ShouldDefineDockerComposeEnvironmentForAspireDeployment()
+    {
+        var repositoryRoot = ResolveRepositoryRoot();
+        var appHostPath = Path.Combine(repositoryRoot, "src", "WhatToCook.AppHost", "AppHost.cs");
+
+        Assert.True(File.Exists(appHostPath));
+
+        var appHost = File.ReadAllText(appHostPath);
+        Assert.Contains("AddDockerComposeEnvironment", appHost, StringComparison.Ordinal);
+        Assert.Contains("compose", appHost, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task AssertPublicHomePageServesAsync(int publicHttpPort)
+    {
+        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+        using var response = await WaitForHealthyResponseAsync(
+            client,
+            new Uri($"http://127.0.0.1:{publicHttpPort}/"),
+            TimeSpan.FromSeconds(90)
+        );
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("WhatToCook", html);
+    }
+
+    // Temporary Compose stack only: verifies PostgreSQL-backed recipe creation and a photo
+    // write/read through the API container's bind mount as the non-root UID.
+    private static async Task AssertApiPersistsRecipeAndPhotoAsync(
+        int apiHttpPort,
+        string imageRoot
+    )
+    {
+        using var apiClient = new HttpClient
+        {
+            BaseAddress = new Uri($"http://127.0.0.1:{apiHttpPort}/"),
+            Timeout = TimeSpan.FromSeconds(20),
+        };
+        using var createdResponse = await apiClient.PostAsJsonAsync(
+            "api/recipes",
+            RecipeApiContracts.CreateRecipePayload($"Deployment smoke {Guid.NewGuid():N}")
+        );
+        Assert.Equal(HttpStatusCode.Created, createdResponse.StatusCode);
+        var created =
+            await createdResponse.Content.ReadFromJsonAsync<RecipeApiContracts.RecipeDetailsDto>(
+                JsonOptions
             );
-            return value.GetBoolean();
-        }
+        Assert.NotNull(created);
 
-        var bindProbeFile = Path.Combine(
+        using var detailsResponse = await apiClient.GetAsync($"api/recipes/{created!.Id}");
+        detailsResponse.EnsureSuccessStatusCode();
+
+        var imageBytes = Convert.FromBase64String(
+            "R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+        );
+        using var uploadContent = new MultipartFormDataContent();
+        uploadContent.Add(new ByteArrayContent(imageBytes), "file", "smoke.gif");
+        using var uploadResponse = await apiClient.PostAsync(
+            $"api/recipes/{created.Id}/photo",
+            uploadContent
+        );
+        uploadResponse.EnsureSuccessStatusCode();
+        var photoResult = await uploadResponse.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        var photoName = photoResult.GetProperty("mainPhotoPath").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(photoName));
+        Assert.Equal(Path.GetFileName(photoName), photoName);
+        Assert.True(File.Exists(Path.Combine(imageRoot, photoName!)));
+
+        using var photoResponse = await apiClient.GetAsync($"recipe-images/{photoName}");
+        photoResponse.EnsureSuccessStatusCode();
+        Assert.Equal(imageBytes, await photoResponse.Content.ReadAsByteArrayAsync());
+    }
+
+    // Proves the certificate came from the real init job (no test-supplied PEM), that the init
+    // container exited cleanly, and that the Docker-created directories and certificate have the
+    // pinned owner and modes. Network, user, read-only root and mount access are checked in the
+    // rendered config test, so they are not repeated here.
+    private static async Task AssertFreshBootstrapAsync(ComposeProject project)
+    {
+        var init = await InspectContainerAsync(
+            project,
+            await GetServiceContainerIdAsync(project, InitServiceName, includeStopped: true)
+        );
+        Assert.Equal(0, init.GetProperty("State").GetProperty("ExitCode").GetInt32());
+
+        Assert.Equal(
+            "1654:1654:700",
+            await StatInWebAsync(project, WebKeyRingPath, OwnerModeFormat)
+        );
+        Assert.Equal(
+            "1654:1654:700",
+            await StatInWebAsync(project, WebCertificatePath, OwnerModeFormat)
+        );
+        Assert.Equal(
+            "1654:1654:400",
+            await StatInWebAsync(project, WebCertificateFile, OwnerModeFormat)
+        );
+    }
+
+    private static async Task RerunCertificateInitializerAsync(ComposeProject project)
+    {
+        var rerun = await RunComposeAsync(
+            project,
+            $"run --rm --no-deps -T {InitServiceName}",
+            300_000
+        );
+        Assert.True(
+            rerun.ExitCode == 0,
+            $"Rerunning {InitServiceName} failed.{Environment.NewLine}{rerun.Output}"
+        );
+    }
+
+    // Behavioral check of the read-only certificate mount: a write from web must be refused.
+    private static async Task AssertCertificateMountIsReadOnlyInWebAsync(ComposeProject project)
+    {
+        var write = await RunComposeAsync(
+            project,
+            $"exec -T web sh -c \"touch {WebCertificatePath}/write-probe\"",
+            60_000
+        );
+        Assert.NotEqual(0, write.ExitCode);
+    }
+
+    // Stops web and its dependencies (volumes kept), removes only the certificate volume, then
+    // asks Compose to start web. The populated key ring makes init fail with no certificate, so
+    // the depends_on gate must stop web from starting. Init output is intentionally not printed:
+    // it must not be needed to diagnose key material problems.
+    private static async Task AssertWebRefusesStartWithoutCertificateAsync(ComposeProject project)
+    {
+        var down = await RunComposeAsync(project, "down --remove-orphans", 180_000);
+        Assert.True(
+            down.ExitCode == 0,
+            $"docker compose down failed.{Environment.NewLine}{down.Output}"
+        );
+
+        var removeCertificate = await RunProcessAsync(
+            "docker",
+            $"volume rm {project.ProjectName}_{WebCertificateVolume}",
+            project.DeployDirectory,
+            project.Env,
+            timeoutMs: 60_000
+        );
+        Assert.True(
+            removeCertificate.ExitCode == 0,
+            "Removing the certificate volume for the missing-certificate check failed."
+        );
+
+        var startWeb = await RunComposeAsync(project, "up -d web", 300_000);
+        Assert.NotEqual(0, startWeb.ExitCode);
+
+        var runningWeb = await RunComposeAsync(project, "ps -q --status running web", 30_000);
+        Assert.Equal(0, runningWeb.ExitCode);
+        Assert.True(
+            string.IsNullOrWhiteSpace(runningWeb.Output),
+            "web must not start when the bootstrap job refuses to run."
+        );
+
+        var init = await InspectContainerAsync(
+            project,
+            await GetServiceContainerIdAsync(project, InitServiceName, includeStopped: true)
+        );
+        Assert.NotEqual(0, init.GetProperty("State").GetProperty("ExitCode").GetInt32());
+    }
+
+    private static void AssertWebDataProtectionWiring(JsonElement root, JsonElement web)
+    {
+        Assert.Equal(
+            WebCertificateFile,
+            web.GetProperty("environment")
+                .GetProperty("DataProtection__CertificatePath")
+                .GetString()
+        );
+        Assert.False(web.TryGetProperty("secrets", out _));
+        Assert.False(root.TryGetProperty("secrets", out _));
+        Assert.Equal(
+            "service_completed_successfully",
+            web.GetProperty("depends_on")
+                .GetProperty(InitServiceName)
+                .GetProperty("condition")
+                .GetString()
+        );
+
+        Assert.Equal(
+            WebKeyRingVolume,
+            GetVolumeByTarget(web, WebKeyRingPath).GetProperty("source").GetString()
+        );
+        Assert.False(
+            IsReadOnly(GetVolumeByTarget(web, WebKeyRingPath)),
+            "web must write its key ring."
+        );
+
+        Assert.Equal(
+            WebCertificateVolume,
+            GetVolumeByTarget(web, WebCertificatePath).GetProperty("source").GetString()
+        );
+        Assert.True(
+            IsReadOnly(GetVolumeByTarget(web, WebCertificatePath)),
+            "web must mount the certificate read-only."
+        );
+
+        var declaredVolumes = root.GetProperty("volumes");
+        foreach (var volumeName in new[] { WebKeyRingVolume, WebCertificateVolume })
+        {
+            Assert.False(
+                declaredVolumes.GetProperty(volumeName).TryGetProperty("external", out _),
+                $"{volumeName} must be a project-scoped named volume."
+            );
+        }
+    }
+
+    private static void AssertBootstrapJobIsIsolated(JsonElement bootstrap)
+    {
+        Assert.Equal("none", bootstrap.GetProperty("network_mode").GetString());
+        Assert.False(bootstrap.TryGetProperty("networks", out _));
+        Assert.False(bootstrap.TryGetProperty("ports", out _));
+        Assert.False(bootstrap.TryGetProperty("secrets", out _));
+        Assert.Equal("1654:1654", bootstrap.GetProperty("user").GetString());
+        Assert.True(bootstrap.GetProperty("read_only").GetBoolean());
+        Assert.False(
+            bootstrap.TryGetProperty("privileged", out var privileged) && privileged.GetBoolean()
+        );
+        Assert.Contains(
+            "ALL",
+            bootstrap.GetProperty("cap_drop").EnumerateArray().Select(x => x.GetString())
+        );
+        Assert.Contains(
+            "no-new-privileges:true",
+            bootstrap.GetProperty("security_opt").EnumerateArray().Select(x => x.GetString())
+        );
+
+        Assert.Equal(
+            WebKeyRingVolume,
+            GetVolumeByTarget(bootstrap, WebKeyRingPath).GetProperty("source").GetString()
+        );
+        Assert.True(
+            IsReadOnly(GetVolumeByTarget(bootstrap, WebKeyRingPath)),
+            "init must read the key ring read-only."
+        );
+
+        Assert.Equal(
+            WebCertificateVolume,
+            GetVolumeByTarget(bootstrap, WebCertificatePath).GetProperty("source").GetString()
+        );
+        Assert.False(
+            IsReadOnly(GetVolumeByTarget(bootstrap, WebCertificatePath)),
+            "init must write the certificate volume."
+        );
+    }
+
+    private static async Task AssertRecipeImagesBindCreateHostPathContractAsync(
+        JsonElement recipeImagesVolume
+    )
+    {
+        var probeFile = Path.Combine(
             Path.GetTempPath(),
             $"wtc-bind-contract-{Guid.NewGuid():N}.yml"
         );
         try
         {
             File.WriteAllText(
-                bindProbeFile,
+                probeFile,
                 """
                 services:
                   probe:
@@ -507,114 +552,159 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
             );
             var bindProbe = await RunProcessAsync(
                 "docker",
-                $"compose -f \"{bindProbeFile}\" --project-name wtc-bind-contract config --format json",
-                Path.GetDirectoryName(bindProbeFile)!,
+                $"compose -f \"{probeFile}\" --project-name wtc-bind-contract config --format json",
+                Path.GetDirectoryName(probeFile)!,
                 new Dictionary<string, string?>(),
                 timeoutMs: 30_000
             );
             Assert.Equal(0, bindProbe.ExitCode);
+
             using var bindProbeDocument = JsonDocument.Parse(bindProbe.Output);
             var probeVolumes = bindProbeDocument
                 .RootElement.GetProperty("services")
                 .GetProperty("probe")
                 .GetProperty("volumes");
-            var explicitFalseVolume = probeVolumes
-                .EnumerateArray()
-                .Single(volume => volume.GetProperty("target").GetString() == "/explicit-false");
-            var implicitVolume = probeVolumes
-                .EnumerateArray()
-                .Single(volume => volume.GetProperty("target").GetString() == "/implicit");
-            var explicitTrueVolume = probeVolumes
-                .EnumerateArray()
-                .Single(volume => volume.GetProperty("target").GetString() == "/explicit-true");
-            var explicitFalse = GetCreateHostPath(explicitFalseVolume);
-            Assert.NotEqual(explicitFalse, GetCreateHostPath(implicitVolume));
-            Assert.NotEqual(explicitFalse, GetCreateHostPath(explicitTrueVolume));
+            var explicitFalse = GetCreateHostPath(
+                GetVolumeEntryByTarget(probeVolumes, "/explicit-false")
+            );
+            Assert.NotEqual(
+                explicitFalse,
+                GetCreateHostPath(GetVolumeEntryByTarget(probeVolumes, "/implicit"))
+            );
+            Assert.NotEqual(
+                explicitFalse,
+                GetCreateHostPath(GetVolumeEntryByTarget(probeVolumes, "/explicit-true"))
+            );
             Assert.Equal(explicitFalse, GetCreateHostPath(recipeImagesVolume));
         }
         finally
         {
-            TryDeleteFile(bindProbeFile);
+            TryDeleteFile(probeFile);
         }
-        var postgresDataVolume = postgres
-            .GetProperty("volumes")
-            .EnumerateArray()
-            .Single(x => x.GetProperty("target").GetString() == "/var/lib/postgresql/data");
-        Assert.Equal("volume", postgresDataVolume.GetProperty("type").GetString());
+    }
 
-        var webEnvironment = web.GetProperty("environment");
-        Assert.Equal(
-            WebKeyRingPath,
-            webEnvironment.GetProperty("DataProtection__KeyRingPath").GetString()
-        );
-        Assert.Equal(
-            WebCertificateTarget,
-            webEnvironment.GetProperty("DataProtection__CertificatePath").GetString()
-        );
-        Assert.Equal(
-            new[] { "DataProtection__CertificatePath", "DataProtection__KeyRingPath" },
-            webEnvironment
-                .EnumerateObject()
-                .Select(property => property.Name)
-                .Where(name => name.StartsWith("DataProtection__", StringComparison.Ordinal))
-                .Order(StringComparer.Ordinal)
-                .ToArray()
-        );
-
-        var webKeyRingVolume = Assert.Single(web.GetProperty("volumes").EnumerateArray().ToArray());
-        Assert.Equal(WebKeyRingPath, webKeyRingVolume.GetProperty("target").GetString());
-        Assert.Equal("volume", webKeyRingVolume.GetProperty("type").GetString());
-        Assert.Equal(WebKeyRingVolume, webKeyRingVolume.GetProperty("source").GetString());
-        Assert.True(root.GetProperty("volumes").TryGetProperty(WebKeyRingVolume, out _));
-
-        var webSecret = Assert.Single(web.GetProperty("secrets").EnumerateArray().ToArray());
-        Assert.Equal(WebCertificateSecret, webSecret.GetProperty("source").GetString());
-        Assert.Equal(
-            WebCertificateTarget,
-            ResolveSecretTarget(webSecret.GetProperty("target").GetString()!)
-        );
-        var certificateSecret = root.GetProperty("secrets").GetProperty(WebCertificateSecret);
-        Assert.Equal(
-            Path.GetFullPath(Path.Combine(dataRoot, "secrets", WebCertificateFileName)),
-            Path.GetFullPath(certificateSecret.GetProperty("file").GetString()!),
-            OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal
-        );
-
-        Assert.False(
-            MountsWebDataProtection(api),
-            "api must not mount web Data Protection key ring or certificate."
-        );
-        Assert.False(
-            MountsWebDataProtection(postgres),
-            "postgres must not mount web Data Protection key ring or certificate."
-        );
-
-        var missingMount = new Dictionary<string, string?>(env, StringComparer.Ordinal)
+    private static bool? GetCreateHostPath(JsonElement volume)
+    {
+        var bind = volume.GetProperty("bind");
+        if (!bind.TryGetProperty("create_host_path", out var value))
         {
-            ["DATA_ROOT"] = "",
-        };
-        var invalid = await RunProcessAsync(
+            return null;
+        }
+
+        Assert.True(
+            value.ValueKind is JsonValueKind.True or JsonValueKind.False,
+            $"bind.create_host_path must render as a bool when present, not {value.ValueKind}."
+        );
+        return value.GetBoolean();
+    }
+
+    private static JsonElement GetVolumeByTarget(JsonElement service, string target) =>
+        GetVolumeEntryByTarget(service.GetProperty("volumes"), target);
+
+    private static JsonElement GetVolumeEntryByTarget(JsonElement volumes, string target) =>
+        volumes
+            .EnumerateArray()
+            .Single(volume => volume.GetProperty("target").GetString() == target);
+
+    private static bool IsReadOnly(JsonElement volume) =>
+        volume.TryGetProperty("read_only", out var readOnly) && readOnly.GetBoolean();
+
+    private static bool MountsDataProtectionVolumes(JsonElement service) =>
+        service.TryGetProperty("volumes", out var volumes)
+        && volumes
+            .EnumerateArray()
+            .Any(volume =>
+                volume.GetProperty("target").GetString() is WebKeyRingPath or WebCertificatePath
+                || volume.TryGetProperty("source", out var source)
+                    && source.GetString() is WebKeyRingVolume or WebCertificateVolume
+            );
+
+    private static async Task<JsonElement> InspectContainerAsync(
+        ComposeProject project,
+        string containerId
+    )
+    {
+        var result = await RunProcessAsync(
             "docker",
-            $"compose -f \"{composeFile}\" --project-name {projectName} config --quiet",
-            deployDirectory,
-            missingMount,
+            $"inspect {containerId}",
+            project.DeployDirectory,
+            project.Env,
             timeoutMs: 30_000
         );
-        Assert.NotEqual(0, invalid.ExitCode);
+        Assert.True(
+            result.ExitCode == 0,
+            $"docker inspect failed.{Environment.NewLine}{result.Output}"
+        );
+
+        using var document = JsonDocument.Parse(result.Output);
+        return document.RootElement[0].Clone();
     }
 
-    [Fact]
-    public void AppHost_ShouldDefineDockerComposeEnvironmentForAspireDeployment()
+    private static async Task<string> GetServiceContainerIdAsync(
+        ComposeProject project,
+        string service,
+        bool includeStopped = false
+    )
     {
-        var repositoryRoot = ResolveRepositoryRoot();
-        var appHostPath = Path.Combine(repositoryRoot, "src", "WhatToCook.AppHost", "AppHost.cs");
-
-        Assert.True(File.Exists(appHostPath));
-
-        var appHost = File.ReadAllText(appHostPath);
-        Assert.Contains("AddDockerComposeEnvironment", appHost, StringComparison.Ordinal);
-        Assert.Contains("compose", appHost, StringComparison.OrdinalIgnoreCase);
+        var result = await RunComposeAsync(
+            project,
+            $"ps {(includeStopped ? "-a " : string.Empty)}-q {service}",
+            30_000
+        );
+        Assert.True(
+            result.ExitCode == 0,
+            $"docker compose ps -q {service} failed.{Environment.NewLine}{result.Output}"
+        );
+        var containerId = result.Output.Trim();
+        Assert.Matches("^[0-9a-f]{64}$", containerId);
+        return containerId;
     }
+
+    // Metadata only (owner, mode, inode, mtime); key or certificate contents are never read.
+    private static async Task<string> StatInWebAsync(
+        ComposeProject project,
+        string path,
+        string format
+    )
+    {
+        var result = await RunComposeAsync(project, $"exec -T web stat -c {format} {path}", 60_000);
+        Assert.True(result.ExitCode == 0, $"Inspecting {path} in web failed.");
+        return result.Output.Trim();
+    }
+
+    private static async Task<string[]> ListDataProtectionKeyFilesAsync(ComposeProject project)
+    {
+        // Names only: key XML content is never read or printed.
+        var listing = await RunComposeAsync(project, $"exec -T web ls -1 {WebKeyRingPath}", 60_000);
+        Assert.True(
+            listing.ExitCode == 0,
+            $"Listing web Data Protection key ring failed.{Environment.NewLine}{listing.Output}"
+        );
+        return listing
+            .Output.Split(
+                '\n',
+                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
+            )
+            .Where(name =>
+                name.StartsWith("key-", StringComparison.Ordinal)
+                && name.EndsWith(".xml", StringComparison.Ordinal)
+            )
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static Task<(int ExitCode, string Output)> RunComposeAsync(
+        ComposeProject project,
+        string subcommand,
+        int timeoutMs
+    ) =>
+        RunProcessAsync(
+            "docker",
+            $"{project.Arguments} {subcommand}",
+            project.DeployDirectory,
+            project.Env,
+            timeoutMs
+        );
 
     private static async Task<HttpResponseMessage> WaitForHealthyResponseAsync(
         HttpClient client,
@@ -768,6 +858,37 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         );
     }
 
+    private static string ResolveDockerPlatform() =>
+        RuntimeInformation.ProcessArchitecture switch
+        {
+            Architecture.Arm64 => "linux/arm64/v8",
+            _ => "linux/amd64",
+        };
+
+    // CI's temporary bind mount is owned by the test runner, not the container's non-root UID
+    // 1654. Allow that UID to exercise readiness in this disposable directory only. Production
+    // setup MUST remain 1654:1654 with mode 0750.
+    private static void MakeDisposableImageRootWritable(string imageRoot)
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        File.SetUnixFileMode(
+            imageRoot,
+            UnixFileMode.UserRead
+                | UnixFileMode.UserWrite
+                | UnixFileMode.UserExecute
+                | UnixFileMode.GroupRead
+                | UnixFileMode.GroupWrite
+                | UnixFileMode.GroupExecute
+                | UnixFileMode.OtherRead
+                | UnixFileMode.OtherWrite
+                | UnixFileMode.OtherExecute
+        );
+    }
+
     private static void TryDeleteDirectory(string path)
     {
         if (!Directory.Exists(path))
@@ -810,11 +931,23 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         }
     }
 
+    private const string PortOverrideYaml = """
+        services:
+          web:
+            ports:
+              - "127.0.0.1:${PUBLIC_HTTP_PORT}:8080"
+          api:
+            ports:
+              - "127.0.0.1:${API_HTTP_PORT}:8080"
+        """;
+    private const string InitServiceName = "web-data-protection-init";
     private const string WebKeyRingPath = "/var/lib/whattocook/data-protection";
     private const string WebKeyRingVolume = "web-data-protection";
-    private const string WebCertificateSecret = "web-data-protection-certificate";
-    private const string WebCertificateTarget = "/run/secrets/web-data-protection.pem";
-    private const string WebCertificateFileName = "web-data-protection.pem";
+    private const string WebCertificatePath = "/var/lib/whattocook/data-protection-certificate";
+    private const string WebCertificateVolume = "web-data-protection-certificate";
+    private const string WebCertificateFile = WebCertificatePath + "/web-data-protection.pem";
+    private const string OwnerModeFormat = "%u:%g:%a";
+    private const string AntiforgeryCookiePrefix = ".AspNetCore.Antiforgery";
     private const string AntiforgeryFieldName = "__RequestVerificationToken";
     private const string RecipeEditorFormName = "recipe-editor";
     private static readonly Regex FormElementPattern = new(
@@ -830,101 +963,119 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         RegexOptions.IgnoreCase
     );
 
+    private sealed record ComposeProject(
+        string ProjectName,
+        string DeployDirectory,
+        string ComposeFile,
+        string OverrideFile,
+        IReadOnlyDictionary<string, string?> Env
+    )
+    {
+        public string Arguments =>
+            $"compose -f \"{ComposeFile}\" -f \"{OverrideFile}\" --project-name {ProjectName}";
+    }
+
     private sealed class RecipeEditorForm(IReadOnlyList<KeyValuePair<string, string>> fields)
     {
         public IReadOnlyList<KeyValuePair<string, string>> Fields { get; } = fields;
 
         public string RequestToken =>
             Fields.Single(input => input.Key == AntiforgeryFieldName).Value;
+
+        public RecipeEditorForm WithRequestToken(string requestToken) =>
+            new(
+                Fields
+                    .Select(field =>
+                        field.Key == AntiforgeryFieldName
+                            ? new KeyValuePair<string, string>(field.Key, requestToken)
+                            : field
+                    )
+                    .ToList()
+            );
     }
 
-    private static void WriteWebDataProtectionCertificate(string dataRoot)
+    // Holds the antiforgery cookie minted before the web recreation and replays it afterwards.
+    private sealed class AntiforgeryProbe : IDisposable
     {
-        var secretsDirectory = Path.Combine(dataRoot, "secrets");
-        Directory.CreateDirectory(secretsDirectory);
-        var certificatePath = Path.Combine(secretsDirectory, WebCertificateFileName);
+        private readonly Uri _pageUri;
+        private readonly CookieContainer _cookies;
+        private readonly HttpClient _client;
+        private readonly RecipeEditorForm _issuedForm;
+        private readonly string _issuedCookieValue;
 
-        // Combined PEM (certificate + unencrypted PKCS#8 RSA key) shaped like the production
-        // file secret. It lives only in this disposable directory and is never logged.
-        using var rsa = RSA.Create(2048);
-        var request = new CertificateRequest(
-            "CN=WhatToCook.Web integration test",
-            rsa,
-            HashAlgorithmName.SHA256,
-            RSASignaturePadding.Pkcs1
-        );
-        using var certificate = request.CreateSelfSigned(
-            DateTimeOffset.UtcNow.AddDays(-1),
-            DateTimeOffset.UtcNow.AddDays(30)
-        );
-        File.WriteAllText(
-            certificatePath,
-            certificate.ExportCertificatePem() + "\n" + rsa.ExportPkcs8PrivateKeyPem()
-        );
-
-        if (OperatingSystem.IsLinux())
+        private AntiforgeryProbe(
+            Uri pageUri,
+            CookieContainer cookies,
+            HttpClient client,
+            RecipeEditorForm issuedForm
+        )
         {
-            // The runner cannot chown this disposable fixture to UID 1654, so grant read bits
-            // only. Production provisioning MUST use owner 1654 and mode 0400.
-            File.SetUnixFileMode(
-                certificatePath,
-                UnixFileMode.UserRead | UnixFileMode.GroupRead | UnixFileMode.OtherRead
+            _pageUri = pageUri;
+            _cookies = cookies;
+            _client = client;
+            _issuedForm = issuedForm;
+            _issuedCookieValue = ReadAntiforgeryCookieValue(cookies, pageUri);
+        }
+
+        public static async Task<AntiforgeryProbe> IssueAsync(Uri pageUri)
+        {
+            var cookies = new CookieContainer();
+            var client = CreateAntiforgeryClient(cookies);
+            try
+            {
+                var form = await GetRecipeEditorFormAsync(client, pageUri);
+                Assert.True(
+                    HasAntiforgeryCookie(cookies, pageUri),
+                    "GET /recipes/new did not issue an antiforgery cookie."
+                );
+                return new AntiforgeryProbe(pageUri, cookies, client, form);
+            }
+            catch
+            {
+                client.Dispose();
+                throw;
+            }
+        }
+
+        // The recreated web must decrypt the existing cookie (no Set-Cookie replacement), keep its
+        // value, accept the matching token, and still reject tampered and cookie-less posts.
+        // Cookie values are compared as booleans and never printed.
+        public async Task AssertCookieSurvivesRecreateAsync()
+        {
+            using var response = await _client.GetAsync(_pageUri);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.False(
+                response.Headers.TryGetValues("Set-Cookie", out var setCookieHeaders)
+                    && setCookieHeaders.Any(header =>
+                        header.StartsWith(AntiforgeryCookiePrefix, StringComparison.Ordinal)
+                    ),
+                "Recreated web replaced the pre-recreation antiforgery cookie instead of decrypting it."
+            );
+            var reissuedForm = ParseRecipeEditorForm(await response.Content.ReadAsStringAsync());
+            Assert.False(string.IsNullOrEmpty(reissuedForm.RequestToken));
+            Assert.True(
+                string.Equals(
+                    _issuedCookieValue,
+                    ReadAntiforgeryCookieValue(_cookies, _pageUri),
+                    StringComparison.Ordinal
+                ),
+                "Antiforgery cookie value changed across web recreation."
+            );
+
+            var tamperedForm = _issuedForm.WithRequestToken(TamperToken(_issuedForm.RequestToken));
+            Assert.Equal(
+                HttpStatusCode.BadRequest,
+                await PostRecipeEditorFormAsync(_client, _pageUri, tamperedForm)
+            );
+
+            using var cookielessClient = CreateAntiforgeryClient(new CookieContainer());
+            Assert.Equal(
+                HttpStatusCode.BadRequest,
+                await PostRecipeEditorFormAsync(cookielessClient, _pageUri, _issuedForm)
             );
         }
-    }
 
-    private static async Task<string> GetComposeServiceContainerIdAsync(
-        string composeArguments,
-        string service,
-        string workingDirectory,
-        IReadOnlyDictionary<string, string?> env
-    )
-    {
-        var result = await RunProcessAsync(
-            "docker",
-            $"{composeArguments} ps -q {service}",
-            workingDirectory,
-            env,
-            timeoutMs: 30_000
-        );
-        Assert.True(
-            result.ExitCode == 0,
-            $"docker compose ps -q {service} failed.{Environment.NewLine}{result.Output}"
-        );
-        var containerId = result.Output.Trim();
-        Assert.Matches("^[0-9a-f]{64}$", containerId);
-        return containerId;
-    }
-
-    private static async Task<string[]> ListDataProtectionKeyFilesAsync(
-        string composeArguments,
-        string workingDirectory,
-        IReadOnlyDictionary<string, string?> env
-    )
-    {
-        // Names only: key XML content is never read or printed.
-        var listing = await RunProcessAsync(
-            "docker",
-            $"{composeArguments} exec -T web ls -1 {WebKeyRingPath}",
-            workingDirectory,
-            env,
-            timeoutMs: 60_000
-        );
-        Assert.True(
-            listing.ExitCode == 0,
-            $"Listing web Data Protection key ring failed.{Environment.NewLine}{listing.Output}"
-        );
-        return listing
-            .Output.Split(
-                '\n',
-                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
-            )
-            .Where(name =>
-                name.StartsWith("key-", StringComparison.Ordinal)
-                && name.EndsWith(".xml", StringComparison.Ordinal)
-            )
-            .Order(StringComparer.Ordinal)
-            .ToArray();
+        public void Dispose() => _client.Dispose();
     }
 
     private static HttpClient CreateAntiforgeryClient(CookieContainer cookies) =>
@@ -1001,8 +1152,16 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         cookies
             .GetCookies(uri)
             .Any(cookie =>
-                cookie.Name.StartsWith(".AspNetCore.Antiforgery", StringComparison.Ordinal)
+                cookie.Name.StartsWith(AntiforgeryCookiePrefix, StringComparison.Ordinal)
             );
+
+    private static string ReadAntiforgeryCookieValue(CookieContainer cookies, Uri uri) =>
+        cookies
+            .GetCookies(uri)
+            .Single(cookie =>
+                cookie.Name.StartsWith(AntiforgeryCookiePrefix, StringComparison.Ordinal)
+            )
+            .Value;
 
     private static async Task<HttpStatusCode> PostRecipeEditorFormAsync(
         HttpClient client,
@@ -1015,36 +1174,5 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         return response.StatusCode;
     }
 
-    private static RecipeEditorForm WithRequestToken(RecipeEditorForm form, string requestToken) =>
-        new(
-            form.Fields.Select(field =>
-                    field.Key == AntiforgeryFieldName
-                        ? new KeyValuePair<string, string>(field.Key, requestToken)
-                        : field
-                )
-                .ToList()
-        );
-
     private static string TamperToken(string token) => token[..^1] + (token[^1] == 'A' ? 'B' : 'A');
-
-    private static bool MountsWebDataProtection(JsonElement service)
-    {
-        var mountsKeyRing =
-            service.TryGetProperty("volumes", out var volumes)
-            && volumes.EnumerateArray().Any(IsWebDataProtectionVolume);
-        var includesCertificateSecret =
-            service.TryGetProperty("secrets", out var secrets)
-            && secrets
-                .EnumerateArray()
-                .Any(secret => secret.GetProperty("source").GetString() == WebCertificateSecret);
-        return mountsKeyRing || includesCertificateSecret;
-    }
-
-    private static bool IsWebDataProtectionVolume(JsonElement volume) =>
-        volume.GetProperty("target").GetString() == WebKeyRingPath
-        || volume.TryGetProperty("source", out var source)
-            && source.GetString() == WebKeyRingVolume;
-
-    private static string ResolveSecretTarget(string target) =>
-        target.StartsWith('/') ? target : $"/run/secrets/{target}";
 }

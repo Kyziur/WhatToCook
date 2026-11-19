@@ -88,6 +88,38 @@ services:
       - observability
       - egress
 
+  web-data-protection-init:
+    build:
+      context: ..
+      dockerfile: src/WhatToCook.Web/Dockerfile
+      target: data-protection-init
+    platform: ${DOCKER_PLATFORM:-linux/arm64/v8}
+    restart: "no"
+    init: true
+    user: "1654:1654"
+    network_mode: none
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+          pids: 64
+    volumes:
+      - type: volume
+        source: web-data-protection
+        target: /var/lib/whattocook/data-protection
+        read_only: true
+      - type: volume
+        source: web-data-protection-certificate
+        target: /var/lib/whattocook/data-protection-certificate
+
   web:
     build:
       context: ..
@@ -111,18 +143,21 @@ services:
     depends_on:
       api:
         condition: service_healthy
+      web-data-protection-init:
+        condition: service_completed_successfully
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://0.0.0.0:8080
       Api__BaseUrl: http://api:8080
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       DataProtection__KeyRingPath: /var/lib/whattocook/data-protection
-      DataProtection__CertificatePath: /run/secrets/web-data-protection.pem
+      DataProtection__CertificatePath: /var/lib/whattocook/data-protection-certificate/web-data-protection.pem
     volumes:
       - web-data-protection:/var/lib/whattocook/data-protection
-    secrets:
-      - source: web-data-protection-certificate
-        target: web-data-protection.pem
+      - type: volume
+        source: web-data-protection-certificate
+        target: /var/lib/whattocook/data-protection-certificate
+        read_only: true
     expose:
       - "8080"
     healthcheck:
@@ -150,10 +185,7 @@ networks:
     external: true
     name: egress
 
-secrets:
-  web-data-protection-certificate:
-    file: ${DATA_ROOT:?DATA_ROOT must be provided}/secrets/web-data-protection.pem
-
 volumes:
   postgres-data:
   web-data-protection:
+  web-data-protection-certificate:
