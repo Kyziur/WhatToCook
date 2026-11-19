@@ -294,10 +294,13 @@ async function profileVariant(browser: Browser, prefix: string, count: number, v
       expect(firstVisit.transferredBytes).toBeGreaterThan(0);
       profiles.push({ variant, viewport, fixtureBodyBytes, firstVisit, repeatVisit });
     } finally {
-      for (const page of context.pages()) {
-        await disconnectBlazorCircuit(page);
+      try {
+        for (const page of context.pages()) {
+          await disconnectBlazorCircuit(page);
+        }
+      } finally {
+        await context.close();
       }
-      await context.close();
     }
   }
   return profiles;
@@ -391,21 +394,22 @@ test("@perf06-generated compare real Web transfers of procedural original/640/32
       }
     }
   } finally {
-    for (const page of generatorContext.pages()) {
-      await disconnectBlazorCircuit(page);
-    }
-    await generatorContext.close();
-    // Archiving prevents pollution even if a profile assertion fails. The E2E
-    // harness also removes the entire dedicated image directory on shutdown.
-    const failures: string[] = [];
-    for (const id of createdIds) {
-      try {
-        const response = await request.post(apiUrl + "/api/recipes/" + id + "/archive");
-        if (!response.ok()) failures.push(id);
-      } catch {
-        failures.push(id);
+    // The generator page never navigates to the app, so it holds no Blazor circuit to disconnect.
+    try {
+      await generatorContext.close();
+    } finally {
+      // Archiving prevents pollution even if a profile assertion fails. The E2E
+      // harness also removes the entire dedicated image directory on shutdown.
+      const failures: string[] = [];
+      for (const id of createdIds) {
+        try {
+          const response = await request.post(apiUrl + "/api/recipes/" + id + "/archive");
+          if (!response.ok()) failures.push(id);
+        } catch {
+          failures.push(id);
+        }
       }
+      expect(failures, "Temporary benchmark recipes must archive successfully").toEqual([]);
     }
-    expect(failures, "Temporary benchmark recipes must archive successfully").toEqual([]);
   }
 });

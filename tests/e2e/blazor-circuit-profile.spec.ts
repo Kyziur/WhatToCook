@@ -97,11 +97,16 @@ async function runSessionGroup(context: BrowserContext, phase: string, sessions:
       availableInstruments: final.PublishedInstruments,
     }));
   } finally {
-    await Promise.all(pages.map(async (page) => {
-      await disconnectBlazorCircuit(page);
-      await page.close();
-    }));
-    fs.writeFileSync(phasePath, `after-${phase}`);
+    try {
+      const results = await Promise.allSettled(pages.map(async (page) => {
+        await disconnectBlazorCircuit(page);
+        await page.close();
+      }));
+      const failure = results.find((result): result is PromiseRejectedResult => result.status === "rejected");
+      if (failure) throw failure.reason;
+    } finally {
+      fs.writeFileSync(phasePath, `after-${phase}`);
+    }
   }
 }
 
