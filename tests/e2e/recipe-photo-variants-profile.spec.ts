@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { expect, test, type APIRequestContext, type Browser, type Locator, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Browser, type Locator, type Page } from "@playwright/test";
+import { disconnectBlazorCircuit, test } from "./fixtures";
 import { summarizeImageCapture } from "../../scripts/perf/image-transfer-metrics.mjs";
 import { gotoAndWaitForApp } from "./helpers";
 
@@ -293,7 +294,13 @@ async function profileVariant(browser: Browser, prefix: string, count: number, v
       expect(firstVisit.transferredBytes).toBeGreaterThan(0);
       profiles.push({ variant, viewport, fixtureBodyBytes, firstVisit, repeatVisit });
     } finally {
-      await context.close();
+      try {
+        for (const page of context.pages()) {
+          await disconnectBlazorCircuit(page);
+        }
+      } finally {
+        await context.close();
+      }
     }
   }
   return profiles;
@@ -387,18 +394,22 @@ test("@perf06-generated compare real Web transfers of procedural original/640/32
       }
     }
   } finally {
-    await generatorContext.close();
-    // Archiving prevents pollution even if a profile assertion fails. The E2E
-    // harness also removes the entire dedicated image directory on shutdown.
-    const failures: string[] = [];
-    for (const id of createdIds) {
-      try {
-        const response = await request.post(apiUrl + "/api/recipes/" + id + "/archive");
-        if (!response.ok()) failures.push(id);
-      } catch {
-        failures.push(id);
+    // The generator page never navigates to the app, so it holds no Blazor circuit to disconnect.
+    try {
+      await generatorContext.close();
+    } finally {
+      // Archiving prevents pollution even if a profile assertion fails. The E2E
+      // harness also removes the entire dedicated image directory on shutdown.
+      const failures: string[] = [];
+      for (const id of createdIds) {
+        try {
+          const response = await request.post(apiUrl + "/api/recipes/" + id + "/archive");
+          if (!response.ok()) failures.push(id);
+        } catch {
+          failures.push(id);
+        }
       }
+      expect(failures, "Temporary benchmark recipes must archive successfully").toEqual([]);
     }
-    expect(failures, "Temporary benchmark recipes must archive successfully").toEqual([]);
   }
 });

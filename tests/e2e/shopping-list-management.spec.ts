@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { test } from "./fixtures";
 import {
   addRecipeToSlot,
   createPlan,
@@ -174,7 +175,7 @@ test.describe("OpenSpec: shopping-list-management", () => {
     await page.getByRole("button", { name: "Regeneruj listę zakupów" }).click();
     await expect(page.getByText("Mleko")).toBeVisible();
     await expect(shoppingItem(page, "Pomidor")).toHaveAttribute("aria-pressed", "true");
-    await page.reload();
+    await gotoAndWaitForApp(page, page.url());
     await expect(page.getByText("Mleko")).toBeVisible();
     await expect(shoppingItem(page, "Pomidor")).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByRole("button", { name: "Regeneruj listę zakupów" })).toBeVisible();

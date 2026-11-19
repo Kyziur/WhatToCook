@@ -15,6 +15,7 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+using var dataProtectionCertificate = builder.Services.AddWebDataProtection(builder.Configuration);
 
 // .NET 10 publishes these meters; only the Web host owns Blazor circuits.
 // ServiceDefaults already handles OTLP export when configured.
@@ -48,6 +49,10 @@ builder.Services.AddApiHttpClient<IShoppingListService, ApiShoppingListService>(
 builder.Services.AddNamedApiHttpClient("api-media");
 
 var app = builder.Build();
+if (dataProtectionCertificate is not null)
+{
+    WebDataProtectionRegistration.VerifyExistingKeys(app.Services);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

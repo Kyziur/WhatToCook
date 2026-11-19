@@ -21,6 +21,8 @@ auto_update = false
 poll_for_updates = true
 webhook_enabled = false
 send_alerts = true
+# Compose checks the initializer's exit code before starting Web.
+ignore_services = ["web-data-protection-init"]
 extra_args = ["--remove-orphans"]
 # Transitional compatibility contract. Do not remove wrapper until M3 is
 # runtime-verified on disposable credentials and the Pi recovery path.
