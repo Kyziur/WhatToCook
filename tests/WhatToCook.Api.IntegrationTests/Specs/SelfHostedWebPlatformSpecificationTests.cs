@@ -186,6 +186,8 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
             await antiforgery.AssertCookieSurvivesRecreateAsync();
             Assert.Equal(keyFiles, await ListDataProtectionKeyFilesAsync(project));
 
+            await AssertWebRefusesWrongCertificateAsync(project, keyFiles);
+
             // Last step: this stops the stack (volumes kept), so it runs after all live checks.
             await AssertWebRefusesStartWithoutCertificateAsync(project);
         }
@@ -380,6 +382,44 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         Assert.True(
             rerun.ExitCode == 0,
             $"Rerunning {InitServiceName} failed.{Environment.NewLine}{rerun.Output}"
+        );
+    }
+
+    private static async Task AssertWebRefusesWrongCertificateAsync(
+        ComposeProject project,
+        string[] keyFiles
+    )
+    {
+        var stop = await RunComposeAsync(project, "stop web", 60_000);
+        Assert.Equal(0, stop.ExitCode);
+
+        // Generate an unrelated but usable PEM within the disposable, networkless initializer.
+        var replace = await RunComposeAsync(
+            project,
+            $"run --rm --no-deps -T --entrypoint /bin/sh {InitServiceName} -ec "
+                + $"\"umask 077; openssl req -x509 -newkey rsa:3072 -noenc -days 1 "
+                + "-subj /CN=WrongCertificate -keyout /tmp/wrong.key -out /tmp/wrong.crt 2>/dev/null; "
+                + $"cat /tmp/wrong.crt /tmp/wrong.key > {WebCertificateFile}.new; "
+                + $"chmod 0400 {WebCertificateFile}.new; mv -f {WebCertificateFile}.new {WebCertificateFile}\"",
+            60_000
+        );
+        Assert.Equal(0, replace.ExitCode);
+        await RerunCertificateInitializerAsync(project);
+
+        // One-off Web uses the same image, entrypoint and volumes without the restart policy.
+        var web = await RunComposeAsync(project, "run --rm --no-deps -T web", 60_000);
+        Assert.NotEqual(0, web.ExitCode);
+        Assert.True(
+            web.Output.Contains(DecryptFailureMessage, StringComparison.Ordinal),
+            "web must reject the mismatched certificate before listening."
+        );
+        Assert.False(web.Output.Contains("PRIVATE KEY", StringComparison.Ordinal));
+        Assert.Equal(
+            keyFiles,
+            await ListKeyRingFilesAsync(
+                project,
+                $"run --rm --no-deps -T --entrypoint /bin/sh {InitServiceName} -c \"ls -1 {WebKeyRingPath}\""
+            )
         );
     }
 
@@ -672,10 +712,16 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
         return result.Output.Trim();
     }
 
-    private static async Task<string[]> ListDataProtectionKeyFilesAsync(ComposeProject project)
+    private static Task<string[]> ListDataProtectionKeyFilesAsync(ComposeProject project) =>
+        ListKeyRingFilesAsync(project, $"exec -T web ls -1 {WebKeyRingPath}");
+
+    private static async Task<string[]> ListKeyRingFilesAsync(
+        ComposeProject project,
+        string subcommand
+    )
     {
         // Names only: key XML content is never read or printed.
-        var listing = await RunComposeAsync(project, $"exec -T web ls -1 {WebKeyRingPath}", 60_000);
+        var listing = await RunComposeAsync(project, subcommand, 60_000);
         Assert.True(
             listing.ExitCode == 0,
             $"Listing web Data Protection key ring failed.{Environment.NewLine}{listing.Output}"
@@ -950,6 +996,9 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
     private const string AntiforgeryCookiePrefix = ".AspNetCore.Antiforgery";
     private const string AntiforgeryFieldName = "__RequestVerificationToken";
     private const string RecipeEditorFormName = "recipe-editor";
+    private const string RecipeTitleRequiredMessage = "Tytuł jest wymagany.";
+    private const string DecryptFailureMessage =
+        "The existing Data Protection key ring cannot be decrypted with the configured certificate. Restore the matching certificate and key ring.";
     private static readonly Regex FormElementPattern = new(
         @"<form\b[^>]*>.*?</form>",
         RegexOptions.IgnoreCase | RegexOptions.Singleline
@@ -1062,16 +1111,31 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
                 "Antiforgery cookie value changed across web recreation."
             );
 
+            // An empty title triggers the form handler's validation without writing a recipe.
+            var (acceptedStatus, acceptedBody) = await PostRecipeEditorFormAsync(
+                _client,
+                _pageUri,
+                _issuedForm
+            );
+            Assert.Equal(HttpStatusCode.OK, acceptedStatus);
+            Assert.Contains(
+                RecipeTitleRequiredMessage,
+                WebUtility.HtmlDecode(acceptedBody),
+                StringComparison.Ordinal
+            );
+
             var tamperedForm = _issuedForm.WithRequestToken(TamperToken(_issuedForm.RequestToken));
             Assert.Equal(
                 HttpStatusCode.BadRequest,
-                await PostRecipeEditorFormAsync(_client, _pageUri, tamperedForm)
+                (await PostRecipeEditorFormAsync(_client, _pageUri, tamperedForm)).StatusCode
             );
 
             using var cookielessClient = CreateAntiforgeryClient(new CookieContainer());
             Assert.Equal(
                 HttpStatusCode.BadRequest,
-                await PostRecipeEditorFormAsync(cookielessClient, _pageUri, _issuedForm)
+                (
+                    await PostRecipeEditorFormAsync(cookielessClient, _pageUri, _issuedForm)
+                ).StatusCode
             );
         }
 
@@ -1163,7 +1227,7 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
             )
             .Value;
 
-    private static async Task<HttpStatusCode> PostRecipeEditorFormAsync(
+    private static async Task<(HttpStatusCode StatusCode, string Body)> PostRecipeEditorFormAsync(
         HttpClient client,
         Uri pageUri,
         RecipeEditorForm form
@@ -1171,8 +1235,15 @@ public sealed class SelfHostedWebPlatformSpecificationTests(TestWebApplicationFa
     {
         using var content = new FormUrlEncodedContent(form.Fields);
         using var response = await client.PostAsync(pageUri, content);
-        return response.StatusCode;
+        return (response.StatusCode, await response.Content.ReadAsStringAsync());
     }
 
-    private static string TamperToken(string token) => token[..^1] + (token[^1] == 'A' ? 'B' : 'A');
+    // Changes a middle character: the final base64 character may encode only padding bits, so
+    // altering it can leave the decoded token unchanged.
+    private static string TamperToken(string token)
+    {
+        var index = token.Length / 2;
+        var replacement = token[index] == 'A' ? 'B' : 'A';
+        return token[..index] + replacement + token[(index + 1)..];
+    }
 }

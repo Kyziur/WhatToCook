@@ -1,5 +1,7 @@
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 
 namespace WhatToCook.Web;
 
@@ -58,6 +60,33 @@ internal static class WebDataProtectionRegistration
 
         // The caller owns the returned certificate and must dispose it when the host stops.
         return certificate;
+    }
+
+    internal static void VerifyExistingKeys(IServiceProvider services)
+    {
+        const string failure =
+            "The existing Data Protection key ring cannot be decrypted with the configured certificate. Restore the matching certificate and key ring.";
+
+        // Loading individual keys does not let Data Protection generate a replacement key.
+        foreach (var key in services.GetRequiredService<IKeyManager>().GetAllKeys())
+        {
+            if (key.IsRevoked)
+            {
+                continue;
+            }
+
+            try
+            {
+                if (key.CreateEncryptor() is null)
+                {
+                    throw new InvalidOperationException(failure);
+                }
+            }
+            catch (CryptographicException)
+            {
+                throw new InvalidOperationException(failure);
+            }
+        }
     }
 
     private static bool HasRsaPrivateKey(X509Certificate2 certificate)

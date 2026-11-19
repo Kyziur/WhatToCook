@@ -245,7 +245,11 @@ public partial class RecipeEditorPage : IAsyncDisposable
         // Validate before disabling the form so invalid fields remain focusable.
         if (!EditContext.Validate())
         {
-            await FocusFirstDataAnnotationErrorAsync();
+            if (IsInteractive)
+            {
+                await FocusFirstDataAnnotationErrorAsync();
+            }
+
             return;
         }
 

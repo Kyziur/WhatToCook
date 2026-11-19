@@ -37,10 +37,10 @@ No certificate, private-key file, or new environment variable needs to be suppli
 
 #### Deploy and verify
 
-1. Complete [preflight](#preflight--stop-on-any-mismatch). If the stack already uses this initializer, confirm both Data Protection volumes exist under the same Compose project and are covered by the homelab encrypted backup and isolated restore procedures.
+1. Complete [preflight](#preflight--stop-on-any-mismatch). Before first rollout, arrange for both project-scoped Data Protection volumes (`web-data-protection` and `web-data-protection-certificate`) to be included in the [homelab encrypted backup policy](https://github.com/Kyziur/homelab/blob/main/docs/backup-actions.md). Do not assume Docker volumes are discovered automatically. For a redeploy, verify both volumes exist and the latest successful encrypted backup includes both.
 2. Build and deploy the reviewed revision through the existing Komodo Stack, with its normal secret wrapper and maintenance lock. Use the normal stack deployment with dependencies, not `up --no-deps web` on first rollout. Compose builds the initializer and waits for its successful exit before starting Web.
-3. In Komodo, confirm `web-data-protection-init` exited with code **0** and Web is **healthy**. If the initializer fails, stop and inspect its service logs; do not bypass it or delete volumes to get Web running. Complete the [application checks below](#after-an-approved-deployment). The first rollout cannot recover tokens whose keys were already lost; reload the affected page if needed.
-4. Add both new project-scoped volumes, `web-data-protection` and `web-data-protection-certificate`, to the encrypted backup policy before marking rollout complete. Back up and test restoring them together, with tightly restricted access to the certificate backup. Never print or attach PEM, key-ring XML, cookies or tokens to rollout evidence.
+3. In Komodo, confirm `web-data-protection-init` exited with code **0** and Web is **healthy**. If either check fails, stop and inspect the failing service's logs; do not bypass the initializer or delete volumes to get Web running. Complete the [application checks below](#after-an-approved-deployment). The first rollout cannot recover tokens whose keys were already lost; reload the affected page if needed.
+4. Before marking rollout complete, verify that a successful encrypted backup includes both volumes and restore them together in isolation. Preserve numeric ownership and modes and verify that the restored Web accepts an antiforgery form issued before recreation. Restrict access to the certificate backup. Never print or attach PEM, key-ring XML, cookies or tokens to rollout evidence.
 
 For a read-only check on the Docker host, substitute the project name recorded in preflight for `whattocook`:
 
@@ -59,9 +59,9 @@ The candidate Stack excludes the completed initializer from aggregate status. If
 
 Web runs as UID/GID **1654:1654**. It writes the encrypted key ring and reads the private certificate from a separate, read-only volume. The initializer has no network, reads the ring without write access, and writes only the certificate volume. Both directories are mode **0700**; the PEM is mode **0400**. API and PostgreSQL mount neither volume.
 
-If the certificate is missing and the ring contains keys, initialization refuses to create a replacement. Restore the original certificate volume from the matching backup, rerun the normal deployment, and verify Web health. Do not use `down --volumes`, rename the Compose project, replace the PEM, or start with an empty key ring as a recovery shortcut. Rotation requires a separate procedure that keeps old decryption certificates available. Live backup/restore and rollout are **not verified by repository tests**.
+If the certificate is missing and the ring contains keys, initialization refuses to generate a replacement. Web exits before listening or writing replacement keys if even one non-revoked key cannot be decrypted with the configured certificate. Check the failing service's logs, restore the matching certificate and ring from the same backup, then rerun the normal deployment and verify Web health. Do not use `down --volumes`, rename the Compose project, replace the PEM, or start with an empty key ring as a recovery shortcut. Rotation requires a separate procedure that keeps old decryption certificates available. Live backup/restore and rollout are **not verified by repository tests**.
 
-The deployment integration test exercises the same Compose initializer and recreates Web with the issued antiforgery cookie, verifying decryption and rejection of forged and cookie-less HTTP submissions. Service-level tests also validate the original cookie/request-token pair across independent lifetimes.
+The deployment integration test recreates Web and submits the original antiforgery cookie and request token over HTTP. It also checks that tampered and cookie-less submissions are rejected and that Web does not start when the populated ring's certificate is missing or wrong.
 
 ## After an approved deployment
 

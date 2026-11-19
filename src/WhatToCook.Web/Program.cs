@@ -49,6 +49,10 @@ builder.Services.AddApiHttpClient<IShoppingListService, ApiShoppingListService>(
 builder.Services.AddNamedApiHttpClient("api-media");
 
 var app = builder.Build();
+if (dataProtectionCertificate is not null)
+{
+    WebDataProtectionRegistration.VerifyExistingKeys(app.Services);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
