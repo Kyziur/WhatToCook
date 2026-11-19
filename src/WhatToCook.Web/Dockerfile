@@ -23,7 +23,9 @@ ENTRYPOINT ["/bin/sh", "/usr/local/bin/web-data-protection-init"]
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
-RUN apt-get update \
+# Use HTTPS for Ubuntu archives; CI runners could not reach the mirrors on port 80.
+RUN sed -i 's|^URIs: http://|URIs: https://|' /etc/apt/sources.list.d/ubuntu.sources \
+    && apt-get update -o APT::Update::Error-Mode=any \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/* \
     && install -d -o "$APP_UID" -g "$APP_UID" -m 0700 /var/lib/whattocook/data-protection /var/lib/whattocook/data-protection-certificate
